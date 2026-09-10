@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink } from "lucide-react";
+import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink, Mail, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,8 @@ export function BrevoApplicationsList() {
   const [apiKey, setApiKey] = useState("");
   const [dailyLimit, setDailyLimit] = useState<number>(300);
   const [isSubmittingApprove, setIsSubmittingApprove] = useState(false);
+  // FIX: moved targetStatus to top with all other state (was declared after useEffect)
+  const [targetStatus, setTargetStatus] = useState<string>("pending_email_verification");
 
   // Rejection Modal State
   const [rejectTarget, setRejectTarget] = useState<BrevoApplication | null>(null);
@@ -55,13 +57,14 @@ export function BrevoApplicationsList() {
     loadApplications();
   }, []);
 
-  const [targetStatus, setTargetStatus] = useState<string>("approved");
-
   const handleOpenApprove = (app: BrevoApplication) => {
     setApproveTarget(app);
-    setApiKey(app.assigned_api_key || app.user_email ? `xkeysib-${Math.random().toString(36).substring(2, 12)}` : "");
+    // FIX: Original had an operator precedence bug: `(app.assigned_api_key || app.user_email) ?`
+    // user_email is always truthy, so a random key was ALWAYS auto-generated. Now we correctly
+    // pre-fill only when there is already an existing assigned_api_key.
+    setApiKey(app.assigned_api_key || "");
     setDailyLimit(app.daily_limit || 300);
-    setTargetStatus("approved");
+    setTargetStatus("pending_email_verification");
   };
 
   const handleConfirmApprove = async () => {
@@ -133,8 +136,16 @@ export function BrevoApplicationsList() {
           </Badge>
         </div>
 
+        {/* Loading state */}
+        {loading && (
+          <div className="flex items-center justify-center py-12 gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
+            Loading applications...
+          </div>
+        )}
+
         {/* Applications List */}
-        <div className="space-y-4">
+        {!loading && <div className="space-y-4">
           {applications.map((app) => (
             <div
               key={app.id}
@@ -146,9 +157,21 @@ export function BrevoApplicationsList() {
                   <span className="text-xs text-muted-foreground ml-2">({app.user_email || `User #${app.user_id}`})</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  {/* FIX: Was animate-spin on Clock (wrong UX for "waiting"). Changed to animate-pulse. */}
                   {app.status === "pending" && (
                     <Badge variant="outline" className="border-amber-500/40 text-amber-400 gap-1 text-[11px]">
-                      <Clock className="h-3 w-3 animate-spin" /> Pending Review
+                      <Clock className="h-3 w-3 animate-pulse" /> Pending Review
+                    </Badge>
+                  )}
+                  {/* FIX: Added missing status badges for pending_email_verification and email_verified */}
+                  {app.status === "pending_email_verification" && (
+                    <Badge variant="outline" className="border-blue-500/40 text-blue-400 gap-1 text-[11px]">
+                      <Mail className="h-3 w-3 animate-pulse" /> Awaiting Email Verification
+                    </Badge>
+                  )}
+                  {app.status === "email_verified" && (
+                    <Badge variant="outline" className="border-cyan-500/40 text-cyan-400 gap-1 text-[11px]">
+                      <CheckCircle2 className="h-3 w-3" /> Email Verified — Needs API Key
                     </Badge>
                   )}
                   {app.status === "approved" && (
@@ -189,7 +212,8 @@ export function BrevoApplicationsList() {
                 <span className="text-muted-foreground font-mono text-[11px]">
                   Verification Handle/Website: <strong className="text-cyan-400">{app.social_media_website}</strong>
                 </span>
-                {app.social_media_website.startsWith("http") && (
+                {/* FIX: null guard added — .startsWith() throws if social_media_website is null/empty */}
+                {app.social_media_website?.startsWith("http") && (
                   <a
                     href={app.social_media_website}
                     target="_blank"
@@ -209,7 +233,14 @@ export function BrevoApplicationsList() {
                 </div>
               )}
 
-              {/* Actions for Pending or Editing */}
+              {/* Show rejection reason when rejected */}
+              {app.status === "rejected" && app.rejection_reason && (
+                <div className="text-xs text-rose-400 bg-rose-950/20 p-2 rounded-lg border border-rose-500/30 font-mono">
+                  <span className="text-muted-foreground">Rejection reason: </span>{app.rejection_reason}
+                </div>
+              )}
+
+              {/* Actions */}
               <div className="flex justify-end gap-2 pt-1">
                 {app.status === "pending" ? (
                   <>
@@ -252,12 +283,12 @@ export function BrevoApplicationsList() {
             </div>
           ))}
 
-          {applications.length === 0 && !loading && (
+          {applications.length === 0 && (
             <div className="text-center py-12 text-xs text-muted-foreground italic">
               No Brevo business verification applications submitted yet.
             </div>
           )}
-        </div>
+        </div>}
       </CardContent>
 
       {/* Approval / Registration Modal */}
