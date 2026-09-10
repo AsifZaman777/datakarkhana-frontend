@@ -4,20 +4,40 @@ export const APP_NAME = "MARKETING OSTAD";
 export const APP_VERSION = "2.0";
 
 export function getApiBase(): string {
-  const envBase = process.env.NEXT_PUBLIC_API_BASE;
+  // 1. Direct explicit override if defined
+  if (process.env.NEXT_PUBLIC_API_BASE) {
+    return process.env.NEXT_PUBLIC_API_BASE.replace(/\/$/, "");
+  }
 
+  const localUrl = (
+    process.env.NEXT_PUBLIC_API_LOCAL || "http://127.0.0.1:8000"
+  ).replace(/\/$/, "");
+
+  const renderUrl = (
+    process.env.NEXT_PUBLIC_API_RENDER ||
+    "https://datakarkhana-backend.onrender.com"
+  ).replace(/\/$/, "");
+
+  const mode = (process.env.NEXT_PUBLIC_API_MODE || "").toLowerCase().trim();
+
+  // 2. Explicit mode selection via NEXT_PUBLIC_API_MODE ("local" or "render")
+  if (mode === "render" || mode === "production" || mode === "prod") {
+    return renderUrl;
+  }
+  if (mode === "local" || mode === "dev" || mode === "development") {
+    return localUrl;
+  }
+
+  // 3. Automatic detection when mode is not set
   if (typeof window !== "undefined") {
     const currentHost = window.location.hostname || "127.0.0.1";
     if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-      return "http://127.0.0.1:8000";
+      return localUrl;
     }
-    if (envBase) {
-      return envBase.replace(/\/$/, "");
-    }
-    return `http://${currentHost}:8000`;
+    return renderUrl;
   }
 
-  return envBase?.replace(/\/$/, "") || "http://127.0.0.1:8000";
+  return localUrl;
 }
 
 export const SUPPORT_EMAIL =

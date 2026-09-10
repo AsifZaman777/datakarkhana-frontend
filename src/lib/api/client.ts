@@ -2,16 +2,17 @@ import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axio
 import { getApiBase, TOKEN_KEY } from "@/lib/constants";
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: typeof window !== "undefined" ? getApiBase() : (process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:8000"),
+  baseURL: getApiBase(),
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 30000,
 });
 
-// Request interceptor — auto-attach Bearer token
+// Request interceptor — auto-attach Bearer token & ensure current baseURL
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    config.baseURL = getApiBase();
     if (typeof window !== "undefined") {
       const token = localStorage.getItem(TOKEN_KEY);
       if (token && config.headers) {
