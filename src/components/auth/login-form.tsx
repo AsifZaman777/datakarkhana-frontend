@@ -43,7 +43,11 @@ export function LoginForm({ onToggleView, verificationNotice }: LoginFormProps) 
         router.push("/catalog");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.detail || "Authentication failed. Check credentials.";
+      const msg =
+        err.response?.data?.detail ||
+        (err.code === "ERR_NETWORK" || !err.response
+          ? "Cannot connect to backend server. Please verify backend is running on port 8000."
+          : err.message || "Authentication failed. Check credentials.");
       setError(msg);
       toast.error(msg);
     } finally {

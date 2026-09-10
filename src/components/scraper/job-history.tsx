@@ -24,6 +24,7 @@ import {
   XCircle,
   Database,
   Search,
+  Radio,
 } from "lucide-react";
 import { scraperApi } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
@@ -136,7 +137,14 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                   const itemCount = job.result_count || 0;
 
                   return (
-                    <TableRow key={job.id} className="border-border/20 hover:bg-cyan-500/5 text-xs">
+                    <TableRow
+                      key={job.id}
+                      className={`border-border/20 text-xs transition-colors ${
+                        activeJobId === job.id
+                          ? "bg-cyan-500/10 border-l-2 border-l-cyan-400"
+                          : "hover:bg-cyan-500/5"
+                      }`}
+                    >
                       <TableCell className="font-mono font-bold text-cyan-400">
                         #{job.id}
                       </TableCell>
@@ -190,9 +198,44 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                         {job.created_at ? job.created_at.split(".")[0] : "-"}
                       </TableCell>
 
-                      {/* 4 ACTION BUTTONS PER JOB */}
+                      {/* ACTION BUTTONS PER JOB */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* WATCH LIVE STREAM IF RUNNING */}
+                          {isRunning && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onViewLogs?.(job.id)}
+                              className={`h-7 px-2 text-[11px] font-bold gap-1 ${
+                                activeJobId === job.id
+                                  ? "bg-cyan-500 text-black border-cyan-400 hover:bg-cyan-400"
+                                  : "border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/20"
+                              }`}
+                              title="Stream Google Maps and live logs"
+                            >
+                              <Radio className="h-3 w-3 animate-pulse text-cyan-400" />
+                              {activeJobId === job.id ? "Watching Live" : "Watch Live"}
+                            </Button>
+                          )}
+
+                          {/* VIEW LOGS & MAP FOR COMPLETED/STOPPED JOBS */}
+                          {!isRunning && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewLogs?.(job.id)}
+                              className={`h-7 px-2 text-[11px] gap-1 ${
+                                activeJobId === job.id
+                                  ? "text-cyan-400 font-bold bg-cyan-500/10"
+                                  : "text-muted-foreground hover:text-cyan-300"
+                              }`}
+                              title="Inspect logs and Google Maps capture"
+                            >
+                              <Eye className="h-3 w-3 text-cyan-400" /> Logs & Map
+                            </Button>
+                          )}
+
                           {/* STOP BUTTON IF RUNNING */}
                           {isRunning && (
                             <Button
@@ -203,7 +246,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                               className="h-7 px-2 text-[11px] font-bold gap-1"
                               title="Stop scraping immediately & keep partial data"
                             >
-                              <Square className="h-3 w-3" /> Stop Job
+                              <Square className="h-3 w-3" /> Stop
                             </Button>
                           )}
 

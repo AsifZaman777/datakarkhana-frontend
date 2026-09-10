@@ -13,12 +13,14 @@ import { configApi } from "@/lib/api/config";
 import { scraperApi } from "@/lib/api/scraper";
 import { requestsApi } from "@/lib/api/requests";
 import { useAuth } from "@/providers/auth-provider";
+import { toast } from "sonner";
 import type { RegionsConfig, DatasetRequest, ScraperJob } from "@/lib/types";
 
 export default function ScraperPage() {
   const { isAdmin } = useAuth();
   const [regionsConfig, setRegionsConfig] = useState<RegionsConfig | null>(null);
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
+  const [isJobRunning, setIsJobRunning] = useState(false);
   const [activeLogs, setActiveLogs] = useState<string[]>([]);
   const [cooldown, setCooldown] = useState(0);
 
@@ -30,7 +32,9 @@ export default function ScraperPage() {
   const refreshJobs = useCallback(() => {
     scraperApi
       .listJobs()
-      .then((res) => setRecentJobs(res.data))
+      .then((res) => {
+        setRecentJobs(res.data);
+      })
       .catch(() => { });
   }, []);
 
@@ -56,25 +60,28 @@ export default function ScraperPage() {
       .catch(() => { });
   }, []);
 
-  // Poll Scraper Job Logs
-  const startPollingJob = useCallback((jobId: number) => {
+  // Job lifecycle handlers via WebSocket
+  const handleJobCreated = (jobId: number) => {
+    setCooldown(120);
     setActiveJobId(jobId);
-    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    setIsJobRunning(true);
+    setActiveLogs([]);
+  };
 
-    pollTimerRef.current = setInterval(async () => {
-      try {
-        const res = await scraperApi.jobStatus(jobId);
-        setActiveLogs(res.data.logs);
-
-        if (res.data.job.status === "done" || res.data.job.status === "failed" || res.data.job.status === "stopped") {
-          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-          scraperApi.listJobs().then((r) => setRecentJobs(r.data)).catch(() => { });
-        }
-      } catch {
-        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+  const handleJobFinished = useCallback(
+    (status: string, resultCount: number) => {
+      setIsJobRunning(false);
+      refreshJobs();
+      if (status === "done") {
+        toast.success(`Scraping completed! Collected ${resultCount} business leads.`);
+      } else if (status === "stopped") {
+        toast.info(`Scraping stopped. Preserved ${resultCount} collected leads.`);
+      } else {
+        toast.error("Scraper job finished with 0 records or errors.");
       }
-    }, 2000);
-  }, []);
+    },
+    [refreshJobs]
+  );
 
   // Cooldown timer effect
   useEffect(() => {
@@ -86,11 +93,6 @@ export default function ScraperPage() {
     }
     return () => clearInterval(interval);
   }, [cooldown]);
-
-  const handleJobCreated = (jobId: number) => {
-    setCooldown(120);
-    startPollingJob(jobId);
-  };
 
   return (
     <div className="space-y-6">
@@ -118,8 +120,8 @@ export default function ScraperPage() {
 
         {/* TAB: SCRAPER CONSOLE */}
         <TabsContent value="scraper" className="space-y-6 pt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5">
               <ScraperForm
                 regionsConfig={regionsConfig}
                 onJobCreated={handleJobCreated}
@@ -127,10 +129,12 @@ export default function ScraperPage() {
               />
             </div>
 
-            <div className="lg:col-span-6">
+            <div className="lg:col-span-7">
               <ScraperTerminal
                 logs={activeLogs}
                 activeJobId={activeJobId}
+                isJobRunning={isJobRunning}
+                onJobFinished={handleJobFinished}
               />
             </div>
           </div>
@@ -140,6 +144,13 @@ export default function ScraperPage() {
             jobs={recentJobs}
             onRefresh={refreshJobs}
             activeJobId={activeJobId}
+            onViewLogs={(jobId) => {
+              const targetJob = recentJobs.find((j) => j.id === jobId);
+              const isRunning = targetJob?.status === "running";
+              setActiveJobId(jobId);
+              setIsJobRunning(isRunning);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
         </TabsContent>
 

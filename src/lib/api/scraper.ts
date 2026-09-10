@@ -63,4 +63,7 @@ export const scraperApi = {
       { headers: { "Content-Type": "multipart/form-data" } }
     );
   },
+
+  screenshot: (jobId: number) =>
+    apiClient.get<{ available: boolean; image: string | null }>(`/api/scraper/jobs/${jobId}/screenshot`),
 };
