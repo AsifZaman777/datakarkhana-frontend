@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { useAuth } from "@/providers/auth-provider";
 import { PaymentWizardModal } from "@/components/payment/payment-wizard-modal";
 import { LiveCampaignTracker } from "@/components/marketing/live-campaign-tracker";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 
 export default function DashboardLayout({
   children,
@@ -32,14 +33,7 @@ export default function DashboardLayout({
   }, [isLoading, user, pathname, isAdmin, router]);
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground font-mono text-sm">
-        <div className="flex items-center gap-3">
-          <span className="h-3 w-3 rounded-full bg-primary animate-ping" />
-          <span>Authenticating session...</span>
-        </div>
-      </div>
-    );
+    return <LoadingBackdrop variant="backdrop" label="Authenticating session..." color="cyan" size="md" />;
   }
 
   return (

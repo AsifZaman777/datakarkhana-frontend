@@ -50,6 +50,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ConfirmModal } from "@/components/ui/modal-confirm";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import { adminApi } from "@/lib/api/admin";
 import { getApiBase, TOKEN_KEY } from "@/lib/constants";
 import { toast } from "sonner";
@@ -213,7 +214,7 @@ export function AdminDashboard() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const res = await adminApi.getDashboardOverview();
+      const res = await adminApi.getDashboardOverview(isRefresh);
       setData(res.data);
     } catch {
       toast.error("Failed to load dashboard data.");
@@ -294,23 +295,23 @@ export function AdminDashboard() {
     }
   };
 
-  // ── Loading skeleton ──
+  // ── Loading state ──
   if (loading || !data) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="space-y-6">
+        <div className="min-h-[420px] rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 shadow-xl">
+          <LoadingBackdrop
+            variant="inline"
+            label="Aggregating platform metrics & telemetry..."
+            color="cyan"
+            size="lg"
+          />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 opacity-30">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="h-28 rounded-xl bg-card/60 border border-border/30"
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-72 rounded-xl bg-card/60 border border-border/30"
+              className="h-28 rounded-xl bg-card/40 border border-border/20 animate-pulse"
             />
           ))}
         </div>
@@ -741,13 +742,13 @@ export function AdminDashboard() {
 
           <div className="p-6 overflow-y-auto h-[calc(100vh-130px)] space-y-3">
             {loadingDatasets ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-20 rounded-lg bg-card/60 border border-border/30 animate-pulse"
-                  />
-                ))}
+              <div className="py-16 flex items-center justify-center">
+                <LoadingBackdrop
+                  variant="inline"
+                  label="Loading user private datasets..."
+                  color="cyan"
+                  size="sm"
+                />
               </div>
             ) : userDatasets.length === 0 ? (
               <div className="text-xs text-muted-foreground text-center py-16">

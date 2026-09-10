@@ -259,6 +259,10 @@ export function WhatsAppPanel({
           data.status === "stopped"
         ) {
           setIsCampaignRunning(false);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("active_campaign_running");
+            window.dispatchEvent(new CustomEvent("campaign_stopped"));
+          }
           if (data.status === "done")
             toast.success("WhatsApp campaign finished successfully!");
           else if (data.status === "stopped")
@@ -279,6 +283,10 @@ export function WhatsAppPanel({
       await marketingApi.stopCampaign(activeCampaignId);
       toast.success("WhatsApp campaign stopped immediately.");
       setIsCampaignRunning(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("active_campaign_running");
+        window.dispatchEvent(new CustomEvent("campaign_stopped"));
+      }
       setLiveCampaignDetails((prev) =>
         prev
           ? {
@@ -322,6 +330,8 @@ export function WhatsAppPanel({
       setIsCampaignRunning(true);
       if (typeof window !== "undefined") {
         sessionStorage.setItem("active_wa_campaign_id", cid);
+        sessionStorage.setItem("active_campaign_running", "true");
+        window.dispatchEvent(new CustomEvent("campaign_started"));
       }
       setLiveCampaignDetails({
         sent: 0,

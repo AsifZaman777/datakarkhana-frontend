@@ -22,6 +22,7 @@ import { paymentsApi } from "@/lib/api/payments";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
 import type { PaymentPackage } from "@/lib/types";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 
 export function PackageSettings() {
   const [loading, setLoading] = useState(true);
@@ -134,16 +135,7 @@ export function PackageSettings() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-4 animate-pulse">
-        <div className="h-12 bg-card/60 rounded-xl border border-border/30" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-96 bg-card/60 rounded-xl border border-border/30" />
-          ))}
-        </div>
-      </div>
-    );
+    return <LoadingBackdrop variant="inline" label="Loading package configuration..." color="amber" size="md" className="py-24" />;
   }
 
   return (

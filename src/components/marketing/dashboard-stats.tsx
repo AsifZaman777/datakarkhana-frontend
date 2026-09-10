@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmModal } from "@/components/ui/modal-confirm";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import { marketingApi } from "@/lib/api/marketing";
 import { toast } from "sonner";
 import type { DashboardStats as StatsType } from "@/lib/types";
@@ -102,6 +103,29 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
       setTargetStopCampaignId(null);
     }
   };
+
+  if (!stats) {
+    return (
+      <div className="space-y-6">
+        <div className="min-h-[360px] rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 shadow-xl">
+          <LoadingBackdrop
+            variant="inline"
+            label="Loading marketing campaign metrics & activity..."
+            color="cyan"
+            size="md"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 opacity-30">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-xl bg-card/40 border border-border/20 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const cards = [
     {

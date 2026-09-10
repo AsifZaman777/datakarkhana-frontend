@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Send, Phone, MapPin, ExternalLink, Loader2 } from "lucide-react";
+import { Search, Download, Send, Phone, MapPin, ExternalLink } from "lucide-react";
 import { scraperApi, type ScrapedDataItem } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 
 interface ScrapedDataModalProps {
   jobId: number | null;
@@ -105,10 +106,7 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
         {/* Data Table */}
         <div className="flex-1 overflow-y-auto border border-border/40 rounded-lg bg-black/40">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-              <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-              <span className="text-xs">Loading scraped dataset records...</span>
-            </div>
+            <LoadingBackdrop variant="inline" label="Loading scraped dataset records..." color="cyan" size="sm" />
           ) : filteredData.length > 0 ? (
             <Table>
               <TableHeader className="bg-muted/30 sticky top-0 backdrop-blur">

@@ -37,20 +37,60 @@ export function LiveCampaignTracker() {
       const res = await marketingApi.activeCampaigns();
       const camps = res.data.active_campaigns || [];
       setActiveCampaigns(camps);
+      if (camps.length === 0 && typeof window !== "undefined") {
+        sessionStorage.removeItem("active_campaign_running");
+      }
+      return camps;
     } catch {
       // Ignore network hiccup during background polling
+      return [];
     }
   }, []);
 
+  // Check once on mount or page navigation ONLY IF visiting /marketing or session had an active campaign
   useEffect(() => {
-    fetchActive();
+    const isMarketing = pathname?.startsWith("/marketing");
+    const hasActiveFlag =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("active_campaign_running") === "true";
 
-    // Dynamically adjust polling frequency: 2.5s if campaigns active, 8s if idle
-    const intervalTime = activeCampaigns.length > 0 ? 2500 : 8000;
-    pollTimerRef.current = setInterval(fetchActive, intervalTime);
+    if (isMarketing || hasActiveFlag) {
+      fetchActive();
+    }
+  }, [pathname, fetchActive]);
+
+  // Listen to custom window events triggered when campaigns start or stop
+  useEffect(() => {
+    const handleCampaignEvent = () => {
+      fetchActive();
+    };
+
+    window.addEventListener("campaign_started", handleCampaignEvent);
+    window.addEventListener("campaign_stopped", handleCampaignEvent);
 
     return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      window.removeEventListener("campaign_started", handleCampaignEvent);
+      window.removeEventListener("campaign_stopped", handleCampaignEvent);
+    };
+  }, [fetchActive]);
+
+  // ONLY poll when active campaigns are running; NEVER poll when idle
+  useEffect(() => {
+    if (activeCampaigns.length === 0) {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+      return;
+    }
+
+    pollTimerRef.current = setInterval(fetchActive, 2500);
+
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
     };
   }, [fetchActive, activeCampaigns.length]);
 

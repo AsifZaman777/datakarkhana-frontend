@@ -172,6 +172,10 @@ export function EmailBuilder({
       await marketingApi.stopCampaign(activeCampaignId);
       toast.info(`Stop request sent for email campaign ${activeCampaignId}`);
       setIsCampaignRunning(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("active_campaign_running");
+        window.dispatchEvent(new CustomEvent("campaign_stopped"));
+      }
     } catch {
       toast.error("Failed to stop email campaign.");
     }
@@ -210,6 +214,10 @@ export function EmailBuilder({
       const cid = String(res.data.campaign_id || `email_camp_${Date.now()}`);
       setActiveCampaignId(cid);
       setIsCampaignRunning(true);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("active_campaign_running", "true");
+        window.dispatchEvent(new CustomEvent("campaign_started"));
+      }
       toast.success(res.data.message || "Email campaign dispatched!");
       loadBrevoStatus();
     } catch (err: any) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink, Mail, Loader2 } from "lucide-react";
+import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 import { marketingApi } from "@/lib/api/marketing";
 import { toast } from "sonner";
 import type { BrevoApplication } from "@/lib/types";
+import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 
 export function BrevoApplicationsList() {
   const [applications, setApplications] = useState<BrevoApplication[]>([]);
@@ -138,10 +139,7 @@ export function BrevoApplicationsList() {
 
         {/* Loading state */}
         {loading && (
-          <div className="flex items-center justify-center py-12 gap-2 text-xs text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
-            Loading applications...
-          </div>
+          <LoadingBackdrop variant="inline" label="Loading Brevo applications..." color="purple" size="md" />
         )}
 
         {/* Applications List */}

@@ -116,8 +116,10 @@ export const adminApi = {
     ),
 
   // ── Admin Dashboard Overview ──
-  getDashboardOverview: () =>
-    apiClient.get<DashboardOverview>("/api/admin/dashboard-overview"),
+  getDashboardOverview: (refresh = false) =>
+    apiClient.get<DashboardOverview>(
+      `/api/admin/dashboard-overview${refresh ? "?refresh=true" : ""}`
+    ),
 
   getUserPrivateDatasets: (userId: number) =>
     apiClient.get<UserPrivateDatasetsResponse>(
