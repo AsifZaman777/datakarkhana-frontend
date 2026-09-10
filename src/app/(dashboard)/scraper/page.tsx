@@ -12,12 +12,10 @@ import { JobHistory } from "@/components/scraper/job-history";
 import { configApi } from "@/lib/api/config";
 import { scraperApi } from "@/lib/api/scraper";
 import { requestsApi } from "@/lib/api/requests";
-import { useAuth } from "@/providers/auth-provider";
 import { toast } from "sonner";
 import type { RegionsConfig, DatasetRequest, ScraperJob } from "@/lib/types";
 
 export default function ScraperPage() {
-  const { isAdmin } = useAuth();
   const [regionsConfig, setRegionsConfig] = useState<RegionsConfig | null>(null);
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
   const [isJobRunning, setIsJobRunning] = useState(false);
@@ -26,8 +24,6 @@ export default function ScraperPage() {
 
   const [myRequests, setMyRequests] = useState<DatasetRequest[]>([]);
   const [recentJobs, setRecentJobs] = useState<ScraperJob[]>([]);
-
-  const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const refreshJobs = useCallback(() => {
     scraperApi
@@ -197,7 +193,7 @@ export default function ScraperPage() {
 
                     {req.additional_notes && (
                       <div className="text-xs text-muted-foreground italic pt-1 border-t border-border/40">
-                        Notes: "{req.additional_notes}"
+                        Notes: &quot;{req.additional_notes}&quot;
                       </div>
                     )}
                   </Card>

@@ -12,8 +12,6 @@ import {
   Copy,
   Check,
   MapPin,
-  Globe,
-  ShieldCheck,
   Activity,
   Columns,
   Rows,
@@ -131,6 +129,11 @@ export function ScraperTerminal({
     onJobFinishedRef.current = onJobFinished;
   }, [onJobFinished]);
 
+  const discoveredCountRef = useRef(discoveredCount);
+  useEffect(() => {
+    discoveredCountRef.current = discoveredCount;
+  }, [discoveredCount]);
+
   // Track closed / finished job IDs so we NEVER reopen or loop connections for them
   const finishedJobIdsRef = useRef<Set<number>>(new Set());
 
@@ -229,7 +232,7 @@ export function ScraperTerminal({
         setStreamStatus("ended");
         wsRef.current = null;
         if (jobEndedRef.current && onJobFinishedRef.current) {
-          onJobFinishedRef.current("done", discoveredCount);
+          onJobFinishedRef.current("done", discoveredCountRef.current);
         }
       };
     };
@@ -242,15 +245,6 @@ export function ScraperTerminal({
     };
   }, [activeJobId, isJobRunning, closeWebSocket]);
 
-  // Derived active query from latest logs or fallback
-  const activeQueryUrl = useMemo(() => {
-    const navLog = displayLogs.find((l) => l.includes("google.com/maps/search/"));
-    if (navLog) {
-      const match = navLog.match(/(https:\/\/www\.google\.com\/maps\/search\/[^\s]+)/);
-      if (match) return match[1];
-    }
-    return activeJobId ? `https://www.google.com/maps/search/?job=${activeJobId}` : "https://www.google.com/maps";
-  }, [displayLogs, activeJobId]);
 
   return (
     <Card className="glass-panel border-cyan-500/40 shadow-2xl overflow-hidden bg-black/95">
@@ -350,23 +344,6 @@ export function ScraperTerminal({
           </div>
         </div>
 
-        {/* ── Chrome DevTools URL Address Bar ── */}
-        <div className="bg-zinc-900 border-b border-zinc-800/80 px-4 py-1.5 flex items-center gap-2 font-mono text-[11px] text-zinc-400">
-          <div className="flex items-center gap-1.5 text-emerald-400 shrink-0">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold text-zinc-300 uppercase">Automated Viewport</span>
-          </div>
-          <div className="flex-1 flex items-center gap-1.5 px-3 py-1 rounded bg-black/80 border border-zinc-800 text-zinc-300 truncate">
-            <Globe className="h-3 w-3 text-cyan-400 shrink-0" />
-            <span className="truncate text-[11px] select-all">{activeQueryUrl}</span>
-          </div>
-          {streamStatus === "live" && (
-            <div className="flex items-center gap-1 text-[10px] text-cyan-400 shrink-0 font-bold animate-pulse">
-              <Radio className="h-3 w-3" />
-              DRIVER STREAMING
-            </div>
-          )}
-        </div>
 
         {/* ── Unified Debugger Body (Live Google Map + Realtime Log Terminal) ── */}
         <div

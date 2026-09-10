@@ -44,16 +44,7 @@ export default function MarketingPage() {
       .catch(() => { });
   }, []);
 
-  useEffect(() => {
-    loadStats();
-    loadRecipientGroups();
-    if (groupParam) {
-      loadContactsForGroup(groupParam);
-    }
-  }, [loadStats, loadRecipientGroups, groupParam]);
-
-  // Load Contacts when active group changes
-  const loadContactsForGroup = async (groupVal: string) => {
+  const loadContactsForGroup = useCallback(async (groupVal: string) => {
     setActiveGroupVal(groupVal);
     if (!groupVal) {
       setGroupContacts([]);
@@ -70,7 +61,15 @@ export default function MarketingPage() {
       setGroupContacts([]);
       setSelectedContactIds(new Set());
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+    loadRecipientGroups();
+    if (groupParam) {
+      loadContactsForGroup(groupParam);
+    }
+  }, [loadStats, loadRecipientGroups, groupParam, loadContactsForGroup]);
 
   return (
     <div className="space-y-6">

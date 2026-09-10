@@ -116,7 +116,6 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
                   <TableHead className="text-xs font-bold text-foreground">Category</TableHead>
                   <TableHead className="text-xs font-bold text-foreground">Rating</TableHead>
                   <TableHead className="text-xs font-bold text-foreground">Address</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground text-right">Links</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -142,20 +141,6 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
                           <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/60" />
                           <span className="truncate">{row.Address}</span>
                         </span>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {row["Maps URL"] ? (
-                        <a
-                          href={row["Maps URL"]}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-cyan-400 hover:underline"
-                        >
-                          Maps <ExternalLink className="h-3 w-3" />
-                        </a>
                       ) : (
                         "-"
                       )}
