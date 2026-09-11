@@ -385,3 +385,19 @@ export interface UserPrivateDatasetsResponse {
   };
   datasets: UserPrivateDataset[];
 }
+
+declare global {
+  interface Window {
+    electronAPI?: {
+      isElectron: boolean;
+      platform: string;
+      getAppVersion: () => Promise<string>;
+      getLicenseStatus: () => Promise<any>;
+      activateLicense: (key: string) => Promise<any>;
+      getBackendStatus: () => Promise<any>;
+      restartBackend: () => Promise<any>;
+      quitApp: () => void;
+    };
+  }
+}
+

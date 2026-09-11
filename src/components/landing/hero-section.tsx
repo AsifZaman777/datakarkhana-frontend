@@ -58,18 +58,11 @@ export function HeroSection() {
                 </Button>
               </Link>
 
-              {user ? (
+              {user && (
                 <Link href="/scraper">
                   <Button size="lg" variant="outline" className="gap-2 font-semibold px-6 border-border/60">
                     <Search className="h-5 w-5" />
                     {t.hero.btnScraper}
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/auth">
-                  <Button size="lg" variant="outline" className="gap-2 font-semibold px-6 border-border/60">
-                    <User className="h-5 w-5" />
-                    {t.hero.btnStart}
                   </Button>
                 </Link>
               )}

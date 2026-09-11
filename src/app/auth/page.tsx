@@ -9,16 +9,26 @@ import { LoginForm } from "@/components/auth/login-form";
 import { RegisterForm } from "@/components/auth/register-form";
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { authApi } from "@/lib/api/auth";
+import { useAuth } from "@/providers/auth-provider";
+import { useIsDesktop } from "@/lib/desktop";
 import { toast } from "sonner";
 
 function AuthContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, isLoading, isAdmin } = useAuth();
   const [view, setView] = useState<"login" | "register" | "otp">("login");
   const [otpEmail, setOtpEmail] = useState("");
   const [initialOtp, setInitialOtp] = useState("");
   const [verificationNotice, setVerificationNotice] = useState("");
   const verifiedRef = useRef(false);
+
+  // If user is already authenticated, redirect immediately to dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace(isAdmin ? "/admin" : "/catalog");
+    }
+  }, [user, isLoading, isAdmin, router]);
 
   // Handle URL verification query params
   useEffect(() => {
@@ -142,13 +152,22 @@ function AuthContent() {
 }
 
 export default function AuthPage() {
+  const isDesktop = useIsDesktop();
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <TopNavbar />
       <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading...</div>}>
         <AuthContent />
       </Suspense>
-      <Footer />
+      {!isDesktop ? (
+        <Footer />
+      ) : (
+        <footer className="py-4 border-t border-border/20 text-center text-xs text-muted-foreground/60">
+          DataKarkhana Desktop © {new Date().getFullYear()} • Local Automation & Lead Generation Engine
+        </footer>
+      )}
     </div>
   );
 }
+

@@ -109,9 +109,15 @@ export function PricingSection({ onSelectPackage }: PricingSectionProps) {
                     variant={isPopular ? "default" : "outline"}
                   >
                     {!onSelectPackage ? (
-                      <Link href={user ? "/upgrade" : "/auth"} className="w-full text-center">
-                        {user ? `Upgrade to ${pkg.name}` : `Get Started`}
-                      </Link>
+                      user ? (
+                        <Link href="/upgrade" className="w-full text-center">
+                          Upgrade to {pkg.name}
+                        </Link>
+                      ) : (
+                        <a href="#download" className="w-full text-center">
+                          Download App to Start
+                        </a>
+                      )
                     ) : (
                       <span>Select {pkg.name}</span>
                     )}
