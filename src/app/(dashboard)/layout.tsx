@@ -8,6 +8,9 @@ import { useAuth } from "@/providers/auth-provider";
 import { PaymentWizardModal } from "@/components/payment/payment-wizard-modal";
 import { LiveCampaignTracker } from "@/components/marketing/live-campaign-tracker";
 import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
+import { LicenseBadge } from "@/components/LicenseBadge";
+import { LicenseModal } from "@/components/LicenseModal";
+import { licenseApi } from "@/lib/api/license";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +21,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isLoading, isAdmin } = useAuth();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -32,6 +36,17 @@ export default function DashboardLayout({
     }
   }, [isLoading, user, pathname, isAdmin, router]);
 
+  // Automatically prompt license activation modal if customer is unlicensed or expired
+  useEffect(() => {
+    if (!isLoading && user && !isAdmin) {
+      licenseApi.getStatus().then((res) => {
+        if (!res.data?.valid) {
+          setLicenseModalOpen(true);
+        }
+      }).catch(() => {});
+    }
+  }, [isLoading, user, isAdmin]);
+
   if (isLoading || !user) {
     return <LoadingBackdrop variant="backdrop" label="Authenticating session..." color="cyan" size="md" />;
   }
@@ -43,6 +58,17 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-6 pt-16 lg:pt-6 lg:p-10 space-y-6 min-w-0">
+        {/* Top Desktop Bar with Status & License Badge */}
+        <div className="flex items-center justify-between pb-3 border-b border-border/30">
+          <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-medium">Local Automation Engine</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
+          </div>
+        </div>
+
         {/* Admin Warning Banner for Logged-In User */}
         {user.warning_message && (
           <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 shadow-lg">
@@ -61,6 +87,16 @@ export default function DashboardLayout({
       <PaymentWizardModal
         open={paymentModalOpen}
         onClose={() => setPaymentModalOpen(false)}
+      />
+
+      {/* Desktop License & Renewal Modal */}
+      <LicenseModal
+        isOpen={licenseModalOpen}
+        onClose={() => setLicenseModalOpen(false)}
+        onOpenPaymentModal={() => {
+          setLicenseModalOpen(false);
+          setPaymentModalOpen(true);
+        }}
       />
 
       {/* Persistent Live Campaign Background Tracker */}

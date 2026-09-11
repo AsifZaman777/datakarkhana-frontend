@@ -16,6 +16,10 @@ export const authApi = {
       `/api/auth/verify-email?token=${encodeURIComponent(token)}`
     ),
 
+  verifyOtp: (data: { email: string; otp: string }) =>
+    apiClient.post<AuthResponse>("/api/auth/verify-otp", data),
+
   resendVerification: (email: string) =>
     apiClient.post<{ message: string }>("/api/auth/resend-verification", { email }),
 };
+

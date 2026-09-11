@@ -10,11 +10,12 @@ import { useLanguage } from "@/providers/language-provider";
 import { authApi } from "@/lib/api/auth";
 
 interface RegisterFormProps {
-  onSuccess: (notice: string) => void;
+  onSuccess: (email: string, notice: string) => void;
   onToggleView: () => void;
+  onVerifyOtp?: () => void;
 }
 
-export function RegisterForm({ onSuccess, onToggleView }: RegisterFormProps) {
+export function RegisterForm({ onSuccess, onToggleView, onVerifyOtp }: RegisterFormProps) {
   const { t } = useLanguage();
   const at = (t as any).auth || {};
 
@@ -92,9 +93,9 @@ export function RegisterForm({ onSuccess, onToggleView }: RegisterFormProps) {
         email: trimmedEmail,
         password,
       });
-      const msg = res.data.message || "Account created! Check email for activation link.";
+      const msg = res.data.message || "Account created! Please enter the 6-digit verification code.";
       toast.success(msg);
-      onSuccess(msg);
+      onSuccess(trimmedEmail, msg);
     } catch (err: any) {
       let msg = "Registration failed. Try another email.";
       const detail = err.response?.data?.detail;
@@ -296,16 +297,30 @@ export function RegisterForm({ onSuccess, onToggleView }: RegisterFormProps) {
         </Button>
       </form>
 
-      {/* Switch to Sign In */}
-      <div className="text-center text-xs text-muted-foreground pt-2">
-        {at.alreadyRegistered || "Already registered?"}{" "}
-        <button
-          type="button"
-          onClick={onToggleView}
-          className="text-emerald-400 font-semibold hover:underline focus:outline-none"
-        >
-          {at.signInHere || "Sign In Here"}
-        </button>
+      {/* Switch to Sign In or OTP */}
+      <div className="text-center text-xs text-muted-foreground pt-2 space-y-1.5 border-t border-border/40">
+        <div>
+          {at.alreadyRegistered || "Already registered?"}{" "}
+          <button
+            type="button"
+            onClick={onToggleView}
+            className="text-emerald-400 font-semibold hover:underline focus:outline-none"
+          >
+            {at.signInHere || "Sign In Here"}
+          </button>
+        </div>
+        {onVerifyOtp && (
+          <div>
+            <span className="text-muted-foreground">Already have a 6-digit code? </span>
+            <button
+              type="button"
+              onClick={onVerifyOtp}
+              className="text-primary font-semibold hover:underline focus:outline-none"
+            >
+              Enter OTP Code →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

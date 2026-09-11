@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building } from "lucide-react";
+import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building, Key } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { DatasetUploadForm } from "@/components/admin/dataset-upload-form";
@@ -9,6 +9,7 @@ import { PromotionRequests } from "@/components/admin/promotion-requests";
 import { PaymentVerification } from "@/components/admin/payment-verification";
 import { GatewaySettings } from "@/components/admin/gateway-settings";
 import { BrevoApplicationsList } from "@/components/admin/brevo-applications";
+import { LicenseManagement } from "@/components/admin/license-management";
 import { adminApi } from "@/lib/api/admin";
 import { configApi } from "@/lib/api/config";
 import { useLanguage } from "@/providers/language-provider";
@@ -94,6 +95,9 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
           <TabsTrigger value="payments" className="gap-2 text-xs font-semibold">
             <Coins className="h-4 w-4 text-amber-500" /> {at.tabPayments || "Payment Verification"} ({pendingPayments})
           </TabsTrigger>
+          <TabsTrigger value="licenses" className="gap-2 text-xs font-semibold">
+            <Key className="h-4 w-4 text-primary" /> Desktop Licenses
+          </TabsTrigger>
           <TabsTrigger value="requests" className="gap-2 text-xs font-semibold">
             <Inbox className="h-4 w-4 text-emerald-400" /> {at.tabRequests || "Dataset Requests"} ({pendingRequests})
           </TabsTrigger>
@@ -134,7 +138,12 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
           <PaymentVerification requests={payments} onRefresh={loadData} />
         </TabsContent>
 
-        {/* TAB 4: BREVO VERIFICATIONS */}
+        {/* TAB 4: LICENSES */}
+        <TabsContent value="licenses" className="pt-4">
+          <LicenseManagement />
+        </TabsContent>
+
+        {/* TAB 5: BREVO VERIFICATIONS */}
         <TabsContent value="brevo" className="pt-4">
           <BrevoApplicationsList />
         </TabsContent>

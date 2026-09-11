@@ -227,7 +227,43 @@ export interface PaymentRequest {
   transaction_id: string;
   status: "pending" | "approved" | "rejected";
   rejection_reason?: string;
+  production_key?: string;
+  license_expiry?: string;
   created_at: string;
+}
+
+export interface LicenseRecord {
+  id: number;
+  user_id?: number;
+  user_email_ref?: string;
+  customer_name: string;
+  customer_email?: string;
+  production_key: string;
+  license_token: string;
+  plan_tier: string;
+  credits_amount: number;
+  is_redeemed: boolean;
+  status: "active" | "expired" | "revoked";
+  expires_at: string;
+  days_remaining: number;
+  is_expired: boolean;
+  created_at: string;
+}
+
+export interface LicenseStatus {
+  valid: boolean;
+  is_expired: boolean;
+  status: "active" | "expired" | "unlicensed" | "signature_mismatch" | "clock_rollback_detected";
+  production_key?: string | null;
+  license_token?: string;
+  customer_name?: string | null;
+  customer_email?: string;
+  plan_tier?: string;
+  credits_amount?: number;
+  is_redeemed?: boolean;
+  expires_at?: string | null;
+  days_remaining: number;
+  message: string;
 }
 
 // ── Admin ──

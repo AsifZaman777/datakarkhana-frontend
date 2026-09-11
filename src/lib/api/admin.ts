@@ -7,6 +7,7 @@ import type {
   DatasetRequest,
   DashboardOverview,
   UserPrivateDatasetsResponse,
+  LicenseRecord,
 } from "@/lib/types";
 
 export const adminApi = {
@@ -67,10 +68,23 @@ export const adminApi = {
   listPaymentRequests: () =>
     apiClient.get<PaymentRequest[]>("/api/admin/payment-requests"),
 
-  approvePayment: (requestId: number) =>
-    apiClient.post<{ message: string }>(
-      `/api/admin/payment-requests/${requestId}/approve`
-    ),
+  approvePayment: (
+    requestId: number,
+    payload?: { expiry_days?: number; expires_at?: string; custom_key?: string }
+  ) =>
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      credits_pending?: number;
+      email_sent?: boolean;
+      license?: {
+        production_key: string;
+        license_token: string;
+        customer_name: string;
+        expires_at: string;
+        days_remaining: number;
+      };
+    }>(`/api/admin/payment-requests/${requestId}/approve`, payload || {}),
 
   rejectPayment: (requestId: number, reason: string) => {
     const formData = new FormData();
@@ -81,6 +95,35 @@ export const adminApi = {
       { headers: { "Content-Type": "multipart/form-data" } }
     );
   },
+
+  // ── Desktop Production Licenses ──
+  listLicenses: () => apiClient.get<LicenseRecord[]>("/api/admin/licenses"),
+
+  generateLicense: (data: {
+    customer_name: string;
+    customer_email?: string;
+    expiry_days?: number;
+    expires_at?: string;
+    custom_key?: string;
+    plan_tier?: string;
+    credits_amount?: number;
+  }) =>
+    apiClient.post<{
+      success: boolean;
+      license: LicenseRecord;
+    }>("/api/admin/licenses/generate", data),
+
+  extendLicense: (licenseId: number, additional_days: number) =>
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      license: LicenseRecord;
+    }>(`/api/admin/licenses/${licenseId}/extend`, { additional_days }),
+
+  revokeLicense: (licenseId: number) =>
+    apiClient.post<{ success: boolean; message: string }>(
+      `/api/admin/licenses/${licenseId}/revoke`
+    ),
 
   // ── Payment Gateway Settings ──
   savePaymentSettings: (formData: FormData) =>
