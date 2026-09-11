@@ -20,8 +20,13 @@ export function DownloadSection() {
     }
   }, []);
 
-  const windowsDownloadUrl = `${apiBase}/api/download/desktop?os=windows`;
-  const macDownloadUrl = `${apiBase}/api/download/desktop?os=mac`;
+  const windowsDownloadUrl =
+    process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
+    `${apiBase}/api/download/desktop?os=windows`;
+
+  const macDownloadUrl =
+    process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
+    `${apiBase}/api/download/desktop?os=mac`;
 
   return (
     <section id="download" className="relative py-20 lg:py-28 overflow-hidden bg-background border-t border-border/40">
