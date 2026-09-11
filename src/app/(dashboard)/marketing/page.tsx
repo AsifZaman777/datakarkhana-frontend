@@ -82,20 +82,20 @@ export default function MarketingPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-card/60 border border-border/40 p-1 flex-wrap h-auto">
-          <TabsTrigger value="dashboard" className="gap-2 text-xs font-semibold">
+        <TabsList className="bg-card/60 border border-border/40 p-1 flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap">
+          <TabsTrigger value="dashboard" className="gap-2 text-xs font-semibold shrink-0">
             <BarChart3 className="h-4 w-4 text-cyan-400" /> Dashboard Overview
           </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="gap-2 text-xs font-semibold">
+          <TabsTrigger value="whatsapp" className="gap-2 text-xs font-semibold shrink-0">
             <Send className="h-4 w-4 text-emerald-400" /> WhatsApp Campaign
           </TabsTrigger>
-          <TabsTrigger value="email" className="gap-2 text-xs font-semibold">
+          <TabsTrigger value="email" className="gap-2 text-xs font-semibold shrink-0">
             <Mail className="h-4 w-4 text-purple-400" /> Email Campaign
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2 text-xs font-semibold">
+          <TabsTrigger value="history" className="gap-2 text-xs font-semibold shrink-0">
             <History className="h-4 w-4 text-amber-500" /> Campaign History
           </TabsTrigger>
-          <TabsTrigger value="logs" className="gap-2 text-xs font-semibold">
+          <TabsTrigger value="logs" className="gap-2 text-xs font-semibold shrink-0">
             <FileText className="h-4 w-4 text-muted-foreground" /> Daily System Logs
           </TabsTrigger>
         </TabsList>
