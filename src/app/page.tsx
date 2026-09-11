@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { TopNavbar } from "@/components/layout/top-navbar";
 import { Footer } from "@/components/layout/footer";
 import { HeroSection } from "@/components/landing/hero-section";
+import { DownloadSection } from "@/components/landing/download-section";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { PricingSection } from "@/components/landing/pricing-section";
 import { ContactSection } from "@/components/landing/contact-section";
@@ -36,6 +37,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <HeroSection />
+        <DownloadSection />
         <FeaturesSection />
         <PricingSection />
         <ContactSection />

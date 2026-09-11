@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Zap, Database, Search, User, Coins, CheckCircle2 } from "lucide-react";
+import { Zap, Database, Search, User, Coins, CheckCircle2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -43,9 +43,16 @@ export function HeroSection() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
+              <a href="#download">
+                <Button size="lg" className="gap-2 font-bold px-6 bg-gradient-to-r from-cyan-500 via-primary to-blue-600 hover:opacity-95 text-white shadow-lg shadow-cyan-500/20">
+                  <Download className="h-5 w-5" />
+                  Download App (PC / Mac)
+                </Button>
+              </a>
+
               <Link href="/catalog">
-                <Button size="lg" className="gap-2 font-bold px-6 shadow-lg shadow-primary/20">
+                <Button size="lg" variant="outline" className="gap-2 font-bold px-6 border-border/60">
                   <Database className="h-5 w-5" />
                   {t.hero.btnDatasets}
                 </Button>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Database, User } from "lucide-react";
+import { BarChart3, Database, User, Laptop } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LanguageToggle } from "@/components/layout/language-toggle";
@@ -15,6 +15,7 @@ export function TopNavbar() {
 
   const navItems = [
     { label: t.nav.home, href: "/", section: "" },
+    { label: "Download", href: "/#download", section: "download", icon: Laptop },
     { label: t.nav.datasets, href: "/catalog", section: "catalog", icon: Database },
     { label: t.nav.features, href: "/#features", section: "features" },
     { label: t.nav.pricing, href: "/#pricing", section: "pricing" },
