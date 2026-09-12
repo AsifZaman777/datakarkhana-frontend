@@ -1,6 +1,6 @@
 // ─── App-wide Constants ───
 
-export const APP_NAME = "MARKETING OSTAD";
+export const APP_NAME = "Datakarkhana";
 export const APP_VERSION = "2.0";
 
 export function getApiBase(): string {
