@@ -30,6 +30,9 @@ export function getApiBase(): string {
 
   // 3. Automatic detection when mode is not set
   if (typeof window !== "undefined") {
+    if (Boolean((window as any).electronAPI?.isElectron || navigator?.userAgent?.includes("Electron"))) {
+      return localUrl;
+    }
     const currentHost = window.location.hostname || "127.0.0.1";
     if (currentHost === "localhost" || currentHost === "127.0.0.1") {
       return localUrl;
