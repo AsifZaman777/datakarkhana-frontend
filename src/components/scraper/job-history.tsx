@@ -80,15 +80,8 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
     }
   };
 
-  const handleViewData = async (jobId: number, queryName: string) => {
-    try {
-      toast.info("Adding scraped dataset to Private Catalogue...");
-      await scraperApi.requestPromote(jobId, queryName, "Scraped Leads");
-      toast.success("Added to Private Catalogue! Redirecting...");
-      router.push(`/catalog?tab=private&job=${jobId}`);
-    } catch {
-      router.push(`/catalog?tab=private&job=${jobId}`);
-    }
+  const handleViewData = (jobId: number) => {
+    router.push(`/catalog?tab=private&job=${jobId}`);
   };
 
   const handleUseInCampaign = (jobId: number) => {
@@ -255,7 +248,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                             variant="outline"
                             size="sm"
                             disabled={!isDone || itemCount === 0}
-                            onClick={() => handleViewData(job.id, job.query)}
+                            onClick={() => handleViewData(job.id)}
                             className="h-7 px-2 text-[11px] gap-1 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
                             title="View collected dataset in private catalogue"
                           >

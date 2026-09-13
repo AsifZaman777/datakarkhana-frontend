@@ -117,7 +117,7 @@ export default function CatalogPage() {
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [pageSize, setPageSize] = useState(25);
 
-  const handleOpenDetails = async (
+  const handleOpenDetails = useCallback(async (
     id: string | number,
     page = 1,
     limit = pageSize,
@@ -131,7 +131,15 @@ export default function CatalogPage() {
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to load dataset details."));
     }
-  };
+  }, [pageSize, activeSearchQuery]);
+
+  const jobParam = searchParams.get("job");
+  useEffect(() => {
+    if (jobParam) {
+      setCatalogTab("private");
+      handleOpenDetails(`job_${jobParam}`);
+    }
+  }, [jobParam, handleOpenDetails]);
 
   // Unlock dataset
   const handleUnlock = async () => {
@@ -181,6 +189,7 @@ export default function CatalogPage() {
       const res = await scraperApi.requestPromote(promoteTarget.id, proposedName, "General Business");
       toast.success(res.data.message || "Promotion requested!");
       loadPrivateDatasets();
+      loadPublicDatasets();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Promotion failed."));
     } finally {
