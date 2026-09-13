@@ -48,6 +48,7 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { APP_NAME } from "@/lib/constants";
+import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -368,6 +369,10 @@ function SidebarInner({
                 <Globe className="h-3.5 w-3.5" />
                 {lang === "en" ? "🇧🇩 বাংলা ভাষা" : "🇺🇸 English"}
               </Button>
+
+              <div className="pt-0.5 pb-1">
+                <ConnectionStatusDots className="w-full justify-between text-[10px] py-1 px-2.5" />
+              </div>
 
               <div
                 className="text-xs text-muted-foreground truncate px-1"
