@@ -59,7 +59,7 @@ export function ConnectionStatusDots({
               className
             )}
           >
-            {/* Dot 1: Backend Server */}
+            {/* Dot 1: Local Automation Engine */}
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
                 {backendOnline && (
@@ -74,14 +74,14 @@ export function ConnectionStatusDots({
               </span>
               {showLabels && (
                 <span className="font-semibold tracking-tight text-[11px]">
-                  {compact ? "API" : "Server"}
+                  {compact ? "Local" : "Engine"}
                 </span>
               )}
             </div>
 
             <span className="text-muted-foreground/40 text-[10px]">•</span>
 
-            {/* Dot 2: Database */}
+            {/* Dot 2: Cloud Control Plane */}
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
                 {dbOnline && (
@@ -96,7 +96,7 @@ export function ConnectionStatusDots({
               </span>
               {showLabels && (
                 <span className="font-semibold tracking-tight text-[11px]">
-                  {compact ? "DB" : "Database"}
+                  {compact ? "Cloud" : "Cloud"}
                 </span>
               )}
             </div>
@@ -114,11 +114,11 @@ export function ConnectionStatusDots({
         <TooltipContent
           side="bottom"
           align="end"
-          className="p-3 w-64 bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-xl text-xs space-y-2.5 z-50 text-foreground"
+          className="p-3 w-72 bg-card/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-xl text-xs space-y-2.5 z-50 text-foreground"
         >
           <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
             <span className="font-bold text-foreground flex items-center gap-1.5">
-              {isDesktop ? "Desktop System Diagnostics" : "Cloud Diagnostics"}
+              {isDesktop ? "Dual-Layer System Diagnostics" : "Cloud & Local Diagnostics"}
             </span>
             <button
               type="button"
@@ -130,38 +130,38 @@ export function ConnectionStatusDots({
             </button>
           </div>
 
-          {/* Backend Row */}
+          {/* Local Engine Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Server className="h-3.5 w-3.5 text-sky-400" />
-              <span>Backend API</span>
+              <span>Local Engine</span>
             </div>
             <div className="flex items-center gap-1 font-medium">
               {backendOnline ? (
                 <span className="text-emerald-400 flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
-                  <span>Online {latencyMs ? `(${latencyMs}ms)` : ""}</span>
+                  <span>Ready {latencyMs ? `(${latencyMs}ms)` : ""}</span>
                 </span>
               ) : (
                 <span className="text-rose-400 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  <span>Disconnected (Port 8000)</span>
+                  <span>Offline (Port 8000)</span>
                 </span>
               )}
             </div>
           </div>
 
-          {/* Database Row */}
+          {/* Cloud Control Plane Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Database className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Cloud PostgreSQL</span>
+              <span>Cloud / Supabase</span>
             </div>
             <div className="flex items-center gap-1 font-medium">
               {dbOnline ? (
                 <span className="text-emerald-400 flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
-                  <span>Supabase Ready</span>
+                  <span>Connected</span>
                 </span>
               ) : (
                 <span className="text-rose-400 flex items-center gap-1">
@@ -173,8 +173,9 @@ export function ConnectionStatusDots({
           </div>
 
           {/* Target Host Info */}
-          <div className="pt-1.5 border-t border-border/40 text-[10px] text-muted-foreground/70 truncate">
-            Target: <code className="text-primary/90 font-mono">{apiEndpoint}</code>
+          <div className="pt-1.5 border-t border-border/40 text-[10px] text-muted-foreground/70 space-y-0.5">
+            <div className="truncate">Local: <code className="text-primary/90 font-mono">{apiEndpoint}</code></div>
+            <div className="truncate">Cloud: <code className="text-cyan-400/90 font-mono">datakarkhana-backend.onrender.com</code></div>
           </div>
 
           {errorMessage && (

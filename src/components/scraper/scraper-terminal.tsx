@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getWsBase, TOKEN_KEY } from "@/lib/constants";
+import { getLocalWsBase, TOKEN_KEY } from "@/lib/constants";
 import { scraperApi } from "@/lib/api/scraper";
 import { toast } from "sonner";
 
@@ -159,7 +159,7 @@ export function ScraperTerminal({
       closeWebSocket();
       setStreamStatus("connecting");
 
-      const wsUrl = `${getWsBase()}/ws/scraper/${activeJobId}/stream?token=${token}`;
+      const wsUrl = `${getLocalWsBase()}/ws/scraper/${activeJobId}/stream?token=${token}`;
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 

@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import { getApiBase, TOKEN_KEY } from "@/lib/constants";
+import { getLocalApiBase, TOKEN_KEY } from "@/lib/constants";
 import type { ScraperJob, ScraperJobStatus } from "@/lib/types";
 
 export interface ScrapedDataItem {
@@ -47,7 +47,7 @@ export const scraperApi = {
 
   downloadJobUrl: (jobId: number) => {
     const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : "";
-    return `${getApiBase()}/api/scraper/jobs/${jobId}/download?token=${encodeURIComponent(token || "")}`;
+    return `${getLocalApiBase()}/api/scraper/jobs/${jobId}/download?token=${encodeURIComponent(token || "")}`;
   },
 
   deleteJob: (jobId: number) =>

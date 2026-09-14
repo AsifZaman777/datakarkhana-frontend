@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getApiBase } from "@/lib/constants";
+import { getCloudApiBase, getLocalApiBase } from "@/lib/constants";
 import { isDesktopApp } from "@/lib/desktop";
 
 export interface ConnectionStatus {
@@ -9,9 +9,11 @@ export interface ConnectionStatus {
   dbOnline: boolean;
   isChecking: boolean;
   latencyMs: number | null;
+  cloudLatencyMs: number | null;
   lastChecked: Date | null;
   errorMessage: string | null;
   apiEndpoint: string;
+  cloudEndpoint: string;
   isDesktop: boolean;
   checkNow: () => Promise<void>;
 }
@@ -21,91 +23,96 @@ export function useConnectionStatus(pollIntervalMs: number = 8000): ConnectionSt
   const [dbOnline, setDbOnline] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(true);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [cloudLatencyMs, setCloudLatencyMs] = useState<number | null>(null);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef<boolean>(true);
 
-  const apiEndpoint = getApiBase();
+  const localEndpoint = getLocalApiBase();
+  const cloudEndpoint = getCloudApiBase();
   const isDesktop = isDesktopApp();
 
   const performCheck = useCallback(async () => {
     setIsChecking(true);
     const startTime = Date.now();
 
+    let localUp = false;
+    let localElapsed: number | null = null;
+    let localErr: string | null = null;
+
+    // 1. Check Local Python Automation Engine (127.0.0.1:8000)
     try {
-      // 1. If running inside Desktop Electron, try IPC first for zero-CORS status
       if (typeof window !== "undefined" && (window as any).electronAPI?.getBackendStatus) {
         try {
           const status = await (window as any).electronAPI.getBackendStatus();
-          if (isMountedRef.current) {
-            const backendUp = Boolean(status?.backend || status?.healthy);
-            const dbUp = Boolean(status?.database);
-            setBackendOnline(backendUp);
-            setDbOnline(dbUp);
-            setLatencyMs(Date.now() - startTime);
-            setLastChecked(new Date());
-            setErrorMessage(backendUp ? null : status?.error || "Backend offline on port 8000");
-            setIsChecking(false);
-            if (backendUp) return;
-          }
+          localUp = Boolean(status?.backend || status?.healthy);
         } catch {
           // Fall through to HTTP fetch
         }
       }
 
-      // 2. Direct HTTP Health Check
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-      const healthUrl = `${apiEndpoint}/api/health`;
-      const res = await fetch(healthUrl, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      const elapsed = Date.now() - startTime;
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Backend responded with error`);
-      }
-
-      const data = await res.json();
-      if (isMountedRef.current) {
-        const isBackendUp = data?.status === "healthy" || res.status === 200;
-        const isDbUp = data?.database === "ok" || (!data?.database && isBackendUp);
-
-        setBackendOnline(isBackendUp);
-        setDbOnline(isDbUp);
-        setLatencyMs(elapsed);
-        setLastChecked(new Date());
-        setErrorMessage(
-          isDbUp
-            ? null
-            : typeof data?.database === "string"
-            ? data.database
-            : "Database connection issue"
-        );
+      if (!localUp) {
+        const localController = new AbortController();
+        const timeoutId = setTimeout(() => localController.abort(), 3500);
+        const res = await fetch(`${localEndpoint}/api/health`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          signal: localController.signal,
+        });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          localUp = data?.status === "healthy" || res.status === 200;
+          localElapsed = Date.now() - startTime;
+        }
+      } else {
+        localElapsed = Date.now() - startTime;
       }
     } catch (err: any) {
-      if (isMountedRef.current) {
-        setBackendOnline(false);
-        setDbOnline(false);
-        setLatencyMs(null);
-        setLastChecked(new Date());
-        setErrorMessage(
-          err.name === "AbortError"
-            ? "Connection timed out (port 8000 not responding)"
-            : err.message || "Failed to reach backend server"
-        );
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsChecking(false);
-      }
+      localUp = false;
+      localErr = err.name === "AbortError" ? "Local automation engine offline (port 8000)" : err.message;
     }
-  }, [apiEndpoint]);
+
+    // 2. Check Central Cloud Control Plane (Render & Supabase)
+    let cloudUp = false;
+    let cloudElapsed: number | null = null;
+    const cloudStart = Date.now();
+    try {
+      const cloudController = new AbortController();
+      const cloudTimeout = setTimeout(() => cloudController.abort(), 4000);
+      const cloudRes = await fetch(`${cloudEndpoint}/api/health`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: cloudController.signal,
+      });
+      clearTimeout(cloudTimeout);
+      if (cloudRes.ok) {
+        const cloudData = await cloudRes.json();
+        cloudUp = cloudData?.status === "healthy" || cloudRes.status === 200;
+        cloudElapsed = Date.now() - cloudStart;
+      }
+    } catch {
+      cloudUp = false;
+    }
+
+    if (isMountedRef.current) {
+      // In web browser (non-desktop), if local engine is not present, mark backendOnline based on cloud status
+      const effectiveLocalUp = localUp || (!isDesktop && cloudUp);
+      setBackendOnline(effectiveLocalUp);
+      setDbOnline(cloudUp);
+      setLatencyMs(localElapsed);
+      setCloudLatencyMs(cloudElapsed);
+      setLastChecked(new Date());
+      setErrorMessage(
+        effectiveLocalUp && cloudUp
+          ? null
+          : !effectiveLocalUp
+          ? localErr || "Local engine offline on port 8000"
+          : "Cloud control plane unreachable"
+      );
+      setIsChecking(false);
+    }
+  }, [localEndpoint, cloudEndpoint, isDesktop]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -126,9 +133,11 @@ export function useConnectionStatus(pollIntervalMs: number = 8000): ConnectionSt
     dbOnline,
     isChecking,
     latencyMs,
+    cloudLatencyMs,
     lastChecked,
     errorMessage,
-    apiEndpoint,
+    apiEndpoint: localEndpoint,
+    cloudEndpoint,
     isDesktop,
     checkNow: performCheck,
   };
