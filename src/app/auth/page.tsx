@@ -41,28 +41,25 @@ function AuthContent() {
   const handleRetryConnection = async () => {
     if (isDesktop && typeof window !== "undefined" && (window as any).electronAPI?.restartBackend) {
       setIsRestarting(true);
-      toast.info("Restarting local Python engine…", { duration: 4000 });
+      toast.info("Restarting local Python engine… killing port 8000 and relaunching.", { duration: 6000 });
       try {
-        await (window as any).electronAPI.restartBackend();
-      } catch {
-        // IPC error — still attempt health checks below
-      }
-      // Poll health every 2 s for up to 30 s
-      let attempts = 0;
-      const maxAttempts = 15;
-      const poll = setInterval(async () => {
-        attempts++;
-        await checkNow();
-        if (backendOnline || attempts >= maxAttempts) {
-          clearInterval(poll);
-          setIsRestarting(false);
-          if (backendOnline) {
-            toast.success("Local engine is back online!");
-          } else if (attempts >= maxAttempts) {
-            toast.error("Engine still offline after 30 s. Check logs or manually restart.");
-          }
+        const result = await (window as any).electronAPI.restartBackend();
+        // backend:restart in main.js now blocks until healthy (waitForBackendReady)
+        if (result?.success) {
+          await checkNow(); // sync UI state
+          toast.success("Local engine is back online!");
+        } else {
+          toast.error(
+            "Engine failed to start. Check logs in: ~/Library/Application Support/DataKarkhana/backend.log",
+            { duration: 10000 }
+          );
+          setDiagnosticModalOpen(true); // fall through to manual guide
         }
-      }, 2000);
+      } catch {
+        toast.error("IPC error communicating with Electron main process.");
+      } finally {
+        setIsRestarting(false);
+      }
     } else {
       // Web browser — show diagnostic modal with OS-specific terminal commands
       setDiagnosticModalOpen(true);
