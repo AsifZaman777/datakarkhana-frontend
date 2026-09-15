@@ -396,13 +396,6 @@ declare global {
       activateLicense: (key: string) => Promise<any>;
       getBackendStatus: () => Promise<any>;
       restartBackend: () => Promise<any>;
-      toggleDevTools?: () => Promise<boolean>;
-      openDevTools?: () => Promise<boolean>;
-      closeDevTools?: () => Promise<boolean>;
-      isDevToolsOpened?: () => Promise<boolean>;
-      setDebugMode?: (enabled: boolean) => Promise<boolean>;
-      getDebugMode?: () => Promise<boolean>;
-      onDevToolsChange?: (callback: (isOpen: boolean) => void) => () => void;
       quitApp: () => void;
     };
   }
