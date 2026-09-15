@@ -28,6 +28,7 @@ import type {
 
 import { useSearchParams } from "next/navigation";
 import { PackageSettings } from "@/components/admin/package-settings";
+import { DebugModeButton } from "@/components/admin/debug-mode-button";
 
 interface AdminPageProps {
   initialTab?: string;
@@ -86,11 +87,16 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">{at.title || "Admin Overview & Control Center"}</h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          {at.subtitle || "Manage dataset uploads, promotion approvals, customer payments, package settings, and gateway configurations"}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground">{at.title || "Admin Overview & Control Center"}</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            {at.subtitle || "Manage dataset uploads, promotion approvals, customer payments, package settings, and gateway configurations"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+          <DebugModeButton />
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
