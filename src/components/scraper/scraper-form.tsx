@@ -150,7 +150,42 @@ export function ScraperForm({
       setQueries([""]);
       setPendingScrapeData(null);
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Failed to launch scraper.");
+      // ── Verbose Error Diagnostics ──────────────────────────────────────
+      // Collect every available detail from the axios error for debugging
+      const httpStatus   = err?.response?.status;
+      const httpDetail   = err?.response?.data?.detail;
+      const httpMessage  = err?.response?.data?.message || err?.response?.data?.error;
+      const axiosCode    = err?.code;                          // e.g. ERR_NETWORK, ECONNREFUSED, ETIMEDOUT
+      const axiosMessage = err?.message;                       // e.g. "Network Error"
+      const targetUrl    = err?.config?.baseURL
+        ? `${err.config.baseURL}${err.config.url ?? ""}`
+        : err?.config?.url ?? "unknown URL";
+
+      // Build a single readable summary for the toast
+      const parts: string[] = [];
+      if (httpStatus)  parts.push(`HTTP ${httpStatus}`);
+      if (axiosCode)   parts.push(`Code: ${axiosCode}`);
+      if (httpDetail)  parts.push(`Detail: ${httpDetail}`);
+      else if (httpMessage) parts.push(`Msg: ${httpMessage}`);
+      else if (axiosMessage) parts.push(axiosMessage);
+      parts.push(`URL: ${targetUrl}`);
+
+      const verboseError = parts.join(" · ");
+
+      console.error("[SCRAPER ERROR]", {
+        httpStatus,
+        httpDetail,
+        httpMessage,
+        axiosCode,
+        axiosMessage,
+        targetUrl,
+        fullError: err,
+      });
+
+      toast.error("Failed to launch scraper", {
+        description: verboseError || "Unknown error — check browser console for details.",
+        duration: 12000, // Keep visible long enough to read/screenshot
+      });
     } finally {
       setIsSubmitting(false);
     }
