@@ -11,6 +11,11 @@ import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/providers/auth-provider";
 import { useIsDesktop } from "@/lib/desktop";
+import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
+import { useConnectionStatus } from "@/lib/hooks/use-connection-status";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 function AuthContent() {
@@ -22,6 +27,7 @@ function AuthContent() {
   const [initialOtp, setInitialOtp] = useState("");
   const [verificationNotice, setVerificationNotice] = useState("");
   const verifiedRef = useRef(false);
+  const { backendOnline, isChecking, checkNow, isDesktop } = useConnectionStatus();
 
   // If user is already authenticated, redirect immediately to dashboard
   useEffect(() => {
@@ -81,6 +87,45 @@ function AuthContent() {
   return (
     <div className="flex-1 flex items-center justify-center p-4 py-12">
       <Card className="glass-panel w-full max-w-md p-6 sm:p-8">
+        {/* System Diagnostics & Connection Dots Header */}
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/40">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
+            <span>{isDesktop ? "DataKarkhana Desktop" : "DataKarkhana Portal"}</span>
+          </div>
+          <ConnectionStatusDots />
+        </div>
+
+        {/* Offline Alert Banner (when local backend or server is not reachable) */}
+        {!backendOnline && (
+          <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
+            <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-semibold text-rose-200">
+                {isDesktop ? "Local Backend Offline (Port 8000)" : "Backend Server Offline"}
+              </div>
+              <div className="text-[11px] text-rose-300/80 mt-0.5 leading-relaxed">
+                {isDesktop
+                  ? "Cannot connect to the local Python engine on port 8000. It may still be launching or starting up."
+                  : "Unable to reach the server. Please check your internet connection."}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={checkNow}
+                className="mt-2.5 h-7 text-xs border-rose-500/40 text-rose-200 hover:bg-rose-500/20 gap-1.5 font-medium"
+              >
+                <RefreshCw className={cn("h-3 w-3", isChecking && "animate-spin")} />
+                <span>Retry Connection</span>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Tabs for Auth Modes */}
         <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 rounded-xl mb-6 border border-border/40 text-xs font-semibold">
           <button

@@ -3,44 +3,45 @@
 export const APP_NAME = "Datakarkhana";
 export const APP_VERSION = "2.0";
 
+export const CLOUD_API_BASE = (
+  process.env.NEXT_PUBLIC_CLOUD_API_URL ||
+  process.env.NEXT_PUBLIC_API_RENDER ||
+  "https://datakarkhana-backend.onrender.com"
+).replace(/\/$/, "");
+
+export const LOCAL_API_BASE = (
+  process.env.NEXT_PUBLIC_LOCAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_LOCAL ||
+  "http://127.0.0.1:8000"
+).replace(/\/$/, "");
+
+export function getCloudApiBase(): string {
+  return CLOUD_API_BASE;
+}
+
+export function getLocalApiBase(): string {
+  return LOCAL_API_BASE;
+}
+
+export function getLocalWsBase(): string {
+  return LOCAL_API_BASE
+    .replace(/^https:\/\//, "wss://")
+    .replace(/^http:\/\//, "ws://");
+}
+
 export function getApiBase(): string {
   // 1. Direct explicit override if defined
   if (process.env.NEXT_PUBLIC_API_BASE) {
     return process.env.NEXT_PUBLIC_API_BASE.replace(/\/$/, "");
   }
 
-  const localUrl = (
-    process.env.NEXT_PUBLIC_API_LOCAL || "http://127.0.0.1:8000"
-  ).replace(/\/$/, "");
-
-  const renderUrl = (
-    process.env.NEXT_PUBLIC_API_RENDER ||
-    "https://datakarkhana-backend.onrender.com"
-  ).replace(/\/$/, "");
-
   const mode = (process.env.NEXT_PUBLIC_API_MODE || "").toLowerCase().trim();
-
-  // 2. Explicit mode selection via NEXT_PUBLIC_API_MODE ("local" or "render")
-  if (mode === "render" || mode === "production" || mode === "prod") {
-    return renderUrl;
-  }
   if (mode === "local" || mode === "dev" || mode === "development") {
-    return localUrl;
+    return LOCAL_API_BASE;
   }
 
-  // 3. Automatic detection when mode is not set
-  if (typeof window !== "undefined") {
-    if (Boolean((window as any).electronAPI?.isElectron || navigator?.userAgent?.includes("Electron"))) {
-      return localUrl;
-    }
-    const currentHost = window.location.hostname || "127.0.0.1";
-    if (currentHost === "localhost" || currentHost === "127.0.0.1") {
-      return localUrl;
-    }
-    return renderUrl;
-  }
-
-  return localUrl;
+  // Default to Cloud Control Plane (Render + Supabase)
+  return CLOUD_API_BASE;
 }
 
 export const SUPPORT_EMAIL =

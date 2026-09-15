@@ -23,6 +23,7 @@ import {
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useIsDesktop } from "@/lib/desktop";
+import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { APP_NAME } from "@/lib/constants";
 
 interface NavItem {
@@ -152,6 +153,7 @@ export function TopNavbar() {
 
         {/* Actions & Mobile Trigger */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <ConnectionStatusDots />
           <LanguageToggle />
           <ThemeToggle />
 

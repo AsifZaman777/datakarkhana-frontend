@@ -395,38 +395,40 @@ export function DatasetDetailView({
                   <CheckCircle2 className="h-4 w-4" /> {ct.unlockedAccess || "Unlocked Access"}
                 </Badge>
 
-                {isAdmin && (
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={datasetsApi.exportUrl(dataset.id, "excel", token)}
-                      download
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
-                    >
-                      <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
-                    </a>
-                    <a
-                      href={datasetsApi.exportUrl(dataset.id, "csv", token)}
-                      download
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-cyan-500/40 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20"
-                    >
-                      <FileText className="h-3.5 w-3.5" /> CSV
-                    </a>
-                    <a
-                      href={datasetsApi.exportUrl(dataset.id, "json", token)}
-                      download
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-purple-500/40 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20"
-                    >
-                      <DatabaseIcon className="h-3.5 w-3.5" /> JSON
-                    </a>
-                    <a
-                      href={datasetsApi.exportUrl(dataset.id, "pdf", token)}
-                      download
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20"
-                    >
-                      <Download className="h-3.5 w-3.5" /> PDF
-                    </a>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={datasetsApi.exportUrl(dataset.id, "excel", token)}
+                    download
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+                    title="Download full dataset in Microsoft Excel format"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+                  </a>
+                  <a
+                    href={datasetsApi.exportUrl(dataset.id, "csv", token)}
+                    download
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-cyan-500/40 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20"
+                    title="Download full dataset in CSV format"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> CSV
+                  </a>
+                  <a
+                    href={datasetsApi.exportUrl(dataset.id, "json", token)}
+                    download
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-purple-500/40 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20"
+                    title="Download full dataset in JSON format"
+                  >
+                    <DatabaseIcon className="h-3.5 w-3.5" /> JSON
+                  </a>
+                  <a
+                    href={datasetsApi.exportUrl(dataset.id, "pdf", token)}
+                    download
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20"
+                    title="Download full dataset in PDF format"
+                  >
+                    <Download className="h-3.5 w-3.5" /> PDF
+                  </a>
+                </div>
               </div>
             )}
           </div>

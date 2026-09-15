@@ -1,10 +1,11 @@
 "use client";
 
-import { Eye, Lock, Trash2, Play, Send, Clock, CheckCircle2 } from "lucide-react";
+import { Eye, Lock, Trash2, Play, Send, Clock, CheckCircle2, Download } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/providers/language-provider";
+import { scraperApi } from "@/lib/api/scraper";
 import type { ScraperJob } from "@/lib/types";
 
 interface PrivateDatasetCardProps {
@@ -35,8 +36,18 @@ export function PrivateDatasetCard({
             <Lock className="h-3 w-3" /> PRIVATE SCRAPED LEAD
           </Badge>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs font-mono text-muted-foreground">#{job.id}</span>
+            {(job.status === "done" || job.status === "stopped") && (
+              <a
+                href={scraperApi.downloadJobUrl(job.id)}
+                download
+                className="h-6 w-6 inline-flex items-center justify-center rounded-md text-amber-400 hover:bg-amber-500/10 transition-colors"
+                title="Download Excel Spreadsheet"
+              >
+                <Download className="h-3.5 w-3.5" />
+              </a>
+            )}
             <Button
               size="icon"
               variant="ghost"
@@ -95,7 +106,11 @@ export function PrivateDatasetCard({
             className="w-full text-xs h-8 gap-1 font-semibold"
           >
             <Send className="h-3.5 w-3.5" />
-            {isAdmin ? (ct.btnPromoteAdmin || "Promote to Public Catalog") : (ct.btnPromote || "Request Catalog Promotion")}
+            {job.promotion_status === "rejected"
+              ? "Re-request Promotion"
+              : isAdmin
+              ? ct.btnPromoteAdmin || "Promote to Public Catalog"
+              : ct.btnPromote || "Request Catalog Promotion"}
           </Button>
         )}
       </CardFooter>

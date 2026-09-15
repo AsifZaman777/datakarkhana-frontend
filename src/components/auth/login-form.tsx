@@ -51,7 +51,7 @@ export function LoginForm({ onToggleView, onVerifyOtp, verificationNotice }: Log
       const msg =
         err.response?.data?.detail ||
         (err.code === "ERR_NETWORK" || !err.response
-          ? "Cannot connect to backend server. Please verify backend is running on port 8000."
+          ? "Cannot connect to backend server. Please wait a moment for the Python engine to start, or click Retry above."
           : err.message || "Authentication failed. Check credentials.");
       setError(msg);
       if (msg.toLowerCase().includes("license expired")) {

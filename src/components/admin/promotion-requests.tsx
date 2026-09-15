@@ -60,40 +60,47 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requests.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">#{r.job_id}</TableCell>
-                  <TableCell className="text-xs font-semibold">{r.user_email}</TableCell>
-                  <TableCell className="text-xs font-bold text-foreground">{r.name}</TableCell>
-                  <TableCell className="text-xs">{r.category}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
-                      {r.status.toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {r.status === "pending" && (
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleApprove(r.job_id)}
-                          className="h-7 text-xs bg-emerald-500 text-black hover:bg-emerald-600 font-bold gap-1"
-                        >
-                          <Check className="h-3.5 w-3.5" /> Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleReject(r.job_id)}
-                          className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1"
-                        >
-                          <X className="h-3.5 w-3.5" /> Reject
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {requests.map((r) => {
+                const jobId = r.job_id || r.id;
+                const title = r.name || (r as any).proposed_name || (r as any).query || `Job #${jobId}`;
+                const category = r.category || (r as any).proposed_category || "Scraped Leads";
+                const status = (r.status || (r as any).promotion_status || "pending").toLowerCase();
+
+                return (
+                  <TableRow key={r.id || jobId}>
+                    <TableCell className="font-mono text-xs text-muted-foreground">#{jobId}</TableCell>
+                    <TableCell className="text-xs font-semibold">{r.user_email}</TableCell>
+                    <TableCell className="text-xs font-bold text-foreground">{title}</TableCell>
+                    <TableCell className="text-xs">{category}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
+                        {status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {status === "pending" && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleApprove(jobId)}
+                            className="h-7 text-xs bg-emerald-500 text-black hover:bg-emerald-600 font-bold gap-1"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReject(jobId)}
+                            className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1"
+                          >
+                            <X className="h-3.5 w-3.5" /> Reject
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
 
               {requests.length === 0 && (
                 <TableRow>
