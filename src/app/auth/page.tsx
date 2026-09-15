@@ -13,6 +13,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useIsDesktop } from "@/lib/desktop";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { useConnectionStatus } from "@/lib/hooks/use-connection-status";
+import { BackendOfflineDiagnosticModal } from "@/components/shared/backend-offline-diagnostic-modal";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,45 @@ function AuthContent() {
   const [verificationNotice, setVerificationNotice] = useState("");
   const verifiedRef = useRef(false);
   const { backendOnline, isChecking, checkNow, isDesktop } = useConnectionStatus();
+  const [diagnosticModalOpen, setDiagnosticModalOpen] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
+
+  /**
+   * Smart retry:
+   *  - Desktop (Electron): invoke restartBackend() which kills port 8000 & respawns Python,
+   *    then poll health every 2 s for up to 30 s.
+   *  - Web browser: open the OS-specific diagnostic guide modal.
+   */
+  const handleRetryConnection = async () => {
+    if (isDesktop && typeof window !== "undefined" && (window as any).electronAPI?.restartBackend) {
+      setIsRestarting(true);
+      toast.info("Restarting local Python engine…", { duration: 4000 });
+      try {
+        await (window as any).electronAPI.restartBackend();
+      } catch {
+        // IPC error — still attempt health checks below
+      }
+      // Poll health every 2 s for up to 30 s
+      let attempts = 0;
+      const maxAttempts = 15;
+      const poll = setInterval(async () => {
+        attempts++;
+        await checkNow();
+        if (backendOnline || attempts >= maxAttempts) {
+          clearInterval(poll);
+          setIsRestarting(false);
+          if (backendOnline) {
+            toast.success("Local engine is back online!");
+          } else if (attempts >= maxAttempts) {
+            toast.error("Engine still offline after 30 s. Check logs or manually restart.");
+          }
+        }
+      }, 2000);
+    } else {
+      // Web browser — show diagnostic modal with OS-specific terminal commands
+      setDiagnosticModalOpen(true);
+    }
+  };
 
   // If user is already authenticated, redirect immediately to dashboard
   useEffect(() => {
@@ -109,22 +149,39 @@ function AuthContent() {
               </div>
               <div className="text-[11px] text-rose-300/80 mt-0.5 leading-relaxed">
                 {isDesktop
-                  ? "Cannot connect to the local Python engine on port 8000. It may still be launching or starting up."
-                  : "Unable to reach the server. Please check your internet connection."}
+                  ? isRestarting
+                    ? "Killing orphan process on port 8000 and restarting Python engine… please wait."
+                    : "Cannot connect to the local Python engine on port 8000. It may still be launching or starting up."
+                  : "Unable to reach the server. Check your internet connection or follow the setup guide."}
               </div>
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={checkNow}
+                onClick={handleRetryConnection}
+                disabled={isRestarting || isChecking}
                 className="mt-2.5 h-7 text-xs border-rose-500/40 text-rose-200 hover:bg-rose-500/20 gap-1.5 font-medium"
               >
-                <RefreshCw className={cn("h-3 w-3", isChecking && "animate-spin")} />
-                <span>Retry Connection</span>
+                <RefreshCw className={cn("h-3 w-3", (isChecking || isRestarting) && "animate-spin")} />
+                <span>
+                  {isRestarting
+                    ? "Restarting Engine…"
+                    : isDesktop
+                    ? "Restart & Retry"
+                    : "Fix — Open Setup Guide"}
+                </span>
               </Button>
             </div>
           </div>
         )}
+
+        {/* OS-specific Backend Diagnostic Modal (web/browser mode) */}
+        <BackendOfflineDiagnosticModal
+          open={diagnosticModalOpen}
+          onClose={() => setDiagnosticModalOpen(false)}
+          onRetry={checkNow}
+          isRetrying={isChecking}
+        />
 
         {/* Navigation Tabs for Auth Modes */}
         <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 rounded-xl mb-6 border border-border/40 text-xs font-semibold">
