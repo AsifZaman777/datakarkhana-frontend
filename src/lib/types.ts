@@ -75,6 +75,7 @@ export interface DatasetDetail {
   unlocked: boolean;
   pages_count: number;
   current_page: number;
+  notice?: string;
 }
 
 export interface Lead {

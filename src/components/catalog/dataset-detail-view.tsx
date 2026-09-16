@@ -30,6 +30,7 @@ import {
   ArrowUp,
   ArrowDown,
   Filter,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -445,6 +446,14 @@ export function DatasetDetailView({
           </div>
         </CardContent>
       </Card>
+
+      {/* Cloud Storage Notice Alert */}
+      {detail.notice && (
+        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 shrink-0 text-amber-400" />
+          <span>{detail.notice}</span>
+        </div>
+      )}
 
       {/* TanStack React Table Container with Draggable Column Resizing and Text-Wrapping */}
       <Card className="glass-panel overflow-hidden relative">

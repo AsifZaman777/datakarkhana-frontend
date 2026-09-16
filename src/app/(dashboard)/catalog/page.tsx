@@ -192,9 +192,21 @@ export default function CatalogPage() {
         const downloadRes = await fetch(scraperApi.downloadJobUrl(job.id));
         if (downloadRes.ok) {
           fileBlob = await downloadRes.blob();
+        } else {
+          toast.error(`Could not download local scraped file (Status: ${downloadRes.status}). Please check local desktop engine.`);
+          setSyncingJobId(null);
+          return;
         }
-      } catch {
-        // Continue if offline or direct
+      } catch (err) {
+        toast.error("Could not reach local desktop scraper engine. Please ensure it is running.");
+        setSyncingJobId(null);
+        return;
+      }
+
+      if (!fileBlob) {
+        toast.error("Scraped dataset file is empty. Please verify the scraping job results.");
+        setSyncingJobId(null);
+        return;
       }
 
       const formData = new FormData();
@@ -205,9 +217,7 @@ export default function CatalogPage() {
       if (job.division) formData.append("division", job.division);
       if (job.district) formData.append("district", job.district);
       if (job.area) formData.append("area", job.area);
-      if (fileBlob) {
-        formData.append("file", fileBlob, `scraped_job_${job.id}.xlsx`);
-      }
+      formData.append("file", fileBlob, `scraped_job_${job.id}.xlsx`);
 
       const res = await datasetsApi.syncToCloud(formData);
       toast.success(res.data.message || `Dataset "${job.query}" synced to PostgreSQL Cloud!`);
@@ -232,8 +242,19 @@ export default function CatalogPage() {
         const downloadRes = await fetch(scraperApi.downloadJobUrl(promoteTarget.id));
         if (downloadRes.ok) {
           fileBlob = await downloadRes.blob();
+        } else {
+          toast.error(`Could not download local scraped file (Status: ${downloadRes.status}).`);
+          return;
         }
-      } catch {}
+      } catch (err) {
+        toast.error("Could not reach local desktop engine to load file.");
+        return;
+      }
+
+      if (!fileBlob) {
+        toast.error("Scraped dataset file is empty.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("proposed_name", proposedName);
@@ -245,9 +266,7 @@ export default function CatalogPage() {
         if (targetJob.district) formData.append("district", targetJob.district);
         if (targetJob.area) formData.append("area", targetJob.area);
       }
-      if (fileBlob) {
-        formData.append("file", fileBlob, `promote_job_${promoteTarget.id}.xlsx`);
-      }
+      formData.append("file", fileBlob, `promote_job_${promoteTarget.id}.xlsx`);
 
       const res = await datasetsApi.promoteRequest(formData);
       toast.success(res.data.message || "Promotion requested! An administrator will review and publish it.");
