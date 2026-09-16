@@ -8,6 +8,8 @@ import type {
   DashboardOverview,
   UserPrivateDatasetsResponse,
   LicenseRecord,
+  CloudStorageOverview,
+  UserUploadedDataset,
 } from "@/lib/types";
 
 export const adminApi = {
@@ -48,6 +50,20 @@ export const adminApi = {
       `/api/admin/users/${userId}/allow-sync`,
       { allow_sync: allowSync ? 1 : 0 }
     ),
+
+  setUserUploadLimit: (userId: number, maxSyncFiles: number) =>
+    apiClient.post<{ success: boolean; max_sync_files: number; message: string }>(
+      `/api/admin/users/${userId}/upload-limit`,
+      { max_sync_files: maxSyncFiles }
+    ),
+
+  getUserDatasets: (userId: number) =>
+    apiClient.get<{ user: { id: number; email: string; full_name: string }; total: number; datasets: UserUploadedDataset[] }>(
+      `/api/admin/users/${userId}/datasets`
+    ),
+
+  getStorageOverview: () =>
+    apiClient.get<CloudStorageOverview>("/api/admin/storage/overview"),
 
   // ── Security Violations ──
   listViolations: () =>

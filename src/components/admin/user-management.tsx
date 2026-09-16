@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff, FolderOpen, SlidersHorizontal, HardDrive, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +24,9 @@ import {
 } from "@/components/ui/table";
 import { adminApi } from "@/lib/api/admin";
 import { marketingApi } from "@/lib/api/marketing";
+import { datasetsApi } from "@/lib/api/datasets";
 import { toast } from "sonner";
-import type { User } from "@/lib/types";
+import type { User, CloudStorageOverview, UserUploadedDataset } from "@/lib/types";
 
 interface UserManagementProps {
   users: User[];
@@ -68,6 +69,86 @@ export function UserManagement({
       toast.error("Failed to update cloud sync permission.");
     } finally {
       setIsTogglingSync(null);
+    }
+  };
+
+  // Cloud Storage Overview state
+  const [storageOverview, setStorageOverview] = useState<CloudStorageOverview | null>(null);
+
+  const loadStorageOverview = async () => {
+    try {
+      const res = await adminApi.getStorageOverview();
+      setStorageOverview(res.data);
+    } catch {
+      // Ignore if not available
+    }
+  };
+
+  useEffect(() => {
+    loadStorageOverview();
+  }, [users]);
+
+  // Inspect User Datasets modal state
+  const [inspectUserTarget, setInspectUserTarget] = useState<User | null>(null);
+  const [userDatasets, setUserDatasets] = useState<UserUploadedDataset[]>([]);
+  const [loadingUserDatasets, setLoadingUserDatasets] = useState(false);
+  const [isDesyncingId, setIsDesyncingId] = useState<number | null>(null);
+
+  const handleOpenUserDatasets = async (user: User) => {
+    setInspectUserTarget(user);
+    setLoadingUserDatasets(true);
+    try {
+      const res = await adminApi.getUserDatasets(user.id);
+      setUserDatasets(res.data.datasets || []);
+    } catch {
+      toast.error("Failed to load user datasets.");
+      setUserDatasets([]);
+    } finally {
+      setLoadingUserDatasets(false);
+    }
+  };
+
+  const handleAdminDesync = async (datasetId: number) => {
+    setIsDesyncingId(datasetId);
+    try {
+      const res = await datasetsApi.desync(datasetId);
+      toast.success(res.data.message || "Dataset desynced from cloud successfully!");
+      if (inspectUserTarget) {
+        const resDs = await adminApi.getUserDatasets(inspectUserTarget.id);
+        setUserDatasets(resDs.data.datasets || []);
+      }
+      onRefresh();
+      loadStorageOverview();
+    } catch {
+      toast.error("Failed to desync dataset.");
+    } finally {
+      setIsDesyncingId(null);
+    }
+  };
+
+  // User Upload Limit modal state
+  const [limitModalTarget, setLimitModalTarget] = useState<User | null>(null);
+  const [limitAmount, setLimitAmount] = useState<number>(5);
+  const [isSavingLimit, setIsSavingLimit] = useState(false);
+
+  const handleOpenLimitModal = (user: User) => {
+    setLimitModalTarget(user);
+    setLimitAmount(user.max_sync_files ?? 5);
+  };
+
+  const confirmSetLimit = async () => {
+    if (!limitModalTarget) return;
+    setIsSavingLimit(true);
+    try {
+      const res = await adminApi.setUserUploadLimit(limitModalTarget.id, limitAmount);
+      toast.success(res.data.message || `Upload limit set to ${limitAmount} datasets.`);
+      setLimitModalTarget(null);
+      onRefresh();
+      loadStorageOverview();
+    } catch {
+      toast.error("Failed to update upload limit.");
+    } finally {
+      setIsSavingLimit(false);
     }
   };
 
@@ -184,7 +265,69 @@ export function UserManagement({
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
-        <h3 className="text-sm font-bold text-foreground">Customer Accounts & Credit Balances Management</h3>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Customer Accounts & Credit Balances Management</h3>
+            <p className="text-xs text-muted-foreground">Manage user roles, balances, upload limits, and inspect cloud storage datasets.</p>
+          </div>
+        </div>
+
+        {/* Cloud Storage Monitoring Summary Banner */}
+        {storageOverview && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 rounded-lg border border-border/50 bg-background/40">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <HardDrive className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase font-semibold">Supabase Bucket</div>
+                <div className="text-xs font-mono font-bold text-foreground truncate max-w-[130px]">
+                  {storageOverview.bucket_name}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Database className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase font-semibold">Total Cloud Datasets</div>
+                <div className="text-xs font-mono font-bold text-purple-400">
+                  {storageOverview.total_cloud_datasets} files
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <Cloud className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase font-semibold">Total Synced Rows</div>
+                <div className="text-xs font-mono font-bold text-emerald-400">
+                  {storageOverview.total_cloud_rows.toLocaleString()} records
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-md border ${
+                storageOverview.supabase_configured 
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              }`}>
+                <UserCheck className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[10px] text-muted-foreground uppercase font-semibold">Cloud Status</div>
+                <div className="text-xs font-medium text-foreground">
+                  {storageOverview.supabase_configured ? "Storage Connected" : "Local Only"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>
@@ -195,7 +338,7 @@ export function UserManagement({
                 <TableHead>Role</TableHead>
                 <TableHead>Credits Balance</TableHead>
                 <TableHead>Status / Warning</TableHead>
-                <TableHead className="w-44 text-center">Plan & Cloud Sync</TableHead>
+                <TableHead className="w-52 text-center">Plan & Cloud Quota</TableHead>
                 <TableHead className="w-72 text-right">Actions (Credits / Brevo API / Notice / Ban)</TableHead>
               </TableRow>
             </TableHeader>
@@ -258,7 +401,7 @@ export function UserManagement({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <div className="flex flex-col items-center gap-1">
+                    <div className="flex flex-col items-center gap-1.5">
                       <Badge
                         variant="outline"
                         className={`text-[9px] uppercase tracking-wider font-mono font-bold ${
@@ -279,33 +422,59 @@ export function UserManagement({
                           ? "Pro Growth"
                           : "Starter"}
                       </Badge>
+
+                      {/* Cloud Sync Status & Quota Controls */}
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isTogglingSync === u.id}
+                          onClick={() => handleToggleSync(u)}
+                          className={`h-6 text-[10px] px-2 gap-1 rounded-full transition-all ${
+                            u.allow_sync === 1
+                              ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+                              : "border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
+                          }`}
+                          title={
+                            u.allow_sync === 1
+                              ? "Custom Cloud Sync is Enabled. Click to disable."
+                              : "Custom Cloud Sync is Disabled. Click to grant sync permission."
+                          }
+                        >
+                          {u.allow_sync === 1 ? (
+                            <>
+                              <Cloud className="h-3 w-3 text-emerald-400" />
+                              <span>Allowed</span>
+                            </>
+                          ) : (
+                            <>
+                              <CloudOff className="h-3 w-3" />
+                              <span>Off</span>
+                            </>
+                          )}
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenLimitModal(u)}
+                          className="h-6 text-[10px] px-1.5 font-mono border-border/50 hover:border-primary/50 text-muted-foreground hover:text-foreground gap-1"
+                          title="Set user max upload/sync file limit"
+                        >
+                          <SlidersHorizontal className="h-2.5 w-2.5" />
+                          <span>{u.synced_files_count ?? 0}/{u.max_sync_files === 0 ? "∞" : (u.max_sync_files ?? 5)}</span>
+                        </Button>
+                      </div>
+
                       <Button
                         size="sm"
-                        variant="outline"
-                        disabled={isTogglingSync === u.id}
-                        onClick={() => handleToggleSync(u)}
-                        className={`h-6 text-[10px] px-2 gap-1 rounded-full transition-all ${
-                          u.allow_sync === 1
-                            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
-                            : "border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
-                        }`}
-                        title={
-                          u.allow_sync === 1
-                            ? "Custom Cloud Sync is Enabled. Click to disable."
-                            : "Custom Cloud Sync is Disabled. Click to grant sync permission."
-                        }
+                        variant="ghost"
+                        onClick={() => handleOpenUserDatasets(u)}
+                        className="h-5 text-[10px] text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-1.5 gap-1"
+                        title="Inspect cloud datasets uploaded by this user"
                       >
-                        {u.allow_sync === 1 ? (
-                          <>
-                            <Cloud className="h-3 w-3 text-emerald-400" />
-                            <span>Sync Allowed</span>
-                          </>
-                        ) : (
-                          <>
-                            <CloudOff className="h-3 w-3" />
-                            <span>Sync Off</span>
-                          </>
-                        )}
+                        <FolderOpen className="h-3 w-3" />
+                        <span>View Synced ({u.synced_files_count ?? 0})</span>
                       </Button>
                     </div>
                   </TableCell>
@@ -565,6 +734,131 @@ export function UserManagement({
               className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs h-8"
             >
               {isSubmittingBrevo ? "Saving Config..." : "Save Brevo Credentials"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inspect User Datasets Dialog */}
+      <Dialog open={!!inspectUserTarget} onOpenChange={(open) => !open && setInspectUserTarget(null)}>
+        <DialogContent className="sm:max-w-2xl bg-card border-border/50 max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-cyan-400">
+              <FolderOpen className="h-5 w-5" /> Cloud Datasets ({inspectUserTarget?.email})
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Datasets uploaded to Supabase Storage and synced by this user. You can desync any dataset to remove it from the cloud while preserving the user's local file.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto py-2 space-y-2">
+            {loadingUserDatasets ? (
+              <div className="py-8 text-center text-xs text-muted-foreground">Loading datasets...</div>
+            ) : userDatasets.length === 0 ? (
+              <div className="py-8 text-center text-xs text-muted-foreground">No datasets uploaded to cloud by this user yet.</div>
+            ) : (
+              <div className="rounded-md border border-border/40 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Dataset Name</TableHead>
+                      <TableHead className="text-xs">Category</TableHead>
+                      <TableHead className="text-xs">Records</TableHead>
+                      <TableHead className="text-xs">Uploaded</TableHead>
+                      <TableHead className="text-xs text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userDatasets.map((d) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="text-xs font-medium">
+                          <div className="truncate max-w-[200px]" title={d.name}>{d.name}</div>
+                          {d.file_path && <div className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">{d.file_path}</div>}
+                        </TableCell>
+                        <TableCell className="text-xs">{d.category || "Scraped"}</TableCell>
+                        <TableCell className="text-xs font-mono">{d.row_count.toLocaleString()} rows</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={isDesyncingId === d.id}
+                            onClick={() => handleAdminDesync(d.id)}
+                            className="h-7 text-[11px] px-2 gap-1"
+                            title="Desync from cloud (removes from Supabase bucket & cloud DB, keeps user local file)"
+                          >
+                            <CloudOff className="h-3 w-3" />
+                            {isDesyncingId === d.id ? "Desyncing..." : "Desync"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-3 border-t border-border/30">
+            <Button variant="ghost" onClick={() => setInspectUserTarget(null)} className="text-xs h-8">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set Upload Limit Dialog */}
+      <Dialog open={!!limitModalTarget} onOpenChange={(open) => !open && setLimitModalTarget(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <SlidersHorizontal className="h-5 w-5 text-primary" /> Set Max Upload Limit ({limitModalTarget?.email})
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Define the maximum number of datasets this user can store simultaneously in Supabase Storage cloud.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold">Maximum Cloud Datasets Limit</Label>
+              <Input
+                type="number"
+                min={0}
+                max={1000}
+                value={limitAmount}
+                onChange={(e) => setLimitAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                className="text-xs h-9 font-mono"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Enter <strong className="text-foreground">0</strong> for unlimited uploads. Default is 5 datasets.
+              </p>
+            </div>
+
+            <div className="rounded-md p-2.5 bg-muted/40 border border-border/40 text-[11px] space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Current Synced Files:</span>
+                <span className="font-mono font-bold text-foreground">{limitModalTarget?.synced_files_count ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Current Limit:</span>
+                <span className="font-mono font-bold text-foreground">
+                  {limitModalTarget?.max_sync_files === 0 ? "Unlimited" : (limitModalTarget?.max_sync_files ?? 5)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-3 border-t border-border/30">
+            <Button variant="ghost" onClick={() => setLimitModalTarget(null)} className="text-xs h-8">
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmSetLimit}
+              disabled={isSavingLimit}
+              className="font-bold text-xs h-8"
+            >
+              {isSavingLimit ? "Saving..." : "Update Upload Limit"}
             </Button>
           </DialogFooter>
         </DialogContent>

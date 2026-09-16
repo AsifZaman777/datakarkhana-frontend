@@ -69,6 +69,11 @@ export const datasetsApi = {
       { headers: { "Content-Type": "multipart/form-data" } }
     ),
 
+  desync: (id: number | string) =>
+    apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
+      `/api/datasets/${id}/desync`
+    ),
+
   promoteRequest: (formData: FormData) =>
     apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
       "/api/datasets/promote-request",

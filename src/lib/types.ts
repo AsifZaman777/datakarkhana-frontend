@@ -14,8 +14,46 @@ export interface User {
   brevo_account_status?: "none" | "pending" | "pending_email_verification" | "email_verified" | "approved" | "rejected" | string;
   daily_email_limit?: number;
   allow_sync?: number;
+  max_sync_files?: number;
+  synced_files_count?: number;
   plan_tier?: string;
   created_at?: string;
+}
+
+export interface CloudStorageUserOverview {
+  id: number;
+  email: string;
+  full_name: string;
+  allow_sync: number;
+  max_sync_files: number;
+  synced_files: number;
+  total_leads: number;
+}
+
+export interface CloudStorageOverview {
+  bucket_name: string;
+  supabase_configured: boolean;
+  supabase_url: string;
+  total_cloud_datasets: number;
+  total_cloud_rows: number;
+  users: CloudStorageUserOverview[];
+}
+
+export interface UserUploadedDataset {
+  id: number;
+  name: string;
+  category: string;
+  division?: string;
+  district?: string;
+  area?: string;
+  row_count: number;
+  file_path: string;
+  is_synced: number;
+  is_active: number;
+  promotion_status: string;
+  source_job_id?: number;
+  created_at: string;
+  is_cloud_stored: boolean;
 }
 
 export interface BrevoApplication {

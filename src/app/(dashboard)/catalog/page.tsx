@@ -55,6 +55,7 @@ export default function CatalogPage() {
   const [promoteTarget, setPromoteTarget] = useState<{ id: number; query: string } | null>(null);
   const [isDemoting, setIsDemoting] = useState(false);
   const [syncingJobId, setSyncingJobId] = useState<number | null>(null);
+  const [desyncingJobId, setDesyncingJobId] = useState<number | null>(null);
 
   // Load configs
   useEffect(() => {
@@ -232,6 +233,23 @@ export default function CatalogPage() {
     }
   };
 
+  // Desync private dataset from Supabase Storage and cloud PostgreSQL
+  const handleDesyncJob = async (job: ScraperJob) => {
+    setDesyncingJobId(job.id);
+    try {
+      const res = await datasetsApi.desync(job.id);
+      toast.success(res.data.message || `Dataset "${job.query}" desynced from cloud!`);
+      setScraperJobs((prev) =>
+        prev.map((j) => (j.id === job.id ? { ...j, is_synced: 0 } : j))
+      );
+      loadPrivateDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to desync dataset from cloud."));
+    } finally {
+      setDesyncingJobId(null);
+    }
+  };
+
   // Request catalog promotion to PostgreSQL public catalog
   const confirmPromoteJob = async (proposedName: string) => {
     if (!promoteTarget || !proposedName) return;
@@ -391,7 +409,9 @@ export default function CatalogPage() {
                   onDelete={(id, q) => setDeleteTarget({ id, query: q })}
                   onPromote={(id, q) => setPromoteTarget({ id, query: q })}
                   onSync={handleSyncJob}
+                  onDesync={handleDesyncJob}
                   isSyncing={syncingJobId === job.id}
+                  isDesyncing={desyncingJobId === job.id}
                   isAdmin={isAdmin}
                   user={user}
                 />

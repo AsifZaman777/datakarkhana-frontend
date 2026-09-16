@@ -15,9 +15,11 @@ interface PrivateDatasetCardProps {
   onDelete: (jobId: number, query: string) => void;
   onPromote: (jobId: number, query: string) => void;
   onSync?: (job: ScraperJob) => void;
+  onDesync?: (job: ScraperJob) => void;
   isAdmin: boolean;
   user?: User | null;
   isSyncing?: boolean;
+  isDesyncing?: boolean;
 }
 
 export function PrivateDatasetCard({
@@ -27,9 +29,11 @@ export function PrivateDatasetCard({
   onDelete,
   onPromote,
   onSync,
+  onDesync,
   isAdmin,
   user,
   isSyncing = false,
+  isDesyncing = false,
 }: PrivateDatasetCardProps) {
   const { t } = useLanguage();
   const ct = t.catalog || {};
@@ -114,8 +118,24 @@ export function PrivateDatasetCard({
 
         {/* CLOUD SYNC BUTTON / STATUS */}
         {job.is_synced === 1 ? (
-          <div className="w-full flex items-center justify-center gap-1.5 py-1 px-2 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold">
-            <Cloud className="h-3.5 w-3.5" /> Synced to PostgreSQL Cloud
+          <div className="w-full flex items-center justify-between gap-1.5 py-1 px-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold">
+            <div className="flex items-center gap-1.5">
+              <Cloud className="h-3.5 w-3.5" />
+              <span>Synced to Cloud</span>
+            </div>
+            {onDesync && (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={isDesyncing}
+                onClick={() => onDesync(job)}
+                className="h-6 text-[10px] px-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 gap-1 font-medium"
+                title="Desync from cloud (removes from Supabase bucket & cloud DB, keeps local file)"
+              >
+                <CloudOff className="h-3 w-3" />
+                {isDesyncing ? "Desyncing..." : "Desync"}
+              </Button>
+            )}
           </div>
         ) : canSync ? (
           <Button
