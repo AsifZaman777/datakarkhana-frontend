@@ -8,11 +8,12 @@ import { getCloudApiBase, getLocalApiBase, TOKEN_KEY } from "@/lib/constants";
 export function resolveTargetBaseUrl(url?: string): string {
   if (!url) return getCloudApiBase();
   const cleanUrl = url.toLowerCase();
-  // Local machine automation routes (Selenium scraping, WhatsApp Web)
+  // Local machine automation routes (Selenium scraping, WhatsApp Web, local scrape datasets)
   if (
     cleanUrl.startsWith("/api/scraper") ||
     cleanUrl.startsWith("/api/marketing") ||
-    cleanUrl.startsWith("/api/local")
+    cleanUrl.startsWith("/api/local") ||
+    cleanUrl.startsWith("/api/datasets/job_")
   ) {
     return getLocalApiBase();
   }

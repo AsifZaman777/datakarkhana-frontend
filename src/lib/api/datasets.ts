@@ -1,4 +1,6 @@
-import apiClient from "./client";
+import axios from "axios";
+import apiClient, { resolveTargetBaseUrl } from "./client";
+import { getCloudApiBase, getLocalApiBase, TOKEN_KEY } from "@/lib/constants";
 import type { Dataset, DatasetDetail } from "@/lib/types";
 
 export interface DatasetFilters {
@@ -20,10 +22,33 @@ export const datasetsApi = {
     return apiClient.get<Dataset[]>(`/api/datasets?${params.toString()}`);
   },
 
-  detail: (id: string | number, page = 1, limit = 25, search = "") =>
-    apiClient.get<DatasetDetail>(
-      `/api/datasets/${id}?page=${Math.max(1, Math.floor(Number(page) || 1))}&limit=${limit}&search=${encodeURIComponent(search)}`
-    ),
+  detail: async (id: string | number, page = 1, limit = 25, search = "") => {
+    const url = `/api/datasets/${id}?page=${Math.max(1, Math.floor(Number(page) || 1))}&limit=${limit}&search=${encodeURIComponent(search)}`;
+    try {
+      return await apiClient.get<DatasetDetail>(url);
+    } catch (err: any) {
+      // For private jobs (job_...), if primary base URL (local or cloud) failed, attempt fallback to the other base
+      if (String(id).startsWith("job_")) {
+        const currentTarget = resolveTargetBaseUrl(url);
+        const fallbackBase = currentTarget === getLocalApiBase() ? getCloudApiBase() : getLocalApiBase();
+        try {
+          const res = await axios.get<DatasetDetail>(`${fallbackBase}${url}`, {
+            headers: {
+              Authorization:
+                typeof window !== "undefined" && localStorage.getItem(TOKEN_KEY)
+                  ? `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                  : undefined,
+            },
+            timeout: 10000,
+          });
+          return res;
+        } catch {
+          // If fallback also fails, rethrow original error
+        }
+      }
+      throw err;
+    }
+  },
 
   unlock: (id: number | string) =>
     apiClient.post<{ message: string; credits?: number }>(`/api/datasets/${id}/unlock`),
@@ -54,6 +79,8 @@ export const datasetsApi = {
   delete: (id: number | string) =>
     apiClient.delete<{ message: string }>(`/api/admin/datasets/${id}`),
 
-  exportUrl: (id: number | string, format: string, token: string) =>
-    `${apiClient.defaults.baseURL}/api/datasets/${id}/export?format=${format}&token=${token}`,
+  exportUrl: (id: number | string, format: string, token: string) => {
+    const base = String(id).startsWith("job_") ? getLocalApiBase() : getCloudApiBase();
+    return `${base}/api/datasets/${id}/export?format=${format}&token=${token}`;
+  },
 };
