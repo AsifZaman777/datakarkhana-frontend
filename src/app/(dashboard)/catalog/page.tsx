@@ -54,6 +54,7 @@ export default function CatalogPage() {
   const [demoteTarget, setDemoteTarget] = useState<Dataset | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<{ id: number; query: string } | null>(null);
   const [isDemoting, setIsDemoting] = useState(false);
+  const [syncingJobId, setSyncingJobId] = useState<number | null>(null);
 
   // Load configs
   useEffect(() => {
@@ -182,16 +183,88 @@ export default function CatalogPage() {
     }
   };
 
-  // Request catalog promotion
+  // Sync private dataset to PostgreSQL cloud
+  const handleSyncJob = async (job: ScraperJob) => {
+    setSyncingJobId(job.id);
+    try {
+      let fileBlob: Blob | null = null;
+      try {
+        const downloadRes = await fetch(scraperApi.downloadJobUrl(job.id));
+        if (downloadRes.ok) {
+          fileBlob = await downloadRes.blob();
+        }
+      } catch {
+        // Continue if offline or direct
+      }
+
+      const formData = new FormData();
+      formData.append("name", job.query);
+      formData.append("category", "Private Scraped Leads");
+      formData.append("source_job_id", String(job.id));
+      formData.append("row_count", String(job.result_count || 0));
+      if (job.division) formData.append("division", job.division);
+      if (job.district) formData.append("district", job.district);
+      if (job.area) formData.append("area", job.area);
+      if (fileBlob) {
+        formData.append("file", fileBlob, `scraped_job_${job.id}.xlsx`);
+      }
+
+      const res = await datasetsApi.syncToCloud(formData);
+      toast.success(res.data.message || `Dataset "${job.query}" synced to PostgreSQL Cloud!`);
+      setScraperJobs((prev) =>
+        prev.map((j) => (j.id === job.id ? { ...j, is_synced: 1 } : j))
+      );
+      loadPrivateDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to sync dataset to cloud."));
+    } finally {
+      setSyncingJobId(null);
+    }
+  };
+
+  // Request catalog promotion to PostgreSQL public catalog
   const confirmPromoteJob = async (proposedName: string) => {
     if (!promoteTarget || !proposedName) return;
+    const targetJob = scraperJobs.find((j) => j.id === promoteTarget.id);
     try {
-      const res = await scraperApi.requestPromote(promoteTarget.id, proposedName, "General Business");
-      toast.success(res.data.message || "Promotion requested!");
+      let fileBlob: Blob | null = null;
+      try {
+        const downloadRes = await fetch(scraperApi.downloadJobUrl(promoteTarget.id));
+        if (downloadRes.ok) {
+          fileBlob = await downloadRes.blob();
+        }
+      } catch {}
+
+      const formData = new FormData();
+      formData.append("proposed_name", proposedName);
+      formData.append("proposed_category", "General Business");
+      formData.append("source_job_id", String(promoteTarget.id));
+      if (targetJob) {
+        formData.append("row_count", String(targetJob.result_count || 0));
+        if (targetJob.division) formData.append("division", targetJob.division);
+        if (targetJob.district) formData.append("district", targetJob.district);
+        if (targetJob.area) formData.append("area", targetJob.area);
+      }
+      if (fileBlob) {
+        formData.append("file", fileBlob, `promote_job_${promoteTarget.id}.xlsx`);
+      }
+
+      const res = await datasetsApi.promoteRequest(formData);
+      toast.success(res.data.message || "Promotion requested! An administrator will review and publish it.");
+      setScraperJobs((prev) =>
+        prev.map((j) => (j.id === promoteTarget.id ? { ...j, promotion_status: "pending" } : j))
+      );
       loadPrivateDatasets();
       loadPublicDatasets();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Promotion failed."));
+      // Fallback to local scraper endpoint
+      try {
+        const res = await scraperApi.requestPromote(promoteTarget.id, proposedName, "General Business");
+        toast.success(res.data.message || "Promotion requested!");
+        loadPrivateDatasets();
+      } catch (fallbackErr) {
+        toast.error(getApiErrorMessage(fallbackErr, "Promotion failed."));
+      }
     } finally {
       setPromoteTarget(null);
     }
@@ -298,7 +371,10 @@ export default function CatalogPage() {
                   onUseLeads={() => router.push(`/marketing?tab=whatsapp&group=job_${job.id}`)}
                   onDelete={(id, q) => setDeleteTarget({ id, query: q })}
                   onPromote={(id, q) => setPromoteTarget({ id, query: q })}
+                  onSync={handleSyncJob}
+                  isSyncing={syncingJobId === job.id}
                   isAdmin={isAdmin}
+                  user={user}
                 />
               ))}
 

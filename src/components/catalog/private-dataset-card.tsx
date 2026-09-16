@@ -1,12 +1,12 @@
 "use client";
 
-import { Eye, Lock, Trash2, Play, Send, Clock, CheckCircle2, Download } from "lucide-react";
+import { Eye, Lock, Trash2, Play, Send, Clock, CheckCircle2, Download, Cloud, CloudOff } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/providers/language-provider";
 import { scraperApi } from "@/lib/api/scraper";
-import type { ScraperJob } from "@/lib/types";
+import type { ScraperJob, User } from "@/lib/types";
 
 interface PrivateDatasetCardProps {
   job: ScraperJob;
@@ -14,7 +14,10 @@ interface PrivateDatasetCardProps {
   onUseLeads: (jobId: number) => void;
   onDelete: (jobId: number, query: string) => void;
   onPromote: (jobId: number, query: string) => void;
+  onSync?: (job: ScraperJob) => void;
   isAdmin: boolean;
+  user?: User | null;
+  isSyncing?: boolean;
 }
 
 export function PrivateDatasetCard({
@@ -23,18 +26,36 @@ export function PrivateDatasetCard({
   onUseLeads,
   onDelete,
   onPromote,
+  onSync,
   isAdmin,
+  user,
+  isSyncing = false,
 }: PrivateDatasetCardProps) {
   const { t } = useLanguage();
   const ct = t.catalog || {};
+
+  // Cloud sync eligibility check:
+  // Allowed if admin, user has custom allow_sync permission, or has pro/enterprise tier
+  const canSync =
+    isAdmin ||
+    user?.allow_sync === 1 ||
+    user?.plan_tier === "pro" ||
+    user?.plan_tier === "enterprise";
 
   return (
     <Card className="glass-panel border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300 flex flex-col justify-between">
       <CardContent className="p-5 space-y-3">
         <div className="flex justify-between items-center">
-          <Badge className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 gap-1 text-[10px] font-bold">
-            <Lock className="h-3 w-3" /> PRIVATE SCRAPED LEAD
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            <Badge className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 gap-1 text-[10px] font-bold">
+              <Lock className="h-3 w-3" /> PRIVATE LOCAL LEAD
+            </Badge>
+            {job.is_synced === 1 && (
+              <Badge variant="outline" className="text-[10px] font-bold border-emerald-500/40 text-emerald-400 bg-emerald-500/10 gap-1">
+                <Cloud className="h-3 w-3" /> SYNCED
+              </Badge>
+            )}
+          </div>
 
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-mono text-muted-foreground">#{job.id}</span>
@@ -91,13 +112,43 @@ export function PrivateDatasetCard({
           </Button>
         </div>
 
+        {/* CLOUD SYNC BUTTON / STATUS */}
+        {job.is_synced === 1 ? (
+          <div className="w-full flex items-center justify-center gap-1.5 py-1 px-2 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold">
+            <Cloud className="h-3.5 w-3.5" /> Synced to PostgreSQL Cloud
+          </div>
+        ) : canSync ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onSync?.(job)}
+            disabled={isSyncing}
+            className="w-full text-xs h-8 gap-1.5 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 font-semibold"
+          >
+            <Cloud className="h-3.5 w-3.5" />
+            {isSyncing ? "Syncing..." : "Sync to Cloud (PostgreSQL)"}
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled
+            className="w-full text-xs h-8 gap-1.5 opacity-60 text-muted-foreground border-border/40 cursor-not-allowed"
+            title="Cloud sync is exclusive to Pro Growth Pack and Enterprise Mega Pack users, or requires Admin permission."
+          >
+            <Lock className="h-3.5 w-3.5 text-amber-500/70" />
+            <span>Sync to Cloud (Pro / Enterprise)</span>
+          </Button>
+        )}
+
+        {/* PROMOTION STATUS & ACTION */}
         {job.promotion_status === "pending" ? (
           <Button size="sm" variant="outline" disabled className="w-full text-xs h-8 text-amber-500 border-amber-500/30 gap-1">
-            <Clock className="h-3.5 w-3.5" /> Promotion Pending
+            <Clock className="h-3.5 w-3.5" /> Promotion Pending Review
           </Button>
         ) : job.promotion_status === "approved" ? (
           <Button size="sm" variant="outline" disabled className="w-full text-xs h-8 text-emerald-400 border-emerald-500/30 gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Published to Catalog
+            <CheckCircle2 className="h-3.5 w-3.5" /> Published to Public Catalog
           </Button>
         ) : (
           <Button

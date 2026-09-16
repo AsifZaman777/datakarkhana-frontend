@@ -13,6 +13,8 @@ export interface User {
   brevo_api_key?: string;
   brevo_account_status?: "none" | "pending" | "pending_email_verification" | "email_verified" | "approved" | "rejected" | string;
   daily_email_limit?: number;
+  allow_sync?: number;
+  plan_tier?: string;
   created_at?: string;
 }
 
@@ -60,6 +62,10 @@ export interface Dataset {
   area?: string;
   row_count: number;
   price_credits: number;
+  is_active?: number;
+  is_synced?: number;
+  promotion_status?: string;
+  source_job_id?: number;
   created_at?: string;
 }
 
@@ -102,7 +108,8 @@ export interface ScraperJob {
   area?: string;
   status: "pending" | "running" | "done" | "stopped" | "failed";
   result_count?: number;
-  promotion_status?: "pending" | "approved" | "rejected" | null;
+  is_synced?: number;
+  promotion_status?: "pending" | "approved" | "rejected" | string | null;
   created_at?: string;
 }
 
@@ -278,13 +285,20 @@ export interface SecurityViolation {
 
 export interface PromotionRequest {
   id: number;
+  dataset_id?: number | null;
   job_id: number;
   user_id: number;
   user_email: string;
+  user_name?: string;
   name: string;
   category: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | string;
   created_at: string;
+  division?: string;
+  district?: string;
+  area?: string;
+  row_count?: number;
+  source_type?: "dataset" | "job";
 }
 
 export interface DatasetRequest {

@@ -43,6 +43,12 @@ export const adminApi = {
       warning_message: warningMessage,
     }),
 
+  setUserAllowSync: (userId: number, allowSync: boolean) =>
+    apiClient.post<{ success: boolean; allow_sync: number; message: string }>(
+      `/api/admin/users/${userId}/allow-sync`,
+      { allow_sync: allowSync ? 1 : 0 }
+    ),
+
   // ── Security Violations ──
   listViolations: () =>
     apiClient.get<SecurityViolation[]>("/api/admin/violations"),

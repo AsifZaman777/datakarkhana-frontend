@@ -37,6 +37,20 @@ export const datasetsApi = {
   myPrivate: () =>
     apiClient.get<Dataset[]>("/api/datasets/my-private"),
 
+  syncToCloud: (formData: FormData) =>
+    apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
+      "/api/datasets/sync",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    ),
+
+  promoteRequest: (formData: FormData) =>
+    apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
+      "/api/datasets/promote-request",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    ),
+
   delete: (id: number | string) =>
     apiClient.delete<{ message: string }>(`/api/admin/datasets/${id}`),
 

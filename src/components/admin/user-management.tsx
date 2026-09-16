@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building } from "lucide-react";
+import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,23 @@ export function UserManagement({
   const [dailyLimit, setDailyLimit] = useState<number>(300);
   const [brevoStatus, setBrevoStatus] = useState<string>("approved");
   const [isSubmittingBrevo, setIsSubmittingBrevo] = useState(false);
+
+  // Cloud Sync toggle state
+  const [isTogglingSync, setIsTogglingSync] = useState<number | null>(null);
+
+  const handleToggleSync = async (user: User) => {
+    const currentVal = user.allow_sync === 1;
+    setIsTogglingSync(user.id);
+    try {
+      const res = await adminApi.setUserAllowSync(user.id, !currentVal);
+      toast.success(res.data.message || `Cloud sync ${!currentVal ? "enabled" : "disabled"} for ${user.email}`);
+      onRefresh();
+    } catch {
+      toast.error("Failed to update cloud sync permission.");
+    } finally {
+      setIsTogglingSync(null);
+    }
+  };
 
   const handleOpenCreditModal = (user: User, mode: "add" | "deduct") => {
     setCreditModalTarget({ user, mode });
@@ -178,6 +195,7 @@ export function UserManagement({
                 <TableHead>Role</TableHead>
                 <TableHead>Credits Balance</TableHead>
                 <TableHead>Status / Warning</TableHead>
+                <TableHead className="w-44 text-center">Plan & Cloud Sync</TableHead>
                 <TableHead className="w-72 text-right">Actions (Credits / Brevo API / Notice / Ban)</TableHead>
               </TableRow>
             </TableHeader>
@@ -238,6 +256,58 @@ export function UserManagement({
                         Active
                       </Badge>
                     )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className={`text-[9px] uppercase tracking-wider font-mono font-bold ${
+                          u.role === "admin" || u.role === "superadmin"
+                            ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
+                            : u.plan_tier === "enterprise"
+                            ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
+                            : u.plan_tier === "pro"
+                            ? "border-cyan-500/40 text-cyan-400 bg-cyan-500/10"
+                            : "border-border/60 text-muted-foreground bg-card/40"
+                        }`}
+                      >
+                        {u.role === "admin" || u.role === "superadmin"
+                          ? "Admin"
+                          : u.plan_tier === "enterprise"
+                          ? "Enterprise"
+                          : u.plan_tier === "pro"
+                          ? "Pro Growth"
+                          : "Starter"}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isTogglingSync === u.id}
+                        onClick={() => handleToggleSync(u)}
+                        className={`h-6 text-[10px] px-2 gap-1 rounded-full transition-all ${
+                          u.allow_sync === 1
+                            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+                            : "border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
+                        }`}
+                        title={
+                          u.allow_sync === 1
+                            ? "Custom Cloud Sync is Enabled. Click to disable."
+                            : "Custom Cloud Sync is Disabled. Click to grant sync permission."
+                        }
+                      >
+                        {u.allow_sync === 1 ? (
+                          <>
+                            <Cloud className="h-3 w-3 text-emerald-400" />
+                            <span>Sync Allowed</span>
+                          </>
+                        ) : (
+                          <>
+                            <CloudOff className="h-3 w-3" />
+                            <span>Sync Off</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-1.5">
