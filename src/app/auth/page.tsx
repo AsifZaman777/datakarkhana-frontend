@@ -18,8 +18,10 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 
 function AuthContent() {
+  const { t, lang } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading, isAdmin } = useAuth();
@@ -142,14 +144,22 @@ function AuthContent() {
             <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="font-semibold text-rose-200">
-                {isDesktop ? "Local Backend Offline (Port 8000)" : "Backend Server Offline"}
+                {isDesktop
+                  ? (lang === "bn" ? "লোকাল ব্যাকএন্ড অফলাইন (পোর্ট ৮০০০)" : "Local Backend Offline (Port 8000)")
+                  : (lang === "bn" ? "ব্যাকএন্ড সার্ভার অফলাইন" : "Backend Server Offline")}
               </div>
               <div className="text-[11px] text-rose-300/80 mt-0.5 leading-relaxed">
                 {isDesktop
                   ? isRestarting
-                    ? "Killing orphan process on port 8000 and restarting Python engine… please wait."
-                    : "Cannot connect to the local Python engine on port 8000. It may still be launching or starting up."
-                  : "Unable to reach the server. Check your internet connection or follow the setup guide."}
+                    ? (lang === "bn"
+                        ? "পোর্ট ৮০০০-এর প্রসেস বন্ধ করে পাইথন ইঞ্জিন পুনরায় চালু করা হচ্ছে… দয়া করে অপেক্ষা করুন।"
+                        : "Killing orphan process on port 8000 and restarting Python engine… please wait.")
+                    : (lang === "bn"
+                        ? "পোর্ট ৮০০০-এ লোকাল পাইথন ইঞ্জিনে সংযোগ করা যাচ্ছে না। এটি এখনও চালু হচ্ছে।"
+                        : "Cannot connect to the local Python engine on port 8000. It may still be launching or starting up.")
+                  : (lang === "bn"
+                      ? "সার্ভারে পৌঁছানো সম্ভব হচ্ছে না। ইন্টারনেট সংযোগ চেক করুন বা সেটআপ গাইড দেখুন।"
+                      : "Unable to reach the server. Check your internet connection or follow the setup guide.")}
               </div>
               <Button
                 type="button"
@@ -162,10 +172,10 @@ function AuthContent() {
                 <RefreshCw className={cn("h-3 w-3", (isChecking || isRestarting) && "animate-spin")} />
                 <span>
                   {isRestarting
-                    ? "Restarting Engine…"
+                    ? (lang === "bn" ? "ইঞ্জিন পুনরায় চালু হচ্ছে…" : "Restarting Engine…")
                     : isDesktop
-                    ? "Restart & Retry"
-                    : "Fix — Open Setup Guide"}
+                    ? (lang === "bn" ? "পুনরায় চালু ও চেষ্টা" : "Restart & Retry")
+                    : (lang === "bn" ? "সমাধান নির্দেশিকা দেখুন" : "Fix — Open Setup Guide")}
                 </span>
               </Button>
             </div>
@@ -191,7 +201,7 @@ function AuthContent() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Sign In
+            {lang === "bn" ? "সাইন ইন" : "Sign In"}
           </button>
           <button
             type="button"
@@ -202,7 +212,7 @@ function AuthContent() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Register
+            {lang === "bn" ? "রেজিস্ট্রেশন" : "Register"}
           </button>
           <button
             type="button"
@@ -213,7 +223,7 @@ function AuthContent() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span>Verify OTP</span>
+            <span>{lang === "bn" ? "ওটিপি কোড" : "Verify OTP"}</span>
           </button>
         </div>
 

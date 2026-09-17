@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/table";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { LicenseRecord, User } from "@/lib/types";
 
 export function LicenseManagement() {
+  const { t, lang } = useLanguage();
   const [licenses, setLicenses] = useState<LicenseRecord[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -147,10 +149,14 @@ export function LicenseManagement() {
           <div>
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Key className="h-4 w-4 text-primary" />
-              Desktop Production Key Management & Expirations
+              {lang === "bn"
+                ? "ডেস্কটপ প্রোডাকশন কি ব্যবস্থাপনা ও মেয়াদ"
+                : "Desktop Production Key Management & Expirations"}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Control, assign expiration dates, and distribute production keys to local desktop customers.
+              {lang === "bn"
+                ? "ডেস্কটপ গ্রাহকদের জন্য প্রোডাকশন কি তৈরি, মেয়াদ নির্ধারণ এবং বিতরণ নিয়ন্ত্রণ করুন।"
+                : "Control, assign expiration dates, and distribute production keys to local desktop customers."}
             </p>
           </div>
 
@@ -163,7 +169,7 @@ export function LicenseManagement() {
               className="h-8 text-xs gap-1.5"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
+              {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
             </Button>
             <Button
               size="sm"
@@ -171,7 +177,7 @@ export function LicenseManagement() {
               className="h-8 text-xs bg-primary text-primary-foreground font-bold hover:bg-primary/90 gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
-              Generate Production Key
+              {lang === "bn" ? "প্রোডাকশন কি তৈরি করুন" : "Generate Production Key"}
             </Button>
           </div>
         </div>
@@ -181,14 +187,14 @@ export function LicenseManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Production Key</TableHead>
-                <TableHead>Credits & Redeemed</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Expiration Date</TableHead>
-                <TableHead>Status & Days Left</TableHead>
-                <TableHead className="w-36 text-right">Actions</TableHead>
+                <TableHead className="w-16">{lang === "bn" ? "আইডি" : "ID"}</TableHead>
+                <TableHead>{lang === "bn" ? "গ্রাহক" : "Customer"}</TableHead>
+                <TableHead>{lang === "bn" ? "প্রোডাকশন কি" : "Production Key"}</TableHead>
+                <TableHead>{lang === "bn" ? "ক্রেডিট ও রিডিম" : "Credits & Redeemed"}</TableHead>
+                <TableHead>{lang === "bn" ? "প্ল্যান" : "Plan"}</TableHead>
+                <TableHead>{lang === "bn" ? "মেয়াদের তারিখ" : "Expiration Date"}</TableHead>
+                <TableHead>{lang === "bn" ? "স্ট্যাটাস ও বাকি দিন" : "Status & Days Left"}</TableHead>
+                <TableHead className="w-36 text-right">{lang === "bn" ? "অ্যাকশন" : "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -201,7 +207,7 @@ export function LicenseManagement() {
                     <TableCell className="font-mono text-xs text-muted-foreground">#{lic.id}</TableCell>
                     <TableCell className="text-xs">
                       <div className="font-semibold text-foreground">{lic.customer_name}</div>
-                      <div className="text-[10px] text-muted-foreground">{lic.customer_email || lic.user_email_ref || "Direct Customer"}</div>
+                      <div className="text-[10px] text-muted-foreground">{lic.customer_email || lic.user_email_ref || (lang === "bn" ? "সরাসরি গ্রাহক" : "Direct Customer")}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
@@ -213,7 +219,7 @@ export function LicenseManagement() {
                           variant="ghost"
                           className="h-6 w-6 text-muted-foreground hover:text-foreground"
                           onClick={() => copyToClipboard(lic.production_key, `lic-${lic.id}`)}
-                          title="Copy Key"
+                          title={lang === "bn" ? "কি কপি করুন" : "Copy Key"}
                         >
                           {copiedId === `lic-${lic.id}` ? (
                             <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -231,11 +237,11 @@ export function LicenseManagement() {
                         </div>
                         {lic.is_redeemed ? (
                           <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
-                            Redeemed
+                            {lang === "bn" ? "রিডিমকৃত" : "Redeemed"}
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-amber-500/40 text-amber-500 bg-amber-500/10">
-                            Pending
+                            {lang === "bn" ? "বাকি আছে" : "Pending"}
                           </Badge>
                         )}
                       </div>
@@ -255,19 +261,23 @@ export function LicenseManagement() {
                     <TableCell>
                       {lic.status === "revoked" ? (
                         <Badge variant="destructive" className="text-[10px] gap-1">
-                          <ShieldAlert className="h-3 w-3" /> Revoked
+                          <ShieldAlert className="h-3 w-3" />
+                          {lang === "bn" ? "বাতিলকৃত" : "Revoked"}
                         </Badge>
                       ) : isExpired ? (
                         <Badge variant="destructive" className="text-[10px] gap-1">
-                          <AlertTriangle className="h-3 w-3" /> Expired
+                          <AlertTriangle className="h-3 w-3" />
+                          {lang === "bn" ? "মেয়াদোত্তীর্ণ" : "Expired"}
                         </Badge>
                       ) : isWarning ? (
                         <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-[10px] gap-1">
-                          <Clock className="h-3 w-3" /> {lic.days_remaining}d left (Warning)
+                          <Clock className="h-3 w-3" />
+                          {lang === "bn" ? `${lic.days_remaining} দিন বাকি (সতর্কতা)` : `${lic.days_remaining}d left (Warning)`}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px] gap-1">
-                          <ShieldCheck className="h-3 w-3" /> Active • {lic.days_remaining}d left
+                          <ShieldCheck className="h-3 w-3" />
+                          {lang === "bn" ? `সক্রিয় • ${lic.days_remaining} দিন বাকি` : `Active • ${lic.days_remaining}d left`}
                         </Badge>
                       )}
                     </TableCell>
@@ -282,7 +292,7 @@ export function LicenseManagement() {
                           }}
                           className="h-7 text-[11px] px-2"
                         >
-                          Extend
+                          {lang === "bn" ? "মেয়াদ বৃদ্ধি" : "Extend"}
                         </Button>
                         {lic.status !== "revoked" && (
                           <Button
@@ -290,9 +300,9 @@ export function LicenseManagement() {
                             variant="ghost"
                             onClick={() => handleRevoke(lic.id)}
                             className="h-7 text-[11px] px-1.5 text-muted-foreground hover:text-destructive"
-                            title="Revoke License"
+                            title={lang === "bn" ? "লাইসেন্স বাতিল করুন" : "Revoke License"}
                           >
-                            Revoke
+                            {lang === "bn" ? "বাতিল" : "Revoke"}
                           </Button>
                         )}
                       </div>
@@ -304,7 +314,9 @@ export function LicenseManagement() {
               {licenses.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
-                    No production keys issued yet. Click &ldquo;Generate Production Key&rdquo; to create one.
+                    {lang === "bn"
+                      ? "কোনো প্রোডাকশন কি ইস্যু করা হয়নি। নতুন তৈরি করতে \"প্রোডাকশন কি তৈরি করুন\"-এ ক্লিক করুন।"
+                      : "No production keys issued yet. Click “Generate Production Key” to create one."}
                   </TableCell>
                 </TableRow>
               )}
@@ -319,10 +331,12 @@ export function LicenseManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
               <Key className="h-5 w-5 text-primary" />
-              Generate Production Key
+              {lang === "bn" ? "প্রোডাকশন কি তৈরি করুন" : "Generate Production Key"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Create a signed license key with credits and an expiration date for your customer.
+              {lang === "bn"
+                ? "আপনার গ্রাহকের জন্য ক্রেডিট এবং মেয়াদসহ একটি সাইন করা লাইসেন্স কি তৈরি করুন।"
+                : "Create a signed license key with credits and an expiration date for your customer."}
             </DialogDescription>
           </DialogHeader>
 
@@ -332,7 +346,7 @@ export function LicenseManagement() {
               <div className="space-y-1.5 p-2 rounded-lg bg-background/80 border border-border/50">
                 <Label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
                   <UserCheck className="h-3 w-3 text-primary" />
-                  Quick Assign to Registered User:
+                  {lang === "bn" ? "নিবন্ধিত ব্যবহারকারীকে দ্রুত বরাদ্দ:" : "Quick Assign to Registered User:"}
                 </Label>
                 <select
                   aria-label="Quick Assign to Registered User"
@@ -342,10 +356,14 @@ export function LicenseManagement() {
                   }}
                   defaultValue=""
                 >
-                  <option value="" disabled>-- Select a registered user or enter details below --</option>
+                  <option value="" disabled>
+                    {lang === "bn"
+                      ? "-- একজন ব্যবহারকারী নির্বাচন করুন বা নিচে লিখুন --"
+                      : "-- Select a registered user or enter details below --"}
+                  </option>
                   {registeredUsers.map((u) => (
                     <option key={u.id} value={u.email}>
-                      {u.full_name} ({u.email}) — Current Credits: {u.credits}
+                      {u.full_name} ({u.email}) — {lang === "bn" ? "বর্তমান ক্রেডিট" : "Current Credits"}: {u.credits}
                     </option>
                   ))}
                 </select>
@@ -353,9 +371,11 @@ export function LicenseManagement() {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Customer / Company Name:</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn" ? "গ্রাহক / কোম্পানির নাম:" : "Customer / Company Name:"}
+              </Label>
               <Input
-                placeholder="e.g. Acme Agency Ltd."
+                placeholder={lang === "bn" ? "যেমন: একমি এজেন্সি লিমিটেড" : "e.g. Acme Agency Ltd."}
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 className="h-8 text-xs"
@@ -363,7 +383,9 @@ export function LicenseManagement() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Customer Email (Optional, auto-links account):</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn" ? "গ্রাহকের ইমেইল (ঐচ্ছিক, অ্যাকাউন্ট লিঙ্ক হবে):" : "Customer Email (Optional, auto-links account):"}
+              </Label>
               <Input
                 type="email"
                 placeholder="customer@example.com"
@@ -377,7 +399,7 @@ export function LicenseManagement() {
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <Coins className="h-3.5 w-3.5 text-amber-400" />
-                Credits to Add Upon Activation:
+                {lang === "bn" ? "অ্যাক্টিভেশনের সাথে যুক্ত হওয়ার ক্রেডিট:" : "Credits to Add Upon Activation:"}
               </Label>
               <div className="grid grid-cols-4 gap-2">
                 {[100, 250, 500, 1000].map((c) => (
@@ -394,7 +416,9 @@ export function LicenseManagement() {
                 ))}
               </div>
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-[11px] text-muted-foreground">Or custom credits:</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {lang === "bn" ? "অথবা কাস্টম ক্রেডিট:" : "Or custom credits:"}
+                </span>
                 <Input
                   type="number"
                   min={0}
@@ -402,21 +426,21 @@ export function LicenseManagement() {
                   onChange={(e) => setCreditsAmount(parseInt(e.target.value) || 0)}
                   className="h-8 w-28 text-xs font-mono"
                 />
-                <span className="text-[11px] text-muted-foreground">credits</span>
+                <span className="text-[11px] text-muted-foreground">{lang === "bn" ? "ক্রেডিট" : "credits"}</span>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                License Validity Duration:
+                {lang === "bn" ? "লাইসেন্স মেয়াদের সময়কাল:" : "License Validity Duration:"}
               </Label>
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: "30 Days", days: 30 },
-                  { label: "60 Days", days: 60 },
-                  { label: "90 Days", days: 90 },
-                  { label: "1 Year", days: 365 },
+                  { label: lang === "bn" ? "৩০ দিন" : "30 Days", days: 30 },
+                  { label: lang === "bn" ? "৬০ দিন" : "60 Days", days: 60 },
+                  { label: lang === "bn" ? "৯০ দিন" : "90 Days", days: 90 },
+                  { label: lang === "bn" ? "১ বছর" : "1 Year", days: 365 },
                 ].map((p) => (
                   <Button
                     key={p.days}
@@ -431,7 +455,9 @@ export function LicenseManagement() {
                 ))}
               </div>
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-[11px] text-muted-foreground">Or custom days:</span>
+                <span className="text-[11px] text-muted-foreground">
+                  {lang === "bn" ? "অথবা নির্দিষ্ট দিন:" : "Or custom days:"}
+                </span>
                 <Input
                   type="number"
                   min={1}
@@ -439,14 +465,16 @@ export function LicenseManagement() {
                   onChange={(e) => setExpiryDays(parseInt(e.target.value) || 30)}
                   className="h-8 w-24 text-xs font-mono"
                 />
-                <span className="text-[11px] text-muted-foreground">days</span>
+                <span className="text-[11px] text-muted-foreground">{lang === "bn" ? "দিন" : "days"}</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Custom Key Format (Optional):</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn" ? "কাস্টম কি ফরম্যাট (ঐচ্ছিক):" : "Custom Key Format (Optional):"}
+              </Label>
               <Input
-                placeholder="Auto-generated if blank (e.g. DK-PROD-2026-XXXX)"
+                placeholder={lang === "bn" ? "খালি রাখলে স্বয়ংক্রিয় (যেমন: DK-PROD-2026-XXXX)" : "Auto-generated if blank (e.g. DK-PROD-2026-XXXX)"}
                 value={customKey}
                 onChange={(e) => setCustomKey(e.target.value)}
                 className="h-8 text-xs font-mono"
@@ -456,7 +484,7 @@ export function LicenseManagement() {
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setShowGenerateModal(false)} className="h-8 text-xs">
-              Cancel
+              {lang === "bn" ? "বাতিল" : "Cancel"}
             </Button>
             <Button
               size="sm"
@@ -464,7 +492,9 @@ export function LicenseManagement() {
               disabled={isGenerating}
               className="h-8 text-xs bg-primary text-primary-foreground font-bold"
             >
-              {isGenerating ? "Generating..." : "Generate Key"}
+              {isGenerating
+                ? (lang === "bn" ? "তৈরি হচ্ছে..." : "Generating...")
+                : (lang === "bn" ? "কি তৈরি করুন" : "Generate Key")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -476,10 +506,12 @@ export function LicenseManagement() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
               <Calendar className="h-5 w-5 text-primary" />
-              Extend License Expiration
+              {lang === "bn" ? "লাইসেন্স মেয়াদ বৃদ্ধি" : "Extend License Expiration"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Add more validity days to {extendTarget?.customer_name}&rsquo;s license.
+              {lang === "bn"
+                ? `${extendTarget?.customer_name}-এর লাইসেন্সে অতিরিক্ত মেয়াদ যুক্ত করুন।`
+                : `Add more validity days to ${extendTarget?.customer_name}’s license.`}
             </DialogDescription>
           </DialogHeader>
 
@@ -487,12 +519,13 @@ export function LicenseManagement() {
             <div className="p-2.5 rounded bg-background/60 border border-border/50">
               <div className="font-semibold">{extendTarget?.production_key}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5">
-                Currently expires: {extendTarget ? new Date(extendTarget.expires_at).toLocaleDateString() : ""}
+                {lang === "bn" ? "বর্তমান মেয়াদ শেষ: " : "Currently expires: "}
+                {extendTarget ? new Date(extendTarget.expires_at).toLocaleDateString() : ""}
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Add Days:</Label>
+              <Label className="text-xs font-semibold">{lang === "bn" ? "দিন যোগ করুন:" : "Add Days:"}</Label>
               <div className="grid grid-cols-4 gap-2">
                 {[30, 60, 90, 180].map((d) => (
                   <Button
@@ -503,7 +536,7 @@ export function LicenseManagement() {
                     onClick={() => setExtendDays(d)}
                     className="h-8 text-xs"
                   >
-                    +{d} Days
+                    +{d} {lang === "bn" ? "দিন" : "Days"}
                   </Button>
                 ))}
               </div>
@@ -512,7 +545,7 @@ export function LicenseManagement() {
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setExtendTarget(null)} className="h-8 text-xs">
-              Cancel
+              {lang === "bn" ? "বাতিল" : "Cancel"}
             </Button>
             <Button
               size="sm"
@@ -520,7 +553,9 @@ export function LicenseManagement() {
               disabled={isExtending}
               className="h-8 text-xs bg-primary text-primary-foreground font-bold"
             >
-              {isExtending ? "Extending..." : "Confirm Extension"}
+              {isExtending
+                ? (lang === "bn" ? "বৃদ্ধি করা হচ্ছে..." : "Extending...")
+                : (lang === "bn" ? "মেয়াদ বৃদ্ধি নিশ্চিত করুন" : "Confirm Extension")}
             </Button>
           </DialogFooter>
         </DialogContent>

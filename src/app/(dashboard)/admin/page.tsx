@@ -34,7 +34,7 @@ interface AdminPageProps {
 }
 
 export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const searchParams = useSearchParams();
   const queryTab = searchParams ? searchParams.get("tab") : null;
   const at = (t as any).admin || {};
@@ -76,10 +76,32 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
   const pendingRequests = datasetRequests.filter((r) => r.status === "pending").length;
 
   const moreTabs = [
-    { id: "promotions", label: at.tabPromotions || "Catalog Promotions", count: promotions.length, icon: Settings, color: "text-purple-400" },
-    { id: "requests", label: at.tabRequests || "Dataset Requests", count: pendingRequests, icon: Inbox, color: "text-emerald-400" },
-    { id: "brevo", label: "Brevo Verifications", icon: Building, color: "text-purple-400" },
-    { id: "gateway", label: at.tabGateway || "Gateway Settings", icon: Settings, color: "text-muted-foreground" },
+    {
+      id: "promotions",
+      label: lang === "bn" ? "ক্যাটালগ প্রমোশন" : (at.tabPromotions || "Catalog Promotions"),
+      count: promotions.length,
+      icon: Settings,
+      color: "text-purple-400",
+    },
+    {
+      id: "requests",
+      label: lang === "bn" ? "ডাটা রিকোয়েস্ট" : (at.tabRequests || "Dataset Requests"),
+      count: pendingRequests,
+      icon: Inbox,
+      color: "text-emerald-400",
+    },
+    {
+      id: "brevo",
+      label: lang === "bn" ? "ব্রেভো ভেরিফিকেশন" : "Brevo Verifications",
+      icon: Building,
+      color: "text-purple-400",
+    },
+    {
+      id: "gateway",
+      label: lang === "bn" ? "গেটওয়ে সেটিংস" : (at.tabGateway || "Gateway Settings"),
+      icon: Settings,
+      color: "text-muted-foreground",
+    },
   ];
 
   const activeMoreTab = moreTabs.find((t) => t.id === activeTab);
@@ -87,28 +109,38 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-foreground">{at.title || "Admin Overview & Control Center"}</h1>
+        <h1 className="text-2xl font-extrabold text-foreground">
+          {lang === "bn"
+            ? "এডমিন ওভারভিউ ও কন্ট্রোল সেন্টার"
+            : (at.title || "Admin Overview & Control Center")}
+        </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          {at.subtitle || "Manage dataset uploads, promotion approvals, customer payments, package settings, and gateway configurations"}
+          {lang === "bn"
+            ? "ডাটা আপলোড, প্রমোশন অনুমোদন, কাস্টমার পেমেন্ট, প্যাকেজ সেটিংস ও গেটওয়ে কনফিগারেশন পরিচালনা করুন"
+            : (at.subtitle || "Manage dataset uploads, promotion approvals, customer payments, package settings, and gateway configurations")}
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-card/60 border border-border/40 p-1 flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap">
           <TabsTrigger value="dashboard" className="gap-2 text-xs font-semibold shrink-0">
-            <LayoutDashboard className="h-4 w-4 text-primary" /> Dashboard
+            <LayoutDashboard className="h-4 w-4 text-primary" /> {lang === "bn" ? "ড্যাশবোর্ড" : "Dashboard"}
           </TabsTrigger>
           <TabsTrigger value="packages" className="gap-2 text-xs font-semibold shrink-0">
-            <Coins className="h-4 w-4 text-amber-500" /> Package Settings
+            <Coins className="h-4 w-4 text-amber-500" /> {lang === "bn" ? "প্যাকেজ সেটিংস" : "Package Settings"}
           </TabsTrigger>
           <TabsTrigger value="payments" className="gap-2 text-xs font-semibold shrink-0">
-            <Coins className="h-4 w-4 text-amber-500" /> {at.tabPayments || "Payment Verification"} ({pendingPayments})
+            <Coins className="h-4 w-4 text-amber-500" />{" "}
+            {lang === "bn"
+              ? `পেমেন্ট ভেরিফিকেশন (${pendingPayments})`
+              : `${at.tabPayments || "Payment Verification"} (${pendingPayments})`}
           </TabsTrigger>
           <TabsTrigger value="licenses" className="gap-2 text-xs font-semibold shrink-0">
-            <Key className="h-4 w-4 text-primary" /> Desktop Licenses
+            <Key className="h-4 w-4 text-primary" /> {lang === "bn" ? "ডেস্কটপ লাইসেন্স" : "Desktop Licenses"}
           </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2 text-xs font-semibold shrink-0">
-            <Upload className="h-4 w-4 text-cyan-400" /> {at.tabUpload || "Upload Dataset"}
+            <Upload className="h-4 w-4 text-cyan-400" />{" "}
+            {lang === "bn" ? "ডাটা আপলোড" : (at.tabUpload || "Upload Dataset")}
           </TabsTrigger>
 
           {/* Three-Dot / More Modules Dropdown */}
@@ -128,7 +160,7 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
               ) : (
                 <>
                   <MoreHorizontal className="h-4 w-4" />
-                  <span>More Modules</span>
+                  <span>{lang === "bn" ? "অন্যান্য মডিউল" : "More Modules"}</span>
                 </>
               )}
               <ChevronDown className="h-3 w-3 opacity-70" />
@@ -205,13 +237,17 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
         {/* TAB 5: REQUESTS */}
         <TabsContent value="requests" className="pt-4 space-y-4">
           <div className="rounded-lg border border-border/40 overflow-hidden bg-card/60 p-4">
-            <h3 className="text-sm font-bold mb-3">{at.tabRequests || "Custom Dataset Requests List"}</h3>
+            <h3 className="text-sm font-bold mb-3">
+              {lang === "bn" ? "কাস্টম ডাটা রিকোয়েস্ট তালিকা" : (at.tabRequests || "Custom Dataset Requests List")}
+            </h3>
             <div className="space-y-3">
               {datasetRequests.map((req) => (
                 <div key={req.id} className="p-3 rounded-lg border border-border/30 bg-background/50 flex justify-between items-center text-xs">
                   <div>
                     <div className="font-bold text-foreground">{req.category_query}</div>
-                    <div className="text-muted-foreground">User: {req.user_email} | Phone: {req.phone}</div>
+                    <div className="text-muted-foreground">
+                      {lang === "bn" ? "ব্যবহারকারী: " : "User: "}{req.user_email} | {lang === "bn" ? "ফোন: " : "Phone: "}{req.phone}
+                    </div>
                   </div>
                   <span className="font-mono uppercase text-amber-500 font-bold">{req.status}</span>
                 </div>

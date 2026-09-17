@@ -35,21 +35,22 @@ interface NavItem {
 
 export function TopNavbar() {
   const pathname = usePathname();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const isDesktop = useIsDesktop();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const primaryNavItems: NavItem[] = [
-    { label: t.nav.home, href: "/", section: "" },
-    { label: "Download", href: "/#download", section: "download", icon: Laptop },
-    { label: t.nav.datasets, href: "/catalog", section: "catalog", icon: Database },
-    { label: t.nav.pricing, href: "/#pricing", section: "pricing" },
+    { label: t.nav?.home || (lang === "bn" ? "হোম" : "Home"), href: "/", section: "" },
+    { label: t.nav?.download || (lang === "bn" ? "ডাউনলোড অ্যাপ" : "Download App"), href: "/#download", section: "download", icon: Laptop },
+    { label: t.nav?.datasets || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets"), href: "/catalog", section: "catalog", icon: Database },
+    { label: t.nav?.pricing || (lang === "bn" ? "মূল্যতালিকা (৳)" : "Pricing (BDT ৳)"), href: "/#pricing", section: "pricing" },
   ];
 
   const moreNavItems: NavItem[] = [
-    { label: t.nav.features, href: "/#features", section: "features" },
-    { label: t.nav.contact, href: "/#contact", section: "contact" },
+    { label: t.nav?.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", section: "tutorial" },
+    { label: t.nav?.features || (lang === "bn" ? "ফিচারসমূহ" : "Features"), href: "/#features", section: "features" },
+    { label: t.nav?.contact || (lang === "bn" ? "যোগাযোগ" : "Contact"), href: "/#contact", section: "contact" },
   ];
 
   const allNavItems = [...primaryNavItems, ...moreNavItems];
@@ -125,10 +126,10 @@ export function TopNavbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer outline-none border-none bg-transparent"
-                  title="More Pages"
+                  title={t.nav?.more || (lang === "bn" ? "আরও" : "More")}
                 >
                   <MoreHorizontal className="h-4 w-4" />
-                  <span>More</span>
+                  <span>{t.nav?.more || (lang === "bn" ? "আরও" : "More")}</span>
                   <ChevronDown className="h-3 w-3 opacity-60" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border/60 shadow-xl p-1.5 space-y-1 z-50">
@@ -161,17 +162,21 @@ export function TopNavbar() {
             <Link href={user.role === "admin" || user.role === "superadmin" ? "/admin" : "/catalog"}>
               <Button size="sm" className="gap-2 rounded-lg font-semibold bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90">
                 <LayoutDashboard className="h-4 w-4" />
-                <span className="hidden sm:inline">{user.role === "admin" || user.role === "superadmin" ? "Admin Panel" : "Dashboard"}</span>
+                <span className="hidden sm:inline">
+                  {user.role === "admin" || user.role === "superadmin"
+                    ? (t.nav?.adminPanel || (lang === "bn" ? "এডমিন প্যানেল" : "Admin Panel"))
+                    : (t.nav?.dashboard || (lang === "bn" ? "ড্যাশবোর্ড" : "Dashboard"))}
+                </span>
               </Button>
             </Link>
           ) : (
             !isDesktop && (
-              <a href="/#download">
+              <Link href="/#download">
                 <Button size="sm" className="gap-2 rounded-lg font-bold bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90">
                   <Laptop className="h-4 w-4" />
-                  <span>Download App</span>
+                  <span>{t.nav?.downloadApp || (lang === "bn" ? "ডাউনলোড অ্যাপ" : "Download App")}</span>
                 </Button>
-              </a>
+              </Link>
             )
           )}
 
@@ -213,16 +218,20 @@ export function TopNavbar() {
                       >
                         <Button className="w-full gap-2 font-bold bg-primary text-primary-foreground">
                           <LayoutDashboard className="h-4 w-4" />
-                          <span>{user.role === "admin" || user.role === "superadmin" ? "Admin Panel" : "My Dashboard"}</span>
+                          <span>
+                            {user.role === "admin" || user.role === "superadmin"
+                              ? (t.nav?.adminPanel || (lang === "bn" ? "এডমিন প্যানেল" : "Admin Panel"))
+                              : (t.nav?.dashboard || (lang === "bn" ? "মাই ড্যাশবোর্ড" : "My Dashboard"))}
+                          </span>
                         </Button>
                       </Link>
                     ) : (
-                      <a href="/#download" onClick={() => setMobileOpen(false)} className="block">
+                      <Link href="/#download" onClick={() => setMobileOpen(false)} className="block">
                         <Button className="w-full gap-2 font-bold bg-primary text-primary-foreground">
                           <Laptop className="h-4 w-4" />
-                          <span>Download App</span>
+                          <span>{t.nav?.downloadApp || (lang === "bn" ? "ডাউনলোড অ্যাপ" : "Download App")}</span>
                         </Button>
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </SheetContent>

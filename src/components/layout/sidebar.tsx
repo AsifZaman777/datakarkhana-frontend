@@ -25,6 +25,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,15 +59,15 @@ interface SidebarProps {
 type NavItem = {
   label: string;
   href: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
   isDanger?: boolean;
 };
 
 type NavGroup = {
   title: string;
-  icon: React.ElementType;
-  color?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
   items: NavItem[];
 };
 
@@ -82,90 +83,109 @@ function SidebarInner({
 }) {
   const pathname = usePathname();
   const { user, isAdmin, logout } = useAuth();
-  const { lang, toggleLang } = useLanguage();
+  const { t, lang, toggleLang } = useLanguage();
+  const st = t.sidebar || {};
   const isSuperadmin = user?.role === "superadmin";
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    Administration: true,
-    "Customer Management": true,
-    "Dataset Management": true,
-    "Marketing & Campaigns": true,
-    "Payment Module": false,
-    "Security Management": false,
-    "Main Navigation": true,
+    admin: true,
+    customers: true,
+    datasets: true,
+    marketing: true,
+    payment: false,
+    security: false,
+    tutorial: true,
+    main: true,
   });
 
-  const toggleGroup = (title: string) =>
-    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  const toggleGroup = (key: string) =>
+    setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
 
   // ── Admin grouped nav ──
-  const adminGroups: NavGroup[] = [
+  const adminGroups: (NavGroup & { key: string })[] = [
     {
-      title: "Administration",
+      key: "admin",
+      title: st.adminHeader || (lang === "bn" ? "অ্যাডমিনিস্ট্রেশন" : "Administration"),
       icon: Settings,
       color: "text-cyan-400",
       items: [
-        { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
-        { label: "Package Settings", href: "/admin/packages", icon: Coins, iconColor: "text-amber-500" },
-        { label: "Dataset Requests", href: "/admin/requests", icon: Inbox, iconColor: "text-amber-500" },
-        { label: "Gateway & QR Settings", href: "/admin/gateway", icon: Settings, iconColor: "text-cyan-500" },
+        { label: st.adminDashboard || (lang === "bn" ? "এডমিন ড্যাশবোর্ড" : "Admin Dashboard"), href: "/admin", icon: LayoutDashboard },
+        { label: st.packageSettings || (lang === "bn" ? "প্যাকেজ সেটিংস" : "Package Settings"), href: "/admin/packages", icon: Coins, iconColor: "text-amber-500" },
+        { label: st.requests || (lang === "bn" ? "ডাটা রিকুয়েস্টসমূহ" : "Dataset Requests"), href: "/admin/requests", icon: Inbox, iconColor: "text-amber-500" },
+        { label: st.gateway || (lang === "bn" ? "গেটওয়ে ও কিউআর সেটিংস" : "Gateway & QR Settings"), href: "/admin/gateway", icon: Settings, iconColor: "text-cyan-500" },
       ],
     },
     {
-      title: "Customer Management",
+      key: "customers",
+      title: st.customerManagement || (lang === "bn" ? "গ্রাহক ব্যবস্থাপনা" : "Customer Management"),
       icon: Users,
       color: "text-emerald-400",
       items: [
-        { label: "Customers & Credits", href: "/users", icon: User },
+        { label: st.users || (lang === "bn" ? "গ্রাহক ও ক্রেডিট" : "Customers & Credits"), href: "/users", icon: User },
       ],
     },
     {
-      title: "Dataset Management",
+      key: "datasets",
+      title: st.datasetManagement || (lang === "bn" ? "ডাটাবেস ব্যবস্থাপনা" : "Dataset Management"),
       icon: Database,
       color: "text-purple-400",
       items: [
-        { label: "Datasets Catalog", href: "/catalog", icon: Database },
-        { label: "Live Scraper Console", href: "/scraper", icon: Search },
+        { label: st.catalog || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets Catalog"), href: "/catalog", icon: Database },
+        { label: st.scraperConsole || (lang === "bn" ? "লাইভ স্ক্র্যাপার কনসোল" : "Live Scraper Console"), href: "/scraper", icon: Search },
       ],
     },
     {
-      title: "Marketing & Campaigns",
+      key: "marketing",
+      title: st.marketingCampaigns || (lang === "bn" ? "মার্কেটিং ও ক্যাম্পেইন" : "Marketing & Campaigns"),
       icon: Send,
       color: "text-pink-400",
       items: [
-        { label: "Marketing Portal", href: "/marketing", icon: Send, iconColor: "text-pink-400" },
+        { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send, iconColor: "text-pink-400" },
       ],
     },
     {
-      title: "Payment Module",
+      key: "payment",
+      title: st.paymentModule || (lang === "bn" ? "পেমেন্ট মডিউল" : "Payment Module"),
       icon: CreditCard,
       color: "text-amber-400",
       items: [
-        { label: "Payment Verification", href: "/admin/payments", icon: Coins, iconColor: "text-amber-500" },
-        { label: "Upgrade Package", href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
+        { label: st.payments || (lang === "bn" ? "পেমেন্ট ভেরিফিকেশন" : "Payment Verification"), href: "/admin/payments", icon: Coins, iconColor: "text-amber-500" },
+        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
       ],
     },
     {
-      title: "Security Management",
+      key: "security",
+      title: st.securityManagement || (lang === "bn" ? "নিরাপত্তা ব্যবস্থাপনা" : "Security Management"),
       icon: Lock,
       color: "text-rose-400",
       items: [
-        { label: "Security Module", href: "/security", icon: Shield, isDanger: true },
+        { label: st.security || (lang === "bn" ? "সিকিউরিটি মডিউল" : "Security Module"), href: "/security", icon: Shield, isDanger: true },
+      ],
+    },
+    {
+      key: "tutorial",
+      title: lang === "bn" ? "সহায়িকা ও টিউটোরিয়াল" : "Guides & Tutorials",
+      icon: BookOpen,
+      color: "text-cyan-400",
+      items: [
+        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-400" },
       ],
     },
   ];
 
   // ── Regular user nav ──
-  const userGroups: NavGroup[] = [
+  const userGroups: (NavGroup & { key: string })[] = [
     {
-      title: "Main Navigation",
+      key: "main",
+      title: st.mainHeader || (lang === "bn" ? "প্রধান নেভিগেশন" : "Main Navigation"),
       icon: LayoutDashboard,
       color: "text-primary",
       items: [
-        { label: "Datasets Catalog", href: "/catalog", icon: Database },
-        { label: "Live Scraper Console", href: "/scraper", icon: Search },
-        { label: "Marketing Portal", href: "/marketing", icon: Send },
-        { label: "Upgrade Package", href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
+        { label: st.catalog || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets Catalog"), href: "/catalog", icon: Database },
+        { label: st.scraperConsole || (lang === "bn" ? "লাইভ স্ক্র্যাপার কনসোল" : "Live Scraper Console"), href: "/scraper", icon: Search },
+        { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send },
+        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
+        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-400" },
       ],
     },
   ];
@@ -282,13 +302,13 @@ function SidebarInner({
             <div className="px-2 space-y-0.5">
               {groups.map((group) => {
                 const GroupIcon = group.icon;
-                const isOpen = openGroups[group.title] ?? true;
+                const isOpen = openGroups[group.key] ?? true;
 
                 return (
                   <Collapsible
-                    key={group.title}
+                    key={group.key}
                     open={isOpen}
-                    onOpenChange={() => toggleGroup(group.title)}
+                    onOpenChange={() => toggleGroup(group.key)}
                   >
                     <CollapsibleTrigger
                       className={cn(
@@ -340,7 +360,7 @@ function SidebarInner({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  {user?.credits ?? 0} Credits — Buy More
+                  {user?.credits ?? 0} {st.creditsBalance || (lang === "bn" ? "ক্রেডিট" : "Credits")} — {st.buyMore || (lang === "bn" ? "আরও কিনুন" : "Buy More")}
                 </TooltipContent>
               </Tooltip>
 
@@ -355,7 +375,7 @@ function SidebarInner({
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right">Logout</TooltipContent>
+                <TooltipContent side="right">{st.logout || (lang === "bn" ? "লগআউট" : "Logout")}</TooltipContent>
               </Tooltip>
             </>
           ) : (
@@ -367,7 +387,7 @@ function SidebarInner({
                 className="w-full text-xs h-8 gap-2 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
               >
                 <Globe className="h-3.5 w-3.5" />
-                {lang === "en" ? "🇧🇩 বাংলা ভাষা" : "🇺🇸 English"}
+                {st.langSwitchText || (lang === "en" ? "🇧🇩 বাংলা ভাষা" : "🇺🇸 English")}
               </Button>
 
               <div className="pt-0.5 pb-1">
@@ -389,7 +409,7 @@ function SidebarInner({
                   className="flex-1 text-xs h-8 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold hover:from-amber-600 hover:to-amber-700"
                 >
                   <Coins className="h-3.5 w-3.5 mr-1" />
-                  {user?.credits ?? 0} CR ➕ Buy
+                  {user?.credits ?? 0} CR ➕ {st.buyCredits || (lang === "bn" ? "কিনুন" : "Buy")}
                 </Button>
 
                 <Button
@@ -397,7 +417,7 @@ function SidebarInner({
                   size="icon"
                   onClick={logout}
                   className="h-8 w-8 text-muted-foreground hover:text-rose-400 shrink-0"
-                  title="Logout"
+                  title={st.logout || (lang === "bn" ? "লগআউট" : "Logout")}
                 >
                   <LogOut className="h-3.5 w-3.5" />
                 </Button>

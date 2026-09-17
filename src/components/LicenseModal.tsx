@@ -37,6 +37,7 @@ import { licenseApi } from "@/lib/api/license";
 import { toast } from "sonner";
 import { HOTLINE_PHONE, SUPPORT_EMAIL } from "@/lib/constants";
 import { useAuth } from "@/providers/auth-provider";
+import { useLanguage } from "@/providers/language-provider";
 import type { LicenseStatus, LicenseRecord } from "@/lib/types";
 
 interface LicenseModalProps {
@@ -52,6 +53,7 @@ export function LicenseModal({
   onActivated,
   onOpenPaymentModal,
 }: LicenseModalProps) {
+  const { lang } = useLanguage();
   const { user, refreshProfile } = useAuth();
   const [licenseKey, setLicenseKey] = useState("");
   const [isActivating, setIsActivating] = useState(false);
@@ -95,7 +97,11 @@ export function LicenseModal({
   const handleActivate = async (keyToActivate?: string) => {
     const key = (keyToActivate || licenseKey).trim();
     if (!key) {
-      toast.error("Please enter a Production Key or License Token.");
+      toast.error(
+        lang === "bn"
+          ? "অনুগ্রহ করে প্রোডাকশন কি অথবা লাইসেন্স টোকেন দিন।"
+          : "Please enter a Production Key or License Token."
+      );
       return;
     }
 
@@ -106,12 +112,19 @@ export function LicenseModal({
 
       if (creditsGranted > 0) {
         toast.success(
-          `🎉 License activated! ${creditsGranted} credits added to your account.`
+          lang === "bn"
+            ? `🎉 লাইসেন্স অ্যাক্টিভেট হয়েছে! ${creditsGranted} ক্রেডিট যুক্ত করা হয়েছে।`
+            : `🎉 License activated! ${creditsGranted} credits added to your account.`
         );
         // Refresh user profile to update credit counter in header
         await refreshProfile();
       } else {
-        toast.success(res.data.message || "License activated successfully!");
+        toast.success(
+          res.data.message ||
+            (lang === "bn"
+              ? "লাইসেন্স সফলভাবে অ্যাক্টিভেট হয়েছে!"
+              : "License activated successfully!")
+        );
       }
 
       setStatus(res.data.license);
@@ -127,7 +140,10 @@ export function LicenseModal({
       }, 1500);
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.detail || "Invalid or expired license key."
+        err?.response?.data?.detail ||
+          (lang === "bn"
+            ? "ভুল অথবা মেয়াদোত্তীর্ণ লাইসেন্স কি।"
+            : "Invalid or expired license key.")
       );
     } finally {
       setIsActivating(false);
@@ -137,7 +153,11 @@ export function LicenseModal({
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);
     setCopiedKey(key);
-    toast.success("Production key copied to clipboard!");
+    toast.success(
+      lang === "bn"
+        ? "প্রোডাকশন কি ক্লিপবোর্ডে কপি হয়েছে!"
+        : "Production key copied to clipboard!"
+    );
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -147,7 +167,10 @@ export function LicenseModal({
       ""
     );
     const emailStr = user?.email ? ` (${user.email})` : "";
-    const msg = `Hello Admin, I am using the DataKarkhana Desktop App${emailStr}. I would like to request a new production key / license renewal.`;
+    const msg =
+      lang === "bn"
+        ? `হ্যালো এডমিন, আমি ডাটা কারখানা ডেস্কটপ অ্যাপ ব্যবহারকারী${emailStr}। আমি একটি নতুন প্রোডাকশন কি বা লাইসেন্স রিনিউ করতে চাই।`
+        : `Hello Admin, I am using the DataKarkhana Desktop App${emailStr}. I would like to request a new production key / license renewal.`;
     window.open(
       `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`,
       "_blank"
@@ -166,50 +189,63 @@ export function LicenseModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-bold">
             <Key className="h-5 w-5 text-primary" />
-            Subscribe & License Activation
+            {lang === "bn"
+              ? "সাবস্ক্রিপশন ও লাইসেন্স অ্যাক্টিভেশন"
+              : "Subscribe & License Activation"}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
-            Activate a key to redeem credits, view your licenses, or purchase a
-            plan.
+            {lang === "bn"
+              ? "ক্রেডিট রিডিম করতে কি অ্যাক্টিভেট করুন, লাইসেন্স তালিকা দেখুন অথবা প্ল্যান কিনুন।"
+              : "Activate a key to redeem credits, view your licenses, or purchase a plan."}
           </DialogDescription>
         </DialogHeader>
 
         {/* Current Status Box */}
         <div className="rounded-xl border border-border/60 bg-background/60 p-3.5 space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground font-medium">Status:</span>
+            <span className="text-muted-foreground font-medium">
+              {lang === "bn" ? "স্ট্যাটাস:" : "Status:"}
+            </span>
             {isActive ? (
               <Badge
                 variant="outline"
                 className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 text-[10px] gap-1"
               >
-                <ShieldCheck className="h-3 w-3" /> Active (
-                {status?.days_remaining} days remaining)
+                <ShieldCheck className="h-3 w-3" />{" "}
+                {lang === "bn"
+                  ? `সক্রিয় (${status?.days_remaining} দিন বাকি)`
+                  : `Active (${status?.days_remaining} days remaining)`}
               </Badge>
             ) : isExpired ? (
               <Badge variant="destructive" className="text-[10px] gap-1">
-                <AlertTriangle className="h-3 w-3" /> License Expired
+                <AlertTriangle className="h-3 w-3" />{" "}
+                {lang === "bn" ? "লাইসেন্সের মেয়াদ শেষ" : "License Expired"}
               </Badge>
             ) : (
               <Badge
                 variant="outline"
                 className="border-destructive/40 text-destructive bg-destructive/10 text-[10px] gap-1"
               >
-                <Lock className="h-3 w-3" /> Unlicensed
+                <Lock className="h-3 w-3" />{" "}
+                {lang === "bn" ? "লাইসেন্সবিহীন" : "Unlicensed"}
               </Badge>
             )}
           </div>
 
           {status?.customer_name && (
             <div className="flex items-center justify-between pt-1 border-t border-border/40">
-              <span className="text-muted-foreground">Licensed To:</span>
+              <span className="text-muted-foreground">
+                {lang === "bn" ? "লাইসেন্সধারী:" : "Licensed To:"}
+              </span>
               <span className="font-semibold">{status.customer_name}</span>
             </div>
           )}
 
           {status?.production_key && (
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Production Key:</span>
+              <span className="text-muted-foreground">
+                {lang === "bn" ? "প্রোডাকশন কি:" : "Production Key:"}
+              </span>
               <code className="font-mono text-primary font-bold">
                 {status.production_key}
               </code>
@@ -218,7 +254,9 @@ export function LicenseModal({
 
           {user && (
             <div className="flex items-center justify-between pt-1 border-t border-border/40">
-              <span className="text-muted-foreground">Credit Balance:</span>
+              <span className="text-muted-foreground">
+                {lang === "bn" ? "ক্রেডিট ব্যালেন্স:" : "Credit Balance:"}
+              </span>
               <span className="font-mono font-bold text-amber-400">
                 {user.credits} CR
               </span>
@@ -229,9 +267,9 @@ export function LicenseModal({
             <div className="pt-2 text-[11px] text-amber-400/90 flex items-start gap-1.5 border-t border-border/30">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>
-                You can freely browse datasets, view catalogs, and your account.
-                An active key is only needed when running local Selenium
-                scrapers.
+                {lang === "bn"
+                  ? "আপনি বিনামূল্যে ডাটাবেস ব্রাউজ ও ক্যাটালগ দেখতে পারবেন। শুধুমাত্র লোকাল স্ক্র্যাপার চালানোর জন্য সক্রিয় লাইসেন্স প্রয়োজন।"
+                  : "You can freely browse datasets, view catalogs, and your account. An active key is only needed when running local Selenium scrapers."}
               </span>
             </div>
           )}
@@ -246,11 +284,11 @@ export function LicenseModal({
           <TabsList className="grid w-full grid-cols-2 h-9">
             <TabsTrigger value="activate" className="text-xs gap-1.5">
               <Key className="h-3.5 w-3.5" />
-              Activate Key
+              {lang === "bn" ? "কি সক্রিয় করুন" : "Activate Key"}
             </TabsTrigger>
             <TabsTrigger value="my-licenses" className="text-xs gap-1.5">
               <Sparkles className="h-3.5 w-3.5" />
-              My Licenses
+              {lang === "bn" ? "আমার লাইসেন্সসমূহ" : "My Licenses"}
               {myLicenses.filter((l) => !l.is_redeemed && l.status === "active" && !l.is_expired).length > 0 && (
                 <Badge
                   variant="default"
@@ -277,7 +315,9 @@ export function LicenseModal({
             {/* Enter Production Key */}
             <div className="space-y-2">
               <Label className="text-xs font-semibold">
-                Have a Production Key? Enter it here:
+                {lang === "bn"
+                  ? "প্রোডাকশন কি আছে? এখানে লিখুন:"
+                  : "Have a Production Key? Enter it here:"}
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -297,12 +337,19 @@ export function LicenseModal({
                   disabled={isActivating || !licenseKey.trim()}
                   className="h-9 px-4 bg-primary text-primary-foreground font-bold text-xs shrink-0"
                 >
-                  {isActivating ? "Verifying..." : "Activate"}
+                  {isActivating
+                    ? lang === "bn"
+                      ? "যাচাই হচ্ছে..."
+                      : "Verifying..."
+                    : lang === "bn"
+                    ? "সক্রিয় করুন"
+                    : "Activate"}
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Activating a key will verify it, store the license locally, and
-                redeem the associated credits to your account.
+                {lang === "bn"
+                  ? "কি সক্রিয় করলে তা যাচাই হয়ে লোকালি সংরক্ষিত হবে এবং বোনাস ক্রেডিট একাউন্টে যুক্ত হবে।"
+                  : "Activating a key will verify it, store the license locally, and redeem the associated credits to your account."}
               </p>
             </div>
 
@@ -310,7 +357,7 @@ export function LicenseModal({
             {!isActive && (
               <div className="space-y-2 pt-1 border-t border-border/40">
                 <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Don&rsquo;t have a key yet?
+                  {lang === "bn" ? "এখনো কি পাননি?" : "Don’t have a key yet?"}
                 </Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {onOpenPaymentModal && (
@@ -322,7 +369,9 @@ export function LicenseModal({
                       className="h-9 text-xs border-primary/40 text-primary hover:bg-primary/10 gap-1.5 font-semibold justify-start"
                     >
                       <CreditCard className="h-3.5 w-3.5" />
-                      Buy / Renew via bKash
+                      {lang === "bn"
+                        ? "বিকাশ দিয়ে কিনুন / নবায়ন"
+                        : "Buy / Renew via bKash"}
                     </Button>
                   )}
                   <Button
@@ -333,7 +382,9 @@ export function LicenseModal({
                     className="h-9 text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 gap-1.5 font-semibold justify-start"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
-                    Request Key on WhatsApp
+                    {lang === "bn"
+                      ? "হোয়াটসঅ্যাপে কি এর অনুরোধ"
+                      : "Request Key on WhatsApp"}
                   </Button>
                 </div>
               </div>
@@ -348,14 +399,22 @@ export function LicenseModal({
             {loadingLicenses ? (
               <div className="flex items-center justify-center py-8 text-muted-foreground">
                 <Clock className="h-4 w-4 animate-spin mr-2" />
-                Loading your licenses...
+                {lang === "bn"
+                  ? "আপনার লাইসেন্স লোড হচ্ছে..."
+                  : "Loading your licenses..."}
               </div>
             ) : myLicenses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground space-y-2">
                 <Key className="h-8 w-8 opacity-30" />
-                <p className="text-sm font-medium">No licenses found</p>
+                <p className="text-sm font-medium">
+                  {lang === "bn"
+                    ? "কোনো লাইসেন্স পাওয়া যায়নি"
+                    : "No licenses found"}
+                </p>
                 <p className="text-[11px]">
-                  Purchase a plan to receive your first license key.
+                  {lang === "bn"
+                    ? "লাইসেন্স কি পেতে একটি ক্রেডিট প্ল্যান ক্রয় করুন।"
+                    : "Purchase a plan to receive your first license key."}
                 </p>
               </div>
             ) : (
@@ -391,7 +450,7 @@ export function LicenseModal({
                                 className="text-[9px] border-blue-500/30 text-blue-400 bg-blue-500/10 gap-0.5"
                               >
                                 <CheckCircle2 className="h-2.5 w-2.5" />
-                                Redeemed
+                                {lang === "bn" ? "রিডিম সম্পন্ন" : "Redeemed"}
                               </Badge>
                             ) : lic.is_expired ||
                               lic.status === "expired" ? (
@@ -400,7 +459,7 @@ export function LicenseModal({
                                 className="text-[9px] gap-0.5"
                               >
                                 <XCircle className="h-2.5 w-2.5" />
-                                Expired
+                                {lang === "bn" ? "মেয়াদ শেষ" : "Expired"}
                               </Badge>
                             ) : lic.status === "revoked" ? (
                               <Badge
@@ -408,7 +467,7 @@ export function LicenseModal({
                                 className="text-[9px] gap-0.5"
                               >
                                 <XCircle className="h-2.5 w-2.5" />
-                                Revoked
+                                {lang === "bn" ? "বাতিলকৃত" : "Revoked"}
                               </Badge>
                             ) : (
                               <Badge
@@ -416,7 +475,9 @@ export function LicenseModal({
                                 className="text-[9px] border-emerald-500/40 text-emerald-400 bg-emerald-500/10 gap-0.5"
                               >
                                 <Coins className="h-2.5 w-2.5" />
-                                {lic.credits_amount} CR Pending
+                                {lang === "bn"
+                                  ? `${lic.credits_amount} CR বাকি`
+                                  : `${lic.credits_amount} CR Pending`}
                               </Badge>
                             )}
                           </div>
@@ -426,16 +487,21 @@ export function LicenseModal({
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                           <span>
                             {lic.plan_tier?.toUpperCase()} •{" "}
-                            {lic.credits_amount} credits
+                            {lic.credits_amount}{" "}
+                            {lang === "bn" ? "ক্রেডিট" : "credits"}
                           </span>
                           <span>
                             {lic.is_expired
-                              ? "Expired"
+                              ? lang === "bn"
+                                ? "মেয়াদ শেষ"
+                                : "Expired"
+                              : lang === "bn"
+                              ? `${lic.days_remaining} দিন বাকি`
                               : `${lic.days_remaining}d left`}{" "}
                             •{" "}
                             {lic.expires_at
                               ? new Date(lic.expires_at).toLocaleDateString(
-                                  "en-US",
+                                  lang === "bn" ? "bn-BD" : "en-US",
                                   {
                                     month: "short",
                                     day: "numeric",
@@ -461,7 +527,13 @@ export function LicenseModal({
                             ) : (
                               <Copy className="h-3 w-3" />
                             )}
-                            {isCopied ? "Copied!" : "Copy Key"}
+                            {isCopied
+                              ? lang === "bn"
+                                ? "কপি হয়েছে!"
+                                : "Copied!"
+                              : lang === "bn"
+                              ? "কি কপি করুন"
+                              : "Copy Key"}
                           </Button>
 
                           {canActivate && (
@@ -475,7 +547,11 @@ export function LicenseModal({
                             >
                               <Sparkles className="h-3 w-3" />
                               {isActivating
-                                ? "Activating..."
+                                ? lang === "bn"
+                                  ? "অ্যাক্টিভেট হচ্ছে..."
+                                  : "Activating..."
+                                : lang === "bn"
+                                ? `অ্যাক্টিভেট করে ${lic.credits_amount} CR নিন`
                                 : `Activate & Get ${lic.credits_amount} CR`}
                             </Button>
                           )}
@@ -494,7 +570,7 @@ export function LicenseModal({
           <div className="flex items-center gap-1.5">
             <Phone className="h-3 w-3 text-emerald-400" />
             <span>
-              Hotline:{" "}
+              {lang === "bn" ? "হটলাইন: " : "Hotline: "}
               <strong className="text-foreground">{HOTLINE_PHONE}</strong>
             </span>
           </div>
@@ -511,7 +587,11 @@ export function LicenseModal({
             onClick={onClose}
             className="text-xs text-muted-foreground hover:text-foreground gap-1"
           >
-            <span>Enter App & Continue Browsing</span>
+            <span>
+              {lang === "bn"
+                ? "অ্যাপে প্রবেশ ও ব্রাউজ করুন"
+                : "Enter App & Continue Browsing"}
+            </span>
             <ArrowRight className="h-3 w-3" />
           </Button>
           <Button
@@ -520,7 +600,7 @@ export function LicenseModal({
             onClick={onClose}
             className="h-8 text-xs"
           >
-            Close
+            {lang === "bn" ? "বন্ধ করুন" : "Close"}
           </Button>
         </DialogFooter>
       </DialogContent>

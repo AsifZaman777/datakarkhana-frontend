@@ -25,6 +25,7 @@ import {
 import { scraperApi } from "@/lib/api/scraper";
 import { toast } from "sonner";
 import type { RegionsConfig } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface ScraperFormProps {
   regionsConfig: RegionsConfig | null;
@@ -37,6 +38,8 @@ export function ScraperForm({
   onJobCreated,
   cooldownRemaining,
 }: ScraperFormProps) {
+  const { t, lang } = useLanguage();
+  const sc = t.scraper || {};
   const [queries, setQueries] = useState<string[]>([""]);
   const [division, setDivision] = useState("");
   const [customDivision, setCustomDivision] = useState("");
@@ -196,19 +199,23 @@ export function ScraperForm({
       <CardContent className="p-0 space-y-6">
         <div className="flex items-center gap-2 border-b border-border/40 pb-3">
           <Zap className="h-5 w-5 text-amber-500" />
-          <h2 className="text-lg font-bold text-foreground">Google Maps Live Scraper Console</h2>
+          <h2 className="text-lg font-bold text-foreground">
+            {sc.titleAdmin || (lang === "bn" ? "লাইভ গুগল ম্যাপস স্ক্র্যাপার কনসোল" : "Google Maps Live Scraper Console")}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Queries Inputs */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold">Search Queries *</Label>
+            <Label className="text-xs font-semibold">
+              {sc.searchQueriesLabel || (lang === "bn" ? "সার্চ কিওয়ার্ডসমূহ *" : "Search Queries *")}
+            </Label>
             {queries.map((q, i) => (
               <div key={i} className="flex gap-2">
                 <Input
                   value={q}
                   onChange={(e) => handleQueryChange(i, e.target.value)}
-                  placeholder="e.g. Pharmacy in Dhanmondi, Dhaka"
+                  placeholder={sc.queryPlaceholder || (lang === "bn" ? "যেমন: Pharmacy in Dhanmondi, Dhaka" : "e.g. Pharmacy in Dhanmondi, Dhaka")}
                   className="text-xs h-9"
                   required={i === 0}
                 />
@@ -233,7 +240,7 @@ export function ScraperForm({
               onClick={handleAddQuery}
               className="gap-1 text-xs mt-1"
             >
-              <Plus className="h-3.5 w-3.5" /> Add Search Query Tag
+              <Plus className="h-3.5 w-3.5" /> {sc.addTagBtn || (lang === "bn" ? "নতুন সার্চ ট্যাগ যোগ করুন" : "Add Search Query Tag")}
             </Button>
           </div>
 
@@ -241,10 +248,12 @@ export function ScraperForm({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Division */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Division</Label>
+              <Label className="text-xs font-semibold">
+                {sc.divisionLabel || (lang === "bn" ? "বিভাগ" : "Division")}
+              </Label>
               <Select value={division} onValueChange={(val) => handleDivisionChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Divisions" />
+                  <SelectValue placeholder={sc.allDivisions || (lang === "bn" ? "সকল বিভাগ" : "All Divisions")} />
                 </SelectTrigger>
                 <SelectContent>
                   {divisions.map((d) => (
@@ -252,14 +261,14 @@ export function ScraperForm({
                       {d}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {division === "Other" && (
                 <Input
                   value={customDivision}
                   onChange={(e) => setCustomDivision(e.target.value)}
-                  placeholder="Type custom division..."
+                  placeholder={lang === "bn" ? "কাস্টম বিভাগ লিখুন..." : "Type custom division..."}
                   className="text-xs h-9 mt-1.5 border-primary/50"
                 />
               )}
@@ -267,10 +276,12 @@ export function ScraperForm({
 
             {/* District */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">District</Label>
+              <Label className="text-xs font-semibold">
+                {sc.districtLabel || (lang === "bn" ? "জেলা" : "District")}
+              </Label>
               <Select value={district} disabled={!division} onValueChange={(val) => handleDistrictChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Districts" />
+                  <SelectValue placeholder={sc.allDistricts || (lang === "bn" ? "সকল জেলা" : "All Districts")} />
                 </SelectTrigger>
                 <SelectContent>
                   {districts.map((d) => (
@@ -278,14 +289,14 @@ export function ScraperForm({
                       {d}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {district === "Other" && (
                 <Input
                   value={customDistrict}
                   onChange={(e) => setCustomDistrict(e.target.value)}
-                  placeholder="Type custom district..."
+                  placeholder={lang === "bn" ? "কাস্টম জেলা লিখুন..." : "Type custom district..."}
                   className="text-xs h-9 mt-1.5 border-primary/50"
                 />
               )}
@@ -293,10 +304,12 @@ export function ScraperForm({
 
             {/* Area / City */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Area / City</Label>
+              <Label className="text-xs font-semibold">
+                {sc.areaLabel || (lang === "bn" ? "এলাকা / শহর" : "Area / City")}
+              </Label>
               <Select value={area} disabled={!district} onValueChange={(val) => handleAreaChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Areas" />
+                  <SelectValue placeholder={sc.allAreas || (lang === "bn" ? "সকল এলাকা" : "All Areas")} />
                 </SelectTrigger>
                 <SelectContent>
                   {areas.map((a) => (
@@ -304,14 +317,14 @@ export function ScraperForm({
                       {a}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {area === "Other" && (
                 <Input
                   value={customArea}
                   onChange={(e) => setCustomArea(e.target.value)}
-                  placeholder="Type custom area..."
+                  placeholder={lang === "bn" ? "কাস্টম এলাকা লিখুন..." : "Type custom area..."}
                   className="text-xs h-9 mt-1.5 border-primary/50"
                 />
               )}
@@ -326,7 +339,7 @@ export function ScraperForm({
               onCheckedChange={(c) => setShowLiveDebug(!!c)}
             />
             <label htmlFor="live-debug" className="text-xs text-muted-foreground cursor-pointer">
-              Background Headless Mode Active — Live WebSocket frames streamed in Console (No Chrome GUI window)
+              {sc.debugCheckbox || (lang === "bn" ? "ব্যাকগ্রাউন্ড হেডলেস মোড — কনসোলে লাইভ ফ্রেম স্ট্রিমিং হবে" : "Background Headless Mode Active — Live WebSocket frames streamed in Console (No Chrome GUI window)")}
             </label>
           </div>
 
@@ -338,10 +351,10 @@ export function ScraperForm({
           >
             <Search className="h-4 w-4" />
             {cooldownRemaining > 0
-              ? `Cooldown Active (${cooldownRemaining}s)`
+              ? `${sc.cooldown || (lang === "bn" ? "কুলডাউন সক্রিয়" : "Cooldown Active")} (${cooldownRemaining}s)`
               : isSubmitting
-                ? "Launching Scraper Job..."
-                : "Launch Scraper Job"}
+                ? (sc.launchingBtn || (lang === "bn" ? "স্ক্র্যাপার চালু হচ্ছে..." : "Launching Scraper Job..."))
+                : (sc.launchBtn || (lang === "bn" ? "স্ক্র্যাপার চালু করুন" : "Launch Scraper Job"))}
           </Button>
         </form>
 
@@ -354,18 +367,22 @@ export function ScraperForm({
                   <Coins className="h-5 w-5" />
                 </div>
                 <DialogTitle className="text-base font-bold text-foreground">
-                  Confirm Scraper Launch & Credit Deduction
+                  {lang === "bn" ? "স্ক্র্যাপার চালু ও ক্রেডিট কর্তন নিশ্চিত করুন" : "Confirm Scraper Launch & Credit Deduction"}
                 </DialogTitle>
               </div>
               <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-                Starting this live web scraping job will deduct credits from your account balance.
+                {lang === "bn"
+                  ? "এই লাইভ স্ক্র্যাপিং জব চালু করলে আপনার অ্যাকাউন্ট থেকে ক্রেডিট কর্তন করা হবে।"
+                  : "Starting this live web scraping job will deduct credits from your account balance."}
               </DialogDescription>
             </DialogHeader>
 
             {pendingScrapeData && (
               <div className="space-y-3 py-3 border-y border-border/40 my-1">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-muted-foreground">Target Queries ({pendingScrapeData.queries.length}):</span>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {lang === "bn" ? `টার্গেট সার্চ কুয়েরি (${pendingScrapeData.queries.length}):` : `Target Queries (${pendingScrapeData.queries.length}):`}
+                  </span>
                   <div className="flex flex-wrap gap-1 mt-1 max-h-24 overflow-y-auto">
                     {pendingScrapeData.queries.map((q, idx) => (
                       <span key={idx} className="text-[11px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-medium">
@@ -377,7 +394,7 @@ export function ScraperForm({
 
                 {(pendingScrapeData.division || pendingScrapeData.district || pendingScrapeData.area) && (
                   <div className="text-xs text-muted-foreground flex gap-2">
-                    <span className="font-semibold">Region Filter:</span>
+                    <span className="font-semibold">{lang === "bn" ? "এলাকা ফিল্টার:" : "Region Filter:"}</span>
                     <span>
                       {[pendingScrapeData.division, pendingScrapeData.district, pendingScrapeData.area].filter(Boolean).join(" → ")}
                     </span>
@@ -387,13 +404,17 @@ export function ScraperForm({
                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-center justify-between mt-2">
                   <div className="flex items-center gap-2">
                     <Coins className="h-4 w-4 text-amber-500" />
-                    <span className="text-xs font-semibold text-foreground">Total Deduction:</span>
+                    <span className="text-xs font-semibold text-foreground">
+                      {lang === "bn" ? "মোট কর্তন:" : "Total Deduction:"}
+                    </span>
                   </div>
                   <div className="text-right">
                     <span className="text-base font-extrabold text-amber-500">
-                      {pendingScrapeData.queries.length * 20} Credits
+                      {pendingScrapeData.queries.length * 20} {lang === "bn" ? "ক্রেডিট" : "Credits"}
                     </span>
-                    <p className="text-[10px] text-muted-foreground">({pendingScrapeData.queries.length} queries × 20 credits/query)</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      ({pendingScrapeData.queries.length} {lang === "bn" ? "কুয়েরি × ২০ ক্রেডিট/কুয়েরি" : "queries × 20 credits/query"})
+                    </p>
                   </div>
                 </div>
               </div>
@@ -407,7 +428,7 @@ export function ScraperForm({
                 onClick={() => setShowConfirmModal(false)}
                 className="text-xs"
               >
-                Cancel
+                {lang === "bn" ? "বাতিল" : "Cancel"}
               </Button>
               <Button
                 type="button"
@@ -417,7 +438,7 @@ export function ScraperForm({
                 className="text-xs font-bold gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950"
               >
                 <Coins className="h-3.5 w-3.5" />
-                Confirm & Launch ({((pendingScrapeData?.queries.length || 0) * 20)} Credits)
+                {lang === "bn" ? "নিশ্চিত ও চালু করুন" : "Confirm & Launch"} ({((pendingScrapeData?.queries.length || 0) * 20)} {lang === "bn" ? "ক্রেডিট" : "Credits"})
               </Button>
             </DialogFooter>
           </DialogContent>

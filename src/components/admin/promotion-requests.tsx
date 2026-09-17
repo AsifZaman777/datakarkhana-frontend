@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { PromotionRequest } from "@/lib/types";
 
 interface PromotionRequestsProps {
@@ -20,6 +21,7 @@ interface PromotionRequestsProps {
 }
 
 export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProps) {
+  const { lang } = useLanguage();
   const handleApprove = async (id: number) => {
     try {
       const res = await adminApi.approvePromotion(id);
@@ -48,13 +50,22 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
       <CardContent className="p-0 space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-sm font-bold text-foreground">Dataset Promotion Requests to Public Catalog</h3>
+            <h3 className="text-sm font-bold text-foreground">
+              {lang === "bn"
+                ? "পাবলিক ক্যাটালগে ডাটা প্রমোশনের অনুরোধ"
+                : "Dataset Promotion Requests to Public Catalog"}
+            </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Approved datasets become public in PostgreSQL. Rejected datasets are removed from PostgreSQL and stay local on the customer PC.
+              {lang === "bn"
+                ? "অনুমোদিত ডাটাবেস পাবলিক ক্যাটালগে যুক্ত হবে। প্রত্যাখ্যাত ডাটাবেস ক্লাউড থেকে মুছে ব্যবহারকারীর নিজস্ব লোকাল পিসিতে সংরক্ষিত থাকবে।"
+                : "Approved datasets become public in PostgreSQL. Rejected datasets are removed from PostgreSQL and stay local on the customer PC."}
             </p>
           </div>
           <Badge variant="outline" className="border-cyan-500/40 text-cyan-400 bg-cyan-500/10 gap-1 text-[11px] font-mono">
-            <Database className="h-3 w-3" /> PostgreSQL Cloud Queue: {requests.length}
+            <Database className="h-3 w-3" />{" "}
+            {lang === "bn"
+              ? `ক্লাউড কিউ: ${requests.length}টি`
+              : `PostgreSQL Cloud Queue: ${requests.length}`}
           </Badge>
         </div>
 
@@ -62,22 +73,24 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">ID #</TableHead>
-                <TableHead>Customer Email</TableHead>
-                <TableHead>Proposed Dataset Title</TableHead>
-                <TableHead>Category / Location</TableHead>
-                <TableHead className="w-24">Leads</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions (PostgreSQL)</TableHead>
+                <TableHead className="w-16">{lang === "bn" ? "আইডি #" : "ID #"}</TableHead>
+                <TableHead>{lang === "bn" ? "গ্রাহকের ইমেইল" : "Customer Email"}</TableHead>
+                <TableHead>{lang === "bn" ? "প্রস্তাবিত ডাটাবেসের শিরোনাম" : "Proposed Dataset Title"}</TableHead>
+                <TableHead>{lang === "bn" ? "ক্যাটাগরি / অবস্থান" : "Category / Location"}</TableHead>
+                <TableHead className="w-24">{lang === "bn" ? "লিড সংখ্যা" : "Leads"}</TableHead>
+                <TableHead>{lang === "bn" ? "স্ট্যাটাস" : "Status"}</TableHead>
+                <TableHead className="text-right">
+                  {lang === "bn" ? "অ্যাকশন" : "Actions (PostgreSQL)"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {requests.map((r) => {
                 const targetId = r.id;
                 const title = r.name || (r as any).proposed_name || (r as any).query || `Dataset #${targetId}`;
-                const category = r.category || (r as any).proposed_category || "Scraped Leads";
+                const category = r.category || (r as any).proposed_category || (lang === "bn" ? "স্ক্র্যাপড লিড" : "Scraped Leads");
                 const status = (r.status || (r as any).promotion_status || "pending").toLowerCase();
-                const location = [r.area, r.district, r.division].filter(Boolean).join(", ") || "Bangladesh";
+                const location = [r.area, r.district, r.division].filter(Boolean).join(", ") || (lang === "bn" ? "বাংলাদেশ" : "Bangladesh");
 
                 return (
                   <TableRow key={r.id}>
@@ -113,7 +126,8 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
                             className="h-7 text-xs bg-emerald-500 text-black hover:bg-emerald-600 font-bold gap-1"
                             title="Approve and publish to PostgreSQL Public Catalog"
                           >
-                            <Check className="h-3.5 w-3.5" /> Approve & Publish
+                            <Check className="h-3.5 w-3.5" />{" "}
+                            {lang === "bn" ? "অনুমোদন ও প্রকাশ" : "Approve & Publish"}
                           </Button>
                           <Button
                             size="sm"
@@ -122,7 +136,8 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
                             className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1"
                             title="Reject and delete from PostgreSQL (remains only in user's local DB)"
                           >
-                            <X className="h-3.5 w-3.5" /> Reject (Remove from Cloud)
+                            <X className="h-3.5 w-3.5" />{" "}
+                            {lang === "bn" ? "প্রত্যাখ্যান (ক্লাউড থেকে বাদ)" : "Reject (Remove from Cloud)"}
                           </Button>
                         </div>
                       )}
@@ -134,7 +149,9 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
               {requests.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
-                    No pending dataset promotion requests.
+                    {lang === "bn"
+                      ? "কোনো প্রমোশন অনুরোধ অপেক্ষমান নেই।"
+                      : "No pending dataset promotion requests."}
                   </TableCell>
                 </TableRow>
               )}

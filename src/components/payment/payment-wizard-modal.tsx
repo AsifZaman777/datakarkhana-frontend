@@ -31,6 +31,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { paymentsApi } from "@/lib/api/payments";
+import { useLanguage } from "@/providers/language-provider";
 import type { PaymentConfig, PaymentPackage, PaymentRequest } from "@/lib/types";
 import bkashLogo from "@/assets/logo/bkash-logo.png";
 import pathaoLogo from "@/assets/logo/pathao-pay.png";
@@ -42,6 +43,8 @@ interface PaymentWizardModalProps {
 }
 
 export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
+  const { t, lang } = useLanguage();
+  const p = t.payment || {};
   const { user, refreshProfile } = useAuth();
   const [modalTab, setModalTab] = useState<"buy" | "history">("buy");
   const [config, setConfig] = useState<PaymentConfig | null>(null);
@@ -139,20 +142,22 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
         <DialogHeader className="border-b border-border/40 pb-4">
           <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl font-extrabold text-foreground">
             <Coins className="h-6 w-6 text-amber-500" />
-            Credit Recharge & Package Upgrade Portal
+            {p.modalTitle || (lang === "bn" ? "ক্রেডিট রিচার্জ ও প্যাকেজ আপগ্রেড পোর্টাল" : "Credit Recharge & Package Upgrade Portal")}
           </DialogTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Select a package tier or slide the credit seek bar to purchase custom credits via bKash or Pathao Pay
+            {lang === "bn" 
+              ? "প্যাকেজ নির্বাচন করুন অথবা স্লাইডার দিয়ে কাস্টম ক্রেডিট কিনুন (বিকাশ বা পাঠাও পে)"
+              : "Select a package tier or slide the credit seek bar to purchase custom credits via bKash or Pathao Pay"}
           </p>
         </DialogHeader>
 
         <Tabs value={modalTab} onValueChange={(v) => setModalTab(v as any)} className="w-full mt-2">
           <TabsList className="grid w-full grid-cols-2 bg-muted/30 p-1">
             <TabsTrigger value="buy" className="gap-2 text-xs font-semibold">
-              <Coins className="h-4 w-4 text-amber-500" /> Purchase Wizard
+              <Coins className="h-4 w-4 text-amber-500" /> {p.tabWizard || (lang === "bn" ? "পেমেন্ট উইজার্ড" : "Purchase Wizard")}
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-2 text-xs font-semibold">
-              <History className="h-4 w-4 text-cyan-400" /> Order Submissions ({myRequests.length})
+              <History className="h-4 w-4 text-cyan-400" /> {p.tabHistory || (lang === "bn" ? "অর্ডার হিস্ট্রি" : "Order Submissions")} ({myRequests.length})
             </TabsTrigger>
           </TabsList>
 
@@ -161,10 +166,10 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
             {/* Step Indicator */}
             <div className="grid grid-cols-4 gap-2 text-center text-[11px] font-semibold">
               {[
-                "1. Choose Tier / Credits",
-                "2. Send Payment & Scan QR",
-                "3. Submit TrxID Proof",
-                "4. Instant Admin Credit",
+                p.step1 || (lang === "bn" ? "১. প্যাকেজ নির্বাচন" : "1. Choose Tier / Credits"),
+                p.step2 || (lang === "bn" ? "২. পেমেন্ট ও কিউআর" : "2. Send Payment & Scan QR"),
+                p.step3 || (lang === "bn" ? "৩. TrxID জমা দিন" : "3. Submit TrxID Proof"),
+                p.step4 || (lang === "bn" ? "৪. অ্যাডমিন অনুমোদন" : "4. Instant Admin Credit"),
               ].map((st, i) => (
                 <div
                   key={i}
@@ -189,10 +194,10 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-amber-500" />
-                      Select Package Tier (Full Features Included)
+                      {p.selectPackageTitle || (lang === "bn" ? "প্যাকেজ নির্বাচন করুন (সকল সুবিধা অন্তর্ভুক্ত)" : "Select Package Tier (Full Features Included)")}
                     </h3>
                     <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                      Best Value Tiers
+                      {lang === "bn" ? "জনপ্রিয় প্যাকেজসমূহ" : "Best Value Tiers"}
                     </Badge>
                   </div>
 
@@ -212,7 +217,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                         >
                           {isPopular && (
                             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-black font-bold uppercase text-[10px] px-2.5 py-0.5">
-                              {pkg.badge || "MOST POPULAR"}
+                              {pkg.badge || (lang === "bn" ? "সবচেয়ে জনপ্রিয়" : "MOST POPULAR")}
                             </Badge>
                           )}
 
@@ -229,7 +234,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                                 ৳{pkg.price_bdt.toLocaleString()}
                               </span>
                               <span className="text-xs text-muted-foreground font-mono">
-                                BDT / {pkg.credits} Credits
+                                BDT / {pkg.credits} {lang === "bn" ? "ক্রেডিট" : "Credits"}
                               </span>
                             </div>
 
@@ -252,7 +257,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                                 isSelected ? "bg-amber-500 text-black hover:bg-amber-600" : ""
                               }`}
                             >
-                              {isSelected ? "Selected" : "Select " + pkg.name}
+                              {isSelected ? (lang === "bn" ? "নির্বাচিত" : "Selected") : (lang === "bn" ? `${pkg.name} নির্বাচন করুন` : "Select " + pkg.name)}
                             </Button>
                           </div>
                         </Card>
@@ -275,11 +280,11 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                       <div className="flex items-center gap-2">
                         <Coins className="h-5 w-5 text-cyan-400" />
                         <h4 className="font-bold text-sm text-foreground">
-                          Custom Credit Pack Calculator (Seek Bar Slider)
+                          {lang === "bn" ? "কাস্টম ক্রেডিট ক্যালকুলেটর (স্লাইডার)" : "Custom Credit Pack Calculator (Seek Bar Slider)"}
                         </h4>
                       </div>
                       <Badge variant="outline" className="text-xs border-cyan-500/40 text-cyan-400">
-                        ৳{customRate} BDT / Credit
+                        ৳{customRate} {lang === "bn" ? "টাকা / ক্রেডিট" : "BDT / Credit"}
                       </Badge>
                     </div>
 
@@ -287,9 +292,11 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                       {/* Slider controls */}
                       <div className="md:col-span-7 space-y-4">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-muted-foreground font-semibold">Slide to choose custom credits:</span>
+                          <span className="text-muted-foreground font-semibold">
+                            {lang === "bn" ? "স্লাইড করে ক্রেডিট নির্বাচন করুন:" : "Slide to choose custom credits:"}
+                          </span>
                           <span className="font-mono font-extrabold text-amber-500 text-base">
-                            {customCredits} Credits
+                            {customCredits} {lang === "bn" ? "ক্রেডিট" : "Credits"}
                           </span>
                         </div>
 
@@ -325,7 +332,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                                   : "border-border/40 text-muted-foreground hover:text-foreground"
                               }`}
                             >
-                              {preset} CR
+                              {preset} {lang === "bn" ? "ক্রেডিট" : "CR"}
                             </Button>
                           ))}
                         </div>
@@ -334,13 +341,13 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                       {/* Total calculation box */}
                       <div className="md:col-span-5 rounded-xl border border-border/50 bg-background/80 p-4 text-center space-y-2">
                         <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                          Custom Order Total
+                          {lang === "bn" ? "কাস্টম অর্ডারের মোট মূল্য" : "Custom Order Total"}
                         </div>
                         <div className="text-2xl font-extrabold font-mono text-amber-500">
                           ৳{(customCredits * customRate).toLocaleString()} BDT
                         </div>
                         <div className="text-[11px] text-muted-foreground">
-                          {customCredits} Credits @ ৳{customRate} BDT/CR
+                          {customCredits} {lang === "bn" ? "ক্রেডিট" : "Credits"} @ ৳{customRate} BDT/CR
                         </div>
                         <Button
                           size="sm"
@@ -351,7 +358,9 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                           }}
                           className="w-full text-xs font-bold mt-2"
                         >
-                          {selectedPkg === "custom" ? "Custom Pack Selected" : "Select Custom Pack"}
+                          {selectedPkg === "custom" 
+                            ? (lang === "bn" ? "কাস্টম প্যাক নির্বাচিত" : "Custom Pack Selected") 
+                            : (lang === "bn" ? "কাস্টম প্যাক বাছাই করুন" : "Select Custom Pack")}
                         </Button>
                       </div>
                     </div>
@@ -360,7 +369,9 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
 
                 {/* 1C. Choose Payment Method */}
                 <div className="space-y-3 pt-2">
-                  <Label className="text-sm font-bold text-foreground">Select Payment Method</Label>
+                  <Label className="text-sm font-bold text-foreground">
+                    {p.chooseMethod || (lang === "bn" ? "পেমেন্ট পদ্ধতি নির্বাচন করুন" : "Select Payment Method")}
+                  </Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Card
                       onClick={() => setMethod("bkash")}
@@ -372,8 +383,12 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                     >
                       <Image src={bkashLogo} alt="bKash" width={44} height={44} className="rounded-lg object-contain" />
                       <div>
-                        <div className="font-bold text-sm text-foreground">bKash Personal / Send Money</div>
-                        <div className="text-xs text-muted-foreground">bKash App / Dial *247#</div>
+                        <div className="font-bold text-sm text-foreground">
+                          {lang === "bn" ? "বিকাশ পার্সোনাল / সেন্ড মানি" : "bKash Personal / Send Money"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {lang === "bn" ? "বিকাশ অ্যাপ / ডায়াল *২৪৭#" : "bKash App / Dial *247#"}
+                        </div>
                       </div>
                     </Card>
 
@@ -387,8 +402,12 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                     >
                       <Image src={pathaoLogo} alt="Pathao Pay" width={44} height={44} className="rounded-lg object-contain" />
                       <div>
-                        <div className="font-bold text-sm text-foreground">Pathao Pay / QR Scan</div>
-                        <div className="text-xs text-muted-foreground">Scan QR or Send Money</div>
+                        <div className="font-bold text-sm text-foreground">
+                          {lang === "bn" ? "পাঠাও পে / কিউআর স্ক্যান" : "Pathao Pay / QR Scan"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {lang === "bn" ? "কিউআর স্ক্যান বা সেন্ড মানি" : "Scan QR or Send Money"}
+                        </div>
                       </div>
                     </Card>
                   </div>
@@ -399,7 +418,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                   disabled={!selectedPkg}
                   className="w-full font-bold gap-2 py-6 text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-black hover:from-amber-600 hover:to-amber-700"
                 >
-                  Proceed to Payment & QR Scan <ArrowRight className="h-4 w-4" />
+                  {p.proceedBtn || (lang === "bn" ? "পেমেন্ট বিবরণ ও কিউআর স্ক্যানে এগিয়ে যান" : "Proceed to Payment & QR Scan")} <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -413,7 +432,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                     <Card className="p-4 border-amber-500/40 bg-card/80 space-y-3">
                       <div className="text-xs font-bold text-foreground flex items-center justify-center gap-1.5">
                         <QrCode className="h-4 w-4 text-amber-500" />
-                        {method === "bkash" ? "bKash Payment Guide" : "Pathao Pay Scan & Pay QR"}
+                        {method === "bkash" ? (lang === "bn" ? "বিকাশ পেমেন্ট নির্দেশিকা" : "bKash Payment Guide") : (lang === "bn" ? "পাঠাও পে স্ক্যান ও পেমেন্ট কিউআর" : "Pathao Pay Scan & Pay QR")}
                       </div>
 
                       {method === "pathao_pay" ? (
@@ -430,15 +449,15 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                         <div className="rounded-xl overflow-hidden border border-border/50 bg-gradient-to-br from-pink-500/10 via-card to-card p-6 max-w-[220px] mx-auto flex flex-col items-center justify-center gap-3">
                           <Image src={bkashLogo} alt="bKash Logo" width={80} height={80} className="object-contain" />
                           <Badge variant="outline" className="border-pink-500/40 text-pink-400 text-[10px]">
-                            bKash Personal Account
+                            {lang === "bn" ? "বিকাশ পার্সোনাল অ্যাকাউন্ট" : "bKash Personal Account"}
                           </Badge>
                         </div>
                       )}
 
                       <p className="text-[11px] text-muted-foreground">
                         {method === "pathao_pay"
-                          ? "Open Pathao App › Tap QR Scan › Point camera at the QR code above"
-                          : "Open bKash App › Select Send Money › Enter the account number"}
+                          ? (lang === "bn" ? "পাঠাও অ্যাপ খুলুন › কিউআর স্ক্যান ট্যাপ করুন › উপরের কিউআর কোডে ক্যামেরা তাক করুন" : "Open Pathao App › Tap QR Scan › Point camera at the QR code above")
+                          : (lang === "bn" ? "বিকাশ অ্যাপ খুলুন › সেন্ড মানি সিলেক্ট করুন › নিচের নম্বরে টাকা পাঠান" : "Open bKash App › Select Send Money › Enter the account number")}
                       </p>
                     </Card>
                   </div>
@@ -447,7 +466,9 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                   <div className="md:col-span-7 space-y-4">
                     <div className="p-5 rounded-xl bg-card border border-border/50 space-y-4">
                       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {method === "bkash" ? "bKash Personal Number:" : "Pathao Pay Number:"}
+                        {method === "bkash" 
+                          ? (lang === "bn" ? "বিকাশ পার্সোনাল নম্বর:" : "bKash Personal Number:") 
+                          : (lang === "bn" ? "পাঠাও পে নম্বর:" : "Pathao Pay Number:")}
                       </div>
 
                       <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-500 flex items-center gap-3">
@@ -457,26 +478,29 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                           variant="outline"
                           onClick={() => handleCopyNumber(targetNumber)}
                           className="h-9 w-9 shrink-0 border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
+                          title={p.copyNumber || (lang === "bn" ? "কপি করুন" : "Copy")}
                         >
                           {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
                         </Button>
                       </div>
 
                       <Badge variant="outline" className="text-xs border-primary/30">
-                        Account Type: {targetType}
+                        {p.accountTypeLabel || (lang === "bn" ? "অ্যাকাউন্টের ধরন:" : "Account Type:")} {targetType}
                       </Badge>
 
                       <div className="p-3 rounded-lg bg-background/80 border border-border/40 text-xs space-y-1">
                         <div className="flex justify-between text-muted-foreground">
-                          <span>Package / Selection:</span>
+                          <span>{lang === "bn" ? "প্যাকেজ / নির্বাচন:" : "Package / Selection:"}</span>
                           <span className="font-bold text-foreground">{calculateAmount().name}</span>
                         </div>
                         <div className="flex justify-between text-muted-foreground">
-                          <span>Credits to Receive:</span>
+                          <span>{lang === "bn" ? "প্রাপ্য ক্রেডিট:" : "Credits to Receive:"}</span>
                           <span className="font-bold text-amber-500">+{calculateAmount().credits} CR</span>
                         </div>
                         <div className="flex justify-between text-muted-foreground border-t border-border/40 pt-1 mt-1">
-                          <span className="font-bold text-foreground">Total Payable BDT:</span>
+                          <span className="font-bold text-foreground">
+                            {p.payableAmountLabel || (lang === "bn" ? "মোট প্রদেয় টাকা:" : "Total Payable BDT:")}
+                          </span>
                           <span className="font-extrabold font-mono text-amber-500 text-sm">
                             ৳{calculateAmount().bdt.toLocaleString()} BDT
                           </span>
@@ -488,10 +512,10 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
 
                 <div className="flex gap-4 max-w-md mx-auto pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1 gap-2">
-                    <ArrowLeft className="h-4 w-4" /> Back to Packages
+                    <ArrowLeft className="h-4 w-4" /> {p.backBtn || (lang === "bn" ? "প্যাকেজে ফিরে যান" : "Back to Packages")}
                   </Button>
                   <Button onClick={() => setStep(3)} className="flex-1 font-bold gap-2 bg-amber-500 text-black hover:bg-amber-600">
-                    I Have Completed Payment <ArrowRight className="h-4 w-4" />
+                    {p.sentPaymentBtn || (lang === "bn" ? "আমি পেমেন্ট সম্পন্ন করেছি" : "I Have Completed Payment")} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -501,23 +525,25 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
             {step === 3 && (
               <form onSubmit={handleSubmitTrx} className="space-y-4 max-w-lg mx-auto p-4 rounded-xl border border-border/40 bg-card/60">
                 <h4 className="text-sm font-bold text-foreground border-b border-border/40 pb-2">
-                  Submit Payment Verification Details
+                  {lang === "bn" ? "পেমেন্ট ভেরিফিকেশন তথ্য জমা দিন" : "Submit Payment Verification Details"}
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Customer Name *</Label>
+                    <Label className="text-xs">{lang === "bn" ? "গ্রাহকের নাম *" : "Customer Name *"}</Label>
                     <Input value={userName} onChange={(e) => setUserName(e.target.value)} required className="text-xs h-9" />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Customer Email Address *</Label>
+                    <Label className="text-xs">{lang === "bn" ? "গ্রাহকের ইমেইল ঠিকানা *" : "Customer Email Address *"}</Label>
                     <Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} required className="text-xs h-9" />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Sender Phone Number (Mobile Account Number) *</Label>
+                  <Label className="text-xs">
+                    {p.senderPhoneLabel || (lang === "bn" ? "প্রেরকের ফোন নম্বর (যে নম্বর থেকে পাঠিয়েছেন) *" : "Sender Phone Number (Mobile Account Number) *")}
+                  </Label>
                   <Input
                     placeholder="e.g. 01824500704"
                     value={userPhone}
@@ -529,7 +555,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">
-                    {method === "bkash" ? "bKash" : "Pathao Pay"} Transaction ID (TrxID) *
+                    {method === "bkash" ? "bKash" : "Pathao Pay"} {p.trxIdLabel || (lang === "bn" ? "ট্রানজেকশন আইডি (TrxID) *" : "Transaction ID (TrxID) *")}
                   </Label>
                   <Input
                     placeholder="e.g. 8N7A6B5C4D"
@@ -542,10 +568,10 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
 
                 <div className="flex gap-4 pt-2">
                   <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1 gap-2 text-xs">
-                    <ArrowLeft className="h-4 w-4" /> Back
+                    <ArrowLeft className="h-4 w-4" /> {p.backBtn || (lang === "bn" ? "পূর্ববর্তী" : "Back")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting} className="flex-1 font-bold gap-2 text-xs bg-amber-500 text-black hover:bg-amber-600">
-                    {isSubmitting ? "Submitting..." : "Submit Proof"} <ArrowRight className="h-4 w-4" />
+                    {isSubmitting ? (p.submittingBtn || (lang === "bn" ? "জমা হচ্ছে..." : "Submitting...")) : (p.submitProofBtn || (lang === "bn" ? "প্রমাণ জমা দিন" : "Submit Proof"))} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </form>
@@ -559,15 +585,18 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-foreground">Step 4: Pending Admin Verification</h3>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {p.pendingAdminTitle || (lang === "bn" ? "ধাপ ৪: অ্যাডমিন ভেরিফিকেশন অপেক্ষমান" : "Step 4: Pending Admin Verification")}
+                  </h3>
                   <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    Your payment proof has been recorded. Admin is reviewing your Transaction ID (
-                    <span className="font-mono text-amber-500 font-bold">{trxId}</span>) and will credit your account shortly.
+                    {lang === "bn"
+                      ? `আপনার পেমেন্টের তথ্য সংরক্ষিত হয়েছে। অ্যাডমিন আপনার ট্রানজেকশন আইডি (${trxId}) যাচাই করে দ্রুত অ্যাকাউন্টে ক্রেডিট যুক্ত করবেন।`
+                      : `Your payment proof has been recorded. Admin is reviewing your Transaction ID (${trxId}) and will credit your account shortly.`}
                   </p>
                 </div>
 
                 <Button onClick={() => setModalTab("history")} className="gap-2 bg-amber-500 text-black hover:bg-amber-600">
-                  <History className="h-4 w-4" /> Track Status in Order History
+                  <History className="h-4 w-4" /> {p.trackHistoryBtn || (lang === "bn" ? "অর্ডার হিস্ট্রিতে স্ট্যাটাস দেখুন" : "Track Status in Order History")}
                 </Button>
               </div>
             )}
@@ -580,38 +609,44 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                 <div className="flex flex-wrap justify-between items-center gap-2 border-b border-border/40 pb-2">
                   <div>
                     <span className="font-bold text-sm text-foreground">{req.package_name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">Order #{req.id}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {lang === "bn" ? "অর্ডার" : "Order"} #{req.id}
+                    </span>
                   </div>
 
                   <div>
                     {req.status === "pending" && (
                       <Badge variant="outline" className="border-amber-500/40 text-amber-500 gap-1">
-                        <Clock className="h-3 w-3" /> Pending Verification
+                        <Clock className="h-3 w-3" /> {p.statusPending || (lang === "bn" ? "ভেরিফিকেশন অপেক্ষমান" : "Pending Verification")}
                       </Badge>
                     )}
                     {req.status === "approved" && (
                       <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Approved & Credited
+                        <CheckCircle2 className="h-3 w-3" /> {p.statusApproved || (lang === "bn" ? "অনুমোদিত ও ক্রেডিট যুক্ত" : "Approved & Credited")}
                       </Badge>
                     )}
                     {req.status === "rejected" && (
                       <Badge variant="outline" className="border-destructive/40 text-destructive gap-1">
-                        <XCircle className="h-3 w-3" /> Rejected
+                        <XCircle className="h-3 w-3" /> {p.statusRejected || (lang === "bn" ? "বাতিল" : "Rejected")}
                       </Badge>
                     )}
                   </div>
                 </div>
 
                 <div className="flex justify-between text-xs text-muted-foreground font-mono">
-                  <span>Method: <strong className="text-foreground uppercase">{req.payment_method}</strong> | Sender: {req.bkash_number}</span>
-                  <span>TrxID: <strong className="text-primary">{req.transaction_id}</strong> | Credits: <strong className="text-amber-500">+{req.credits_requested} CR</strong></span>
+                  <span>
+                    {lang === "bn" ? "পদ্ধতি:" : "Method:"} <strong className="text-foreground uppercase">{req.payment_method}</strong> | {lang === "bn" ? "প্রেরক:" : "Sender:"} {req.bkash_number}
+                  </span>
+                  <span>
+                    TrxID: <strong className="text-primary">{req.transaction_id}</strong> | {lang === "bn" ? "ক্রেডিট:" : "Credits:"} <strong className="text-amber-500">+{req.credits_requested} CR</strong>
+                  </span>
                 </div>
               </Card>
             ))}
 
             {myRequests.length === 0 && (
               <div className="text-center py-12 text-xs text-muted-foreground">
-                No payment submissions found.
+                {lang === "bn" ? "কোনো পেমেন্ট জমা পাওয়া যায়নি।" : "No payment submissions found."}
               </div>
             )}
           </TabsContent>

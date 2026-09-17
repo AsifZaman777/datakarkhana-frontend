@@ -12,6 +12,8 @@ import { LicenseBadge } from "@/components/LicenseBadge";
 import { LicenseModal } from "@/components/LicenseModal";
 import { licenseApi } from "@/lib/api/license";
 
+import { useLanguage } from "@/providers/language-provider";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -20,6 +22,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoading, isAdmin } = useAuth();
+  const { lang } = useLanguage();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
 
@@ -48,7 +51,14 @@ export default function DashboardLayout({
   }, [isLoading, user, isAdmin]);
 
   if (isLoading || !user) {
-    return <LoadingBackdrop variant="backdrop" label="Authenticating session..." color="cyan" size="md" />;
+    return (
+      <LoadingBackdrop
+        variant="backdrop"
+        label={lang === "bn" ? "অ্যাকাউন্ট যাচাই হচ্ছে..." : "Authenticating session..."}
+        color="cyan"
+        size="md"
+      />
+    );
   }
 
   return (
@@ -62,7 +72,9 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between pb-3 border-b border-border/30">
           <div className="text-[11px] text-muted-foreground flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-medium">Local Automation Engine</span>
+            <span className="font-medium">
+              {lang === "bn" ? "লোকাল অটোমেশন ইঞ্জিন সচল" : "Local Automation Engine"}
+            </span>
           </div>
           <div className="flex items-center gap-3">
             <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
@@ -74,7 +86,9 @@ export default function DashboardLayout({
           <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 shadow-lg">
             <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <div className="font-bold text-sm">⚠️ Notice from System Administrator</div>
+              <div className="font-bold text-sm">
+                ⚠️ {lang === "bn" ? "সিস্টেম অ্যাডমিনিস্ট্রেটরের নোটিশ" : "Notice from System Administrator"}
+              </div>
               <div className="text-xs text-foreground/90">{user.warning_message}</div>
             </div>
           </div>

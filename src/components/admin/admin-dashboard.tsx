@@ -54,6 +54,7 @@ import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import { adminApi } from "@/lib/api/admin";
 import { getApiBase, TOKEN_KEY } from "@/lib/constants";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type {
   DashboardOverview,
   UserDatasetSummary,
@@ -192,6 +193,7 @@ function CustomTooltip({
 
 // ─── Main Dashboard Component ───────────────────────────────
 export function AdminDashboard() {
+  const { lang } = useLanguage();
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -217,12 +219,16 @@ export function AdminDashboard() {
       const res = await adminApi.getDashboardOverview(isRefresh);
       setData(res.data);
     } catch {
-      toast.error("Failed to load dashboard data.");
+      toast.error(
+        lang === "bn"
+          ? "ড্যাশবোর্ড ডাটা লোড করতে ব্যর্থ হয়েছে।"
+          : "Failed to load dashboard data."
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     fetchDashboard();
@@ -237,7 +243,11 @@ export function AdminDashboard() {
       const res = await adminApi.getUserPrivateDatasets(user.user_id);
       setUserDatasets(res.data.datasets);
     } catch {
-      toast.error("Failed to load user datasets.");
+      toast.error(
+        lang === "bn"
+          ? "ব্যবহারকারীর ডাটাবেস লোড করতে ব্যর্থ হয়েছে।"
+          : "Failed to load user datasets."
+      );
       setUserDatasets([]);
     } finally {
       setLoadingDatasets(false);
@@ -248,29 +258,32 @@ export function AdminDashboard() {
   const handleDownload = async (userId: number, jobId: number) => {
     try {
       const token = localStorage.getItem(TOKEN_KEY);
-      const url = `${getApiBase()}/api/admin/users/${userId}/private-datasets/${jobId}/download`;
-      const resp = await fetch(url, {
+      const url = `${getApiBase()}/api/admin/users/${userId}/datasets/${jobId}/download`;
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!resp.ok) throw new Error("Download failed");
-      const blob = await resp.blob();
-      const filename =
-        resp.headers
-          .get("content-disposition")
-          ?.split("filename=")[1]
-          ?.replace(/"/g, "") || `dataset_${jobId}.xlsx`;
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = filename;
+      a.download = `private_dataset_${userId}_job_${jobId}.xlsx`;
       a.click();
       URL.revokeObjectURL(a.href);
-      toast.success("Download started.");
+      toast.success(
+        lang === "bn"
+          ? "ডাটাবেস ডাউনলোড সফল হয়েছে!"
+          : "Dataset downloaded successfully!"
+      );
     } catch {
-      toast.error("Failed to download dataset file.");
+      toast.error(
+        lang === "bn"
+          ? "ফাইল ডাউনলোড করতে ব্যর্থ হয়েছে।"
+          : "Failed to download dataset file."
+      );
     }
   };
 
-  // Delete a private dataset
+  // Delete private dataset
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -278,18 +291,21 @@ export function AdminDashboard() {
         deleteTarget.userId,
         deleteTarget.jobId
       );
-      toast.success("Private dataset deleted successfully.");
-      // Refresh sheet data
-      if (selectedUser) {
-        const res = await adminApi.getUserPrivateDatasets(
-          selectedUser.user_id
-        );
-        setUserDatasets(res.data.datasets);
-      }
-      // Refresh overview
+      toast.success(
+        lang === "bn"
+          ? "প্রাইভেট ডাটাবেস সফলভাবে মুছে ফেলা হয়েছে।"
+          : "Private dataset deleted successfully."
+      );
+      setUserDatasets((prev) =>
+        prev.filter((d) => d.id !== deleteTarget.jobId)
+      );
       fetchDashboard(true);
     } catch {
-      toast.error("Failed to delete dataset.");
+      toast.error(
+        lang === "bn"
+          ? "ডাটাবেস মুছে ফেলতে ব্যর্থ হয়েছে।"
+          : "Failed to delete dataset."
+      );
     } finally {
       setDeleteTarget(null);
     }
@@ -302,7 +318,11 @@ export function AdminDashboard() {
         <div className="min-h-[420px] rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 shadow-xl">
           <LoadingBackdrop
             variant="inline"
-            label="Aggregating platform metrics & telemetry..."
+            label={
+              lang === "bn"
+                ? "প্ল্যাটফর্ম মেট্রিক্স ও টেলিমেট্রি সংকলন করা হচ্ছে..."
+                : "Aggregating platform metrics & telemetry..."
+            }
             color="cyan"
             size="lg"
           />
@@ -353,10 +373,14 @@ export function AdminDashboard() {
         <div>
           <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            Platform Analytics Dashboard
+            {lang === "bn"
+              ? "প্ল্যাটফর্ম অ্যানালিটিক্স ড্যাশবোর্ড"
+              : "Platform Analytics Dashboard"}
           </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Real-time bird&apos;s eye view of all platform activity
+            {lang === "bn"
+              ? "সকল প্ল্যাটফর্ম কার্যক্রমের রিয়েল-টাইম বিস্তারিত রূপরেখা"
+              : "Real-time bird's eye view of all platform activity"}
           </p>
         </div>
         <Button
@@ -369,7 +393,7 @@ export function AdminDashboard() {
           <RefreshCw
             className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
           />
-          Refresh
+          {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
         </Button>
       </div>
 
@@ -378,41 +402,61 @@ export function AdminDashboard() {
         <KpiCard
           icon={Users}
           iconColor={COLORS.cyan}
-          label="Total Customers"
+          label={lang === "bn" ? "মোট গ্রাহক" : "Total Customers"}
           value={data.user_stats.total_users}
-          subtext={`${data.user_stats.role_counts["user"] || 0} users · ${(data.user_stats.role_counts["admin"] || 0) + (data.user_stats.role_counts["superadmin"] || 0)} admins`}
+          subtext={
+            lang === "bn"
+              ? `${data.user_stats.role_counts["user"] || 0} ইউজার · ${(data.user_stats.role_counts["admin"] || 0) + (data.user_stats.role_counts["superadmin"] || 0)} এডমিন`
+              : `${data.user_stats.role_counts["user"] || 0} users · ${(data.user_stats.role_counts["admin"] || 0) + (data.user_stats.role_counts["superadmin"] || 0)} admins`
+          }
           glowColor="oklch(0.75 0.14 200 / 0.08)"
         />
         <KpiCard
           icon={DollarSign}
           iconColor={COLORS.emerald}
-          label="Total Revenue"
+          label={lang === "bn" ? "মোট রাজস্ব" : "Total Revenue"}
           value={data.payment_stats.total_revenue_bdt}
-          subtext={`৳ BDT from ${data.payment_stats.status_counts["approved"] || 0} approved payments`}
+          subtext={
+            lang === "bn"
+              ? `${data.payment_stats.status_counts["approved"] || 0}টি অনুমোদিত পেমেন্ট থেকে ৳ BDT`
+              : `৳ BDT from ${data.payment_stats.status_counts["approved"] || 0} approved payments`
+          }
           glowColor="oklch(0.72 0.19 155 / 0.08)"
         />
         <KpiCard
           icon={Clock}
           iconColor={COLORS.amber}
-          label="Pending Payments"
+          label={lang === "bn" ? "অপেক্ষমান পেমেন্ট" : "Pending Payments"}
           value={data.payment_stats.status_counts["pending"] || 0}
-          subtext="Awaiting admin review"
+          subtext={
+            lang === "bn"
+              ? "এডমিন পর্যালোচনার অপেক্ষায়"
+              : "Awaiting admin review"
+          }
           glowColor="oklch(0.82 0.16 80 / 0.08)"
         />
         <KpiCard
           icon={Activity}
           iconColor={COLORS.purple}
-          label="Active Scraper Jobs"
+          label={lang === "bn" ? "চলমান স্ক্র্যাপার কাজ" : "Active Scraper Jobs"}
           value={data.scraper_stats.running_jobs}
-          subtext={`${data.scraper_stats.total_jobs} total jobs`}
+          subtext={
+            lang === "bn"
+              ? `মোট ${data.scraper_stats.total_jobs}টি কাজ`
+              : `${data.scraper_stats.total_jobs} total jobs`
+          }
           glowColor="oklch(0.65 0.2 300 / 0.08)"
         />
         <KpiCard
           icon={HardDrive}
           iconColor={COLORS.blue}
-          label="Private Datasets"
+          label={lang === "bn" ? "প্রাইভেট ডাটাবেস" : "Private Datasets"}
           value={data.scraper_stats.total_private_datasets}
-          subtext={`${data.catalog_stats.total_catalog_datasets} catalog datasets`}
+          subtext={
+            lang === "bn"
+              ? `${data.catalog_stats.total_catalog_datasets}টি ক্যাটালগ ডাটাবেস`
+              : `${data.catalog_stats.total_catalog_datasets} catalog datasets`
+          }
           glowColor="oklch(0.6 0.18 250 / 0.08)"
         />
       </div>
@@ -424,11 +468,15 @@ export function AdminDashboard() {
           <CardContent className="p-0">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
               <ShieldCheck className="h-4 w-4 text-amber-500" />
-              Payment Status Distribution
+              {lang === "bn"
+                ? "পেমেন্ট স্ট্যাটাস বিভাজন"
+                : "Payment Status Distribution"}
             </h3>
             {paymentPieData.every((d) => d.value === 0) ? (
               <div className="h-56 flex items-center justify-center text-xs text-muted-foreground">
-                No payment data available yet
+                {lang === "bn"
+                  ? "কোনো পেমেন্ট তথ্য পাওয়া যায়নি"
+                  : "No payment data available yet"}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
@@ -467,11 +515,15 @@ export function AdminDashboard() {
           <CardContent className="p-0">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
               <Database className="h-4 w-4 text-cyan-400" />
-              Dataset Request Status
+              {lang === "bn"
+                ? "ডাটা রিকোয়েস্ট স্ট্যাটাস"
+                : "Dataset Request Status"}
             </h3>
             {requestBarData.every((d) => d.value === 0) ? (
               <div className="h-56 flex items-center justify-center text-xs text-muted-foreground">
-                No dataset requests yet
+                {lang === "bn"
+                  ? "কোনো ডাটা রিকোয়েস্ট নেই"
+                  : "No dataset requests yet"}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
@@ -512,11 +564,13 @@ export function AdminDashboard() {
           <CardContent className="p-0">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
               <TrendingUp className="h-4 w-4 text-purple-400" />
-              Subscription Package Popularity
+              {lang === "bn"
+                ? "প্যাকেজ সাবস্ক্রিপশনের জনপ্রিয়তা"
+                : "Subscription Package Popularity"}
             </h3>
             {packageBarData.length === 0 ? (
               <div className="h-56 flex items-center justify-center text-xs text-muted-foreground">
-                No purchases yet
+                {lang === "bn" ? "এখনো কোনো ক্রয় নেই" : "No purchases yet"}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
@@ -558,11 +612,15 @@ export function AdminDashboard() {
           <CardContent className="p-0">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
               <DollarSign className="h-4 w-4 text-emerald-400" />
-              Monthly Revenue Trend (৳ BDT)
+              {lang === "bn"
+                ? "মাসিক রাজস্বের ধারা (৳ BDT)"
+                : "Monthly Revenue Trend (৳ BDT)"}
             </h3>
             {monthlyRevenueData.length === 0 ? (
               <div className="h-56 flex items-center justify-center text-xs text-muted-foreground">
-                No revenue data yet
+                {lang === "bn"
+                  ? "কোনো রাজস্ব তথ্য নেই"
+                  : "No revenue data yet"}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
@@ -623,36 +681,47 @@ export function AdminDashboard() {
         <CardContent className="p-0 space-y-4">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <Eye className="h-4 w-4 text-cyan-400" />
-            Users with Private Datasets
+            {lang === "bn"
+              ? "প্রাইভেট ডাটাবেস সমৃদ্ধ ব্যবহারকারী"
+              : "Users with Private Datasets"}
             <Badge
               variant="outline"
               className="ml-2 text-[10px] border-primary/30 text-primary"
             >
-              {data.users_with_datasets.length} Users
+              {data.users_with_datasets.length}{" "}
+              {lang === "bn" ? "জন ব্যবহারকারী" : "Users"}
             </Badge>
           </h3>
 
           {data.users_with_datasets.length === 0 ? (
             <div className="text-xs text-muted-foreground text-center py-12 border border-border/30 rounded-lg bg-background/50">
-              No users have created private datasets yet.
+              {lang === "bn"
+                ? "কোনো ব্যবহারকারী এখনো প্রাইভেট ডাটাবেস তৈরি করেননি।"
+                : "No users have created private datasets yet."}
             </div>
           ) : (
             <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead className="text-center">Credits</TableHead>
-                    <TableHead className="text-center">
-                      Total Datasets
+                    <TableHead>
+                      {lang === "bn" ? "ব্যবহারকারী" : "User"}
                     </TableHead>
-                    <TableHead className="text-center">Completed</TableHead>
+                    <TableHead>{lang === "bn" ? "রোল" : "Role"}</TableHead>
                     <TableHead className="text-center">
-                      Total Rows
+                      {lang === "bn" ? "ক্রেডিট" : "Credits"}
+                    </TableHead>
+                    <TableHead className="text-center">
+                      {lang === "bn" ? "মোট ডাটাবেস" : "Total Datasets"}
+                    </TableHead>
+                    <TableHead className="text-center">
+                      {lang === "bn" ? "সম্পন্ন" : "Completed"}
+                    </TableHead>
+                    <TableHead className="text-center">
+                      {lang === "bn" ? "মোট সারি" : "Total Rows"}
                     </TableHead>
                     <TableHead className="w-20 text-right">
-                      Actions
+                      {lang === "bn" ? "অ্যাকশন" : "Actions"}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -728,7 +797,7 @@ export function AdminDashboard() {
           <SheetHeader className="px-6 pt-6 pb-4 border-b border-border/30">
             <SheetTitle className="flex items-center gap-2 text-sm">
               <Database className="h-4 w-4 text-primary" />
-              Private Datasets
+              {lang === "bn" ? "প্রাইভেট ডাটাবেস" : "Private Datasets"}
             </SheetTitle>
             {selectedUser && (
               <div className="text-xs text-muted-foreground space-y-0.5">
@@ -745,14 +814,20 @@ export function AdminDashboard() {
               <div className="py-16 flex items-center justify-center">
                 <LoadingBackdrop
                   variant="inline"
-                  label="Loading user private datasets..."
+                  label={
+                    lang === "bn"
+                      ? "ব্যবহারকারীর প্রাইভেট ডাটা লোড হচ্ছে..."
+                      : "Loading user private datasets..."
+                  }
                   color="cyan"
                   size="sm"
                 />
               </div>
             ) : userDatasets.length === 0 ? (
               <div className="text-xs text-muted-foreground text-center py-16">
-                This user has no private datasets.
+                {lang === "bn"
+                  ? "এই ব্যবহারকারীর কোনো প্রাইভেট ডাটাবেস নেই।"
+                  : "This user has no private datasets."}
               </div>
             ) : (
               userDatasets.map((ds) => (
@@ -799,17 +874,19 @@ export function AdminDashboard() {
                   {/* Row 2: Stats */}
                   <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
                     <span>
-                      Job #{ds.id}
+                      {lang === "bn" ? "কাজ #" : "Job #"}{ds.id}
                     </span>
                     <span>
-                      {ds.result_count || 0} rows
+                      {ds.result_count || 0} {lang === "bn" ? "সারি" : "rows"}
                     </span>
                     <span>
                       {ds.cost_credits || 0} CR
                     </span>
                     {ds.created_at && (
                       <span>
-                        {new Date(ds.created_at).toLocaleDateString()}
+                        {new Date(ds.created_at).toLocaleDateString(
+                          lang === "bn" ? "bn-BD" : "en-US"
+                        )}
                       </span>
                     )}
                   </div>
@@ -829,7 +906,7 @@ export function AdminDashboard() {
                         }
                       >
                         <Download className="h-3 w-3" />
-                        Download
+                        {lang === "bn" ? "ডাউনলোড" : "Download"}
                       </Button>
                     )}
                     <Button
@@ -845,7 +922,7 @@ export function AdminDashboard() {
                       }
                     >
                       <Trash2 className="h-3 w-3" />
-                      Delete
+                      {lang === "bn" ? "মুছুন" : "Delete"}
                     </Button>
                   </div>
                 </div>
@@ -860,9 +937,19 @@ export function AdminDashboard() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title="Delete Private Dataset"
-        description={`Are you sure you want to permanently delete this private dataset? "${deleteTarget?.query}" — This will remove the file from the server and cannot be undone.`}
-        confirmText="Delete Permanently"
+        title={
+          lang === "bn"
+            ? "প্রাইভেট ডাটাবেস মুছুন"
+            : "Delete Private Dataset"
+        }
+        description={
+          lang === "bn"
+            ? `আপনি কি নিশ্চিতভাবে এই প্রাইভেট ডাটাবেসটি স্থায়ীভাবে মুছে ফেলতে চান? "${deleteTarget?.query}" — এটি সার্ভার থেকে ফাইল মুছে ফেলবে এবং পুনরুদ্ধার করা যাবে না।`
+            : `Are you sure you want to permanently delete this private dataset? "${deleteTarget?.query}" — This will remove the file from the server and cannot be undone.`
+        }
+        confirmText={
+          lang === "bn" ? "স্থায়ীভাবে মুছুন" : "Delete Permanently"
+        }
         isDanger
       />
     </div>

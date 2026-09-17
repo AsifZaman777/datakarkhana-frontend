@@ -8,7 +8,7 @@ import { useLanguage } from "@/providers/language-provider";
 import type { User } from "@/lib/types";
 
 export default function UsersPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const ut = t.users || {};
   const [users, setUsers] = useState<User[]>([]);
   const [warningTarget, setWarningTarget] = useState<User | null>(null);
@@ -27,9 +27,15 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-foreground">{ut.title || "Customer Accounts & Credits"}</h1>
+        <h1 className="text-2xl font-extrabold text-foreground">
+          {lang === "bn"
+            ? "গ্রাহক একাউন্ট ও ক্রেডিট ম্যানেজমেন্ট"
+            : (ut.title || "Customer Accounts & Credits")}
+        </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          {ut.subtitle || "Manage user permissions, assign credit balances, issue dashboard warning notices, and enforce ban status"}
+          {lang === "bn"
+            ? "ব্যবহারকারীর অনুমতি, ক্রেডিট ব্যালেন্স বরাদ্দ, সতর্কবার্তা প্রদান এবং ব্যান স্ট্যাটাস নিয়ন্ত্রণ করুন"
+            : (ut.subtitle || "Manage user permissions, assign credit balances, issue dashboard warning notices, and enforce ban status")}
         </p>
       </div>
 

@@ -9,8 +9,11 @@ import { useAuth } from "@/providers/auth-provider";
 import { marketingApi } from "@/lib/api/marketing";
 import { toast } from "sonner";
 import type { LogFile, LogFileContent } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 export function LogViewer() {
+  const { t, lang } = useLanguage();
+  const m = t.marketing || {};
   const { isAdmin } = useAuth();
   const [logFiles, setLogFiles] = useState<LogFile[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -78,7 +81,9 @@ export function LogViewer() {
         <div className="flex items-center justify-between border-b border-border/40 pb-3">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-cyan-400" />
-            <h3 className="text-sm font-bold text-foreground">Daily System Execution Logs</h3>
+            <h3 className="text-sm font-bold text-foreground">
+              {m.logsTitle || (lang === "bn" ? "দৈনিক সিস্টেম এক্সিকিউশন লগ" : "Daily System Execution Logs")}
+            </h3>
           </div>
           {selectedDate && fileContent && (
             <div className="flex items-center gap-2">
@@ -88,7 +93,7 @@ export function LogViewer() {
                 onClick={() => handleDownload(selectedDate)}
                 className="h-8 gap-1.5 text-xs border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
               >
-                <Download className="h-3.5 w-3.5" /> Download Log
+                <Download className="h-3.5 w-3.5" /> {lang === "bn" ? "লগ ডাউনলোড" : "Download Log"}
               </Button>
               {isAdmin && (
                 <Button
@@ -97,7 +102,7 @@ export function LogViewer() {
                   onClick={() => setDeleteTargetDate(selectedDate)}
                   className="h-8 gap-1.5 text-xs border-rose-500/40 text-rose-400 hover:bg-rose-500/10"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete Log
+                  <Trash2 className="h-3.5 w-3.5" /> {lang === "bn" ? "লগ মুছুন" : "Delete Log"}
                 </Button>
               )}
             </div>
@@ -108,7 +113,7 @@ export function LogViewer() {
           {/* Files List Sidebar */}
           <div className="md:col-span-4 space-y-2">
             <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" /> Log Date Archives:
+              <Calendar className="h-3.5 w-3.5" /> {lang === "bn" ? "লগ আর্কাইভ তারিখসমূহ:" : "Log Date Archives:"}
             </div>
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
               {logFiles.map((f) => (
@@ -127,7 +132,7 @@ export function LogViewer() {
                     variant="ghost"
                     onClick={() => handleDownload(f.date)}
                     className="h-8 w-8 text-cyan-400 hover:bg-cyan-500/10 shrink-0"
-                    title="Download Log"
+                    title={lang === "bn" ? "লগ ডাউনলোড" : "Download Log"}
                   >
                     <Download className="h-3.5 w-3.5" />
                   </Button>
@@ -137,7 +142,7 @@ export function LogViewer() {
                       variant="ghost"
                       onClick={() => setDeleteTargetDate(f.date)}
                       className="h-8 w-8 text-rose-400 hover:bg-rose-500/10 shrink-0"
-                      title="Delete Log File"
+                      title={lang === "bn" ? "লগ ফাইল মুছুন" : "Delete Log File"}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -146,7 +151,9 @@ export function LogViewer() {
               ))}
 
               {logFiles.length === 0 && (
-                <div className="text-xs text-muted-foreground italic py-4">No log files found.</div>
+                <div className="text-xs text-muted-foreground italic py-4">
+                  {lang === "bn" ? "কোনো লগ ফাইল পাওয়া যায়নি।" : "No log files found."}
+                </div>
               )}
             </div>
           </div>
@@ -154,9 +161,13 @@ export function LogViewer() {
           {/* Content Viewer Box */}
           <div className="md:col-span-8 space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-              <span>{selectedDate ? `Viewing Log: ${selectedDate}_campaigns.log` : "Select a log date to inspect"}</span>
+              <span>
+                {selectedDate 
+                  ? (lang === "bn" ? `লগ দেখা হচ্ছে: ${selectedDate}_campaigns.log` : `Viewing Log: ${selectedDate}_campaigns.log`) 
+                  : (lang === "bn" ? "লগ দেখতে বাম পাশ থেকে তারিখ নির্বাচন করুন" : "Select a log date to inspect")}
+              </span>
               {fileContent && (
-                <span className="text-[11px] font-mono text-cyan-400">({fileContent.lines.length} lines)</span>
+                <span className="text-[11px] font-mono text-cyan-400">({fileContent.lines.length} {lang === "bn" ? "টি লাইন" : "lines"})</span>
               )}
             </div>
             <div className="h-[300px] overflow-y-auto rounded-lg bg-black/90 p-4 font-mono text-xs text-emerald-400 border border-border/40 select-text">
@@ -167,7 +178,9 @@ export function LogViewer() {
                   </div>
                 ))
               ) : (
-                <div className="text-muted-foreground italic">Select a date file from the left to view logs.</div>
+                <div className="text-muted-foreground italic">
+                  {lang === "bn" ? "লগ দেখতে বাম পাশ থেকে একটি তারিখ ফাইল নির্বাচন করুন।" : "Select a date file from the left to view logs."}
+                </div>
               )}
             </div>
           </div>
@@ -178,9 +191,9 @@ export function LogViewer() {
         open={!!deleteTargetDate}
         onClose={() => setDeleteTargetDate(null)}
         onConfirm={confirmDeleteLogFile}
-        title="Delete Log Archive File"
-        description={`Are you sure you want to permanently delete the log archive file for ${deleteTargetDate}?`}
-        confirmText="Delete File"
+        title={lang === "bn" ? "লগ আর্কাইভ ফাইল মুছবেন?" : "Delete Log Archive File"}
+        description={lang === "bn" ? `${deleteTargetDate}-এর লগ আর্কাইভ ফাইলটি আপনি কি স্থায়ীভাবে মুছে ফেলতে চান?` : `Are you sure you want to permanently delete the log archive file for ${deleteTargetDate}?`}
+        confirmText={lang === "bn" ? "মুছে ফেলুন" : "Delete File"}
         isDanger
       />
     </Card>

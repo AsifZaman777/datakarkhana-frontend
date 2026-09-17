@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { PaymentRequest } from "@/lib/types";
 
 interface PaymentVerificationProps {
@@ -43,6 +44,7 @@ interface GeneratedLicenseDialogData {
 }
 
 export function PaymentVerification({ requests, onRefresh }: PaymentVerificationProps) {
+  const { t, lang } = useLanguage();
   const [rejectTargetId, setRejectTargetId] = useState<number | null>(null);
   const [approveTarget, setApproveTarget] = useState<PaymentRequest | null>(null);
   const [expiryDays, setExpiryDays] = useState<number>(30);
@@ -128,9 +130,13 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
       <CardContent className="p-0 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-foreground">Customer BDT Payment Submissions Verification</h3>
+            <h3 className="text-sm font-bold text-foreground">
+              {lang === "bn" ? "গ্রাহক বিডিটি পেমেন্ট সাবমিশন যাচাইকরণ" : "Customer BDT Payment Submissions Verification"}
+            </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Approve bKash/Pathao payments, manually assign expiration dates, and generate production keys.
+              {lang === "bn"
+                ? "বিকাশ/পাঠাও পেমেন্ট অনুমোদন করুন, মেয়াদ নির্ধারণ করুন এবং প্রোডাকশন কি তৈরি করুন।"
+                : "Approve bKash/Pathao payments, manually assign expiration dates, and generate production keys."}
             </p>
           </div>
         </div>
@@ -139,14 +145,14 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">ID #</TableHead>
-                <TableHead>Customer Email / Name</TableHead>
-                <TableHead>Package Requested</TableHead>
-                <TableHead>Method & Sender</TableHead>
-                <TableHead>Transaction ID (TrxID)</TableHead>
-                <TableHead>Production License Key</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-32 text-right">Actions</TableHead>
+                <TableHead className="w-16">{lang === "bn" ? "আইডি #" : "ID #"}</TableHead>
+                <TableHead>{lang === "bn" ? "গ্রাহক ইমেইল / নাম" : "Customer Email / Name"}</TableHead>
+                <TableHead>{lang === "bn" ? "প্যাকেজ" : "Package Requested"}</TableHead>
+                <TableHead>{lang === "bn" ? "মাধ্যম ও প্রেরক" : "Method & Sender"}</TableHead>
+                <TableHead>{lang === "bn" ? "ট্রানজেকশন আইডি (TrxID)" : "Transaction ID (TrxID)"}</TableHead>
+                <TableHead>{lang === "bn" ? "প্রোডাকশন লাইসেন্স কি" : "Production License Key"}</TableHead>
+                <TableHead>{lang === "bn" ? "স্ট্যাটাস" : "Status"}</TableHead>
+                <TableHead className="w-32 text-right">{lang === "bn" ? "অ্যাকশন" : "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,7 +161,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                   <TableCell className="font-mono text-xs text-muted-foreground">#{req.id}</TableCell>
                   <TableCell className="text-xs font-semibold">
                     <div>{req.user_email}</div>
-                    <div className="text-[10px] text-muted-foreground">{req.full_name || "Customer"}</div>
+                    <div className="text-[10px] text-muted-foreground">{req.full_name || (lang === "bn" ? "গ্রাহক" : "Customer")}</div>
                   </TableCell>
                   <TableCell className="text-xs font-bold text-cyan-400">
                     <div>{req.package_name}</div>
@@ -179,7 +185,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                           variant="ghost"
                           className="h-6 w-6 text-muted-foreground hover:text-foreground"
                           onClick={() => copyToClipboard(req.production_key!, `row-${req.id}`)}
-                          title="Copy Production Key"
+                          title={lang === "bn" ? "প্রোডাকশন কি কপি করুন" : "Copy Production Key"}
                         >
                           {copiedKey === `row-${req.id}` ? (
                             <Check className="h-3.5 w-3.5 text-emerald-400" />
@@ -189,23 +195,25 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-[11px] text-muted-foreground italic">None issued</span>
+                      <span className="text-[11px] text-muted-foreground italic">
+                        {lang === "bn" ? "ইস্যু করা হয়নি" : "None issued"}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
                     {req.status === "pending" && (
                       <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
-                        Pending Review
+                        {lang === "bn" ? "রিভিউ বাকি" : "Pending Review"}
                       </Badge>
                     )}
                     {req.status === "approved" && (
                       <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                        Approved
+                        {lang === "bn" ? "অনুমোদিত" : "Approved"}
                       </Badge>
                     )}
                     {req.status === "rejected" && (
                       <Badge variant="outline" className="border-destructive/40 text-destructive text-[10px]">
-                        Rejected
+                        {lang === "bn" ? "বাতিল" : "Rejected"}
                       </Badge>
                     )}
                   </TableCell>
@@ -217,7 +225,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                           onClick={() => openApproveModal(req)}
                           className="h-7 text-[11px] px-2.5 bg-emerald-500 text-black font-bold hover:bg-emerald-600 gap-1.5 shadow-sm"
                         >
-                          <Key className="h-3 w-3" /> Approve & Key
+                          <Key className="h-3 w-3" /> {lang === "bn" ? "অনুমোদন ও কি" : "Approve & Key"}
                         </Button>
                         <Button
                           size="sm"
@@ -225,11 +233,13 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                           onClick={() => setRejectTargetId(req.id)}
                           className="h-7 text-[11px] px-2 gap-1"
                         >
-                          <XCircle className="h-3 w-3" /> Reject
+                          <XCircle className="h-3 w-3" /> {lang === "bn" ? "বাতিল" : "Reject"}
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground italic">Processed</span>
+                      <span className="text-[10px] text-muted-foreground italic">
+                        {lang === "bn" ? "সম্পন্ন" : "Processed"}
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -238,7 +248,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               {requests.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
-                    No payment verification requests found.
+                    {lang === "bn" ? "কোনো পেমেন্ট ভেরিফিকেশন রিকোয়েস্ট নেই।" : "No payment verification requests found."}
                   </TableCell>
                 </TableRow>
               )}
@@ -253,10 +263,12 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
               <ShieldCheck className="h-5 w-5 text-emerald-400" />
-              Approve Payment & Issue Desktop License
+              {lang === "bn" ? "পেমেন্ট অনুমোদন ও ডেস্কটপ লাইসেন্স ইস্যু" : "Approve Payment & Issue Desktop License"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Assign an expiration period and generate a signed production key for this customer.
+              {lang === "bn"
+                ? "গ্রাহকের জন্য মেয়াদকাল নির্ধারণ করুন এবং একটি সাইন করা প্রোডাকশন কি তৈরি করুন।"
+                : "Assign an expiration period and generate a signed production key for this customer."}
             </DialogDescription>
           </DialogHeader>
 
@@ -264,19 +276,19 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
             <div className="space-y-4 py-2 text-xs">
               <div className="rounded-lg border border-border/50 bg-background/60 p-3 space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Customer:</span>
+                  <span className="text-muted-foreground">{lang === "bn" ? "গ্রাহক:" : "Customer:"}</span>
                   <span className="font-semibold">{approveTarget.user_email}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Package:</span>
+                  <span className="text-muted-foreground">{lang === "bn" ? "প্যাকেজ:" : "Package:"}</span>
                   <span className="font-bold text-cyan-400">{approveTarget.package_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Amount:</span>
+                  <span className="text-muted-foreground">{lang === "bn" ? "পরিমাণ:" : "Amount:"}</span>
                   <span className="font-mono font-bold text-amber-400">৳{approveTarget.amount_bdt} BDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">TrxID:</span>
+                  <span className="text-muted-foreground">{lang === "bn" ? "ট্রানজেকশন আইডি:" : "TrxID:"}</span>
                   <span className="font-mono font-bold">{approveTarget.transaction_id}</span>
                 </div>
               </div>
@@ -285,14 +297,14 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               <div className="space-y-2">
                 <Label className="text-xs font-semibold flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 text-primary" />
-                  Assign License Expiration Period:
+                  {lang === "bn" ? "লাইসেন্সের মেয়াদকাল নির্ধারণ করুন:" : "Assign License Expiration Period:"}
                 </Label>
                 <div className="grid grid-cols-4 gap-2">
                   {[
-                    { label: "30 Days", days: 30 },
-                    { label: "60 Days", days: 60 },
-                    { label: "90 Days", days: 90 },
-                    { label: "1 Year", days: 365 },
+                    { label: lang === "bn" ? "৩০ দিন" : "30 Days", days: 30 },
+                    { label: lang === "bn" ? "৬০ দিন" : "60 Days", days: 60 },
+                    { label: lang === "bn" ? "৯০ দিন" : "90 Days", days: 90 },
+                    { label: lang === "bn" ? "১ বছর" : "1 Year", days: 365 },
                   ].map((p) => (
                     <Button
                       key={p.days}
@@ -307,7 +319,9 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                   ))}
                 </div>
                 <div className="flex items-center gap-2 pt-1">
-                  <span className="text-[11px] text-muted-foreground">Or custom days:</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {lang === "bn" ? "অথবা নির্দিষ্ট দিন:" : "Or custom days:"}
+                  </span>
                   <Input
                     type="number"
                     min={1}
@@ -316,15 +330,21 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                     onChange={(e) => setExpiryDays(parseInt(e.target.value) || 30)}
                     className="h-8 w-24 text-xs font-mono"
                   />
-                  <span className="text-[11px] text-muted-foreground">days</span>
+                  <span className="text-[11px] text-muted-foreground">{lang === "bn" ? "দিন" : "days"}</span>
                 </div>
               </div>
 
               {/* Optional Custom Key */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Custom Key Format (Optional):</Label>
+                <Label className="text-xs font-semibold">
+                  {lang === "bn" ? "কাস্টম কি ফরম্যাট (ঐচ্ছিক):" : "Custom Key Format (Optional):"}
+                </Label>
                 <Input
-                  placeholder="Auto-generated if left empty (e.g. DK-PROD-2026-XXXX)"
+                  placeholder={
+                    lang === "bn"
+                      ? "খালি রাখলে স্বয়ংক্রিয় তৈরি হবে (উদা: DK-PROD-2026-XXXX)"
+                      : "Auto-generated if left empty (e.g. DK-PROD-2026-XXXX)"
+                  }
                   value={customKey}
                   onChange={(e) => setCustomKey(e.target.value)}
                   className="h-8 text-xs font-mono"
@@ -335,7 +355,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" size="sm" onClick={() => setApproveTarget(null)} className="h-8 text-xs">
-              Cancel
+              {lang === "bn" ? "বাতিল" : "Cancel"}
             </Button>
             <Button
               size="sm"
@@ -344,7 +364,9 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               className="h-8 text-xs bg-emerald-500 text-black font-bold hover:bg-emerald-600 gap-1.5"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {isApproving ? "Generating Key..." : "Approve & Generate Key"}
+              {isApproving
+                ? (lang === "bn" ? "কি তৈরি হচ্ছে..." : "Generating Key...")
+                : (lang === "bn" ? "অনুমোদন ও কি তৈরি করুন" : "Approve & Generate Key")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -356,10 +378,12 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold text-emerald-400">
               <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-              Production Key Generated Successfully!
+              {lang === "bn" ? "প্রোডাকশন কি সফলভাবে তৈরি হয়েছে!" : "Production Key Generated Successfully!"}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Payment approved! Copy the key below and send it to your customer.
+              {lang === "bn"
+                ? "পেমেন্ট অনুমোদিত! নিচের কি-টি কপি করে আপনার গ্রাহককে প্রদান করুন।"
+                : "Payment approved! Copy the key below and send it to your customer."}
             </DialogDescription>
           </DialogHeader>
 
@@ -369,10 +393,12 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Production Key
+                    {lang === "bn" ? "প্রোডাকশন কি" : "Production Key"}
                   </span>
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                    Active • Valid until {new Date(licenseResult.expires_at).toLocaleDateString()}
+                    {lang === "bn"
+                      ? `সক্রিয় • মেয়াদ: ${new Date(licenseResult.expires_at).toLocaleDateString()}`
+                      : `Active • Valid until ${new Date(licenseResult.expires_at).toLocaleDateString()}`}
                   </Badge>
                 </div>
 
@@ -387,11 +413,11 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                   >
                     {copiedKey === "modal-key" ? (
                       <>
-                        <Check className="h-3.5 w-3.5" /> Copied!
+                        <Check className="h-3.5 w-3.5" /> {lang === "bn" ? "কপি হয়েছে!" : "Copied!"}
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5" /> Copy Key
+                        <Copy className="h-3.5 w-3.5" /> {lang === "bn" ? "কি কপি করুন" : "Copy Key"}
                       </>
                     )}
                   </Button>
@@ -403,7 +429,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold flex items-center gap-1.5">
                     <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
-                    Customer Message Template:
+                    {lang === "bn" ? "গ্রাহক বার্তা টেমপ্লেট:" : "Customer Message Template:"}
                   </span>
                   <Button
                     size="sm"
@@ -411,7 +437,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                     onClick={() => copyWhatsAppMessage(licenseResult)}
                     className="h-7 text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
                   >
-                    <Copy className="h-3 w-3" /> Copy WhatsApp Message
+                    <Copy className="h-3 w-3" /> {lang === "bn" ? "হোয়াটসঅ্যাপ বার্তা কপি করুন" : "Copy WhatsApp Message"}
                   </Button>
                 </div>
                 <div className="text-[11px] text-muted-foreground bg-black/40 p-2.5 rounded border border-border/40 font-mono whitespace-pre-line">
@@ -427,7 +453,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               onClick={() => setLicenseResult(null)}
               className="h-8 text-xs bg-primary text-primary-foreground font-semibold"
             >
-              Done
+              {lang === "bn" ? "সম্পন্ন" : "Done"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -436,10 +462,18 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
       {/* Reject Modal */}
       <PromptModal
         open={!!rejectTargetId}
-        title="Reject Payment Request"
-        description="State why this customer payment submission is being rejected."
-        placeholder="e.g. Transaction ID not found or payment not received"
-        confirmText="Reject Payment"
+        title={lang === "bn" ? "পেমেন্ট রিকোয়েস্ট বাতিল করুন" : "Reject Payment Request"}
+        description={
+          lang === "bn"
+            ? "কেন এই গ্রাহকের পেমেন্ট বাতিল করা হচ্ছে তা উল্লেখ করুন।"
+            : "State why this customer payment submission is being rejected."
+        }
+        placeholder={
+          lang === "bn"
+            ? "যেমন: ট্রানজেকশন আইডি পাওয়া যায়নি অথবা টাকা জমা হয়নি"
+            : "e.g. Transaction ID not found or payment not received"
+        }
+        confirmText={lang === "bn" ? "পেমেন্ট বাতিল করুন" : "Reject Payment"}
         onConfirm={confirmReject}
         onClose={() => setRejectTargetId(null)}
       />

@@ -19,6 +19,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Campaign, CampaignLog } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface CampaignHistoryProps {
   campaigns: Campaign[];
@@ -26,6 +27,8 @@ interface CampaignHistoryProps {
 }
 
 export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) {
+  const { t, lang } = useLanguage();
+  const m = t.marketing || {};
   const { isAdmin } = useAuth();
   const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const [expandedLogs, setExpandedLogs] = useState<CampaignLog[]>([]);
@@ -90,18 +93,20 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
-        <h3 className="text-sm font-bold text-foreground">Campaign Dispatch History & Audit Trail</h3>
+        <h3 className="text-sm font-bold text-foreground">
+          {m.historyTitle || (lang === "bn" ? "ক্যাম্পেইন হিস্ট্রি ও অডিট ট্রেইল" : "Campaign Dispatch History & Audit Trail")}
+        </h3>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>Channel / Type</TableHead>
-                <TableHead>Target Recipient Group</TableHead>
-                <TableHead>Progress (Sent/Total)</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-28 text-right">Actions</TableHead>
+                <TableHead className="w-16">{lang === "bn" ? "আইডি" : "ID"}</TableHead>
+                <TableHead>{m.thChannel || (lang === "bn" ? "চ্যানেল / ধরন" : "Channel / Type")}</TableHead>
+                <TableHead>{m.thCampaign || (lang === "bn" ? "টার্গেট প্রাপক গ্রুপ" : "Target Recipient Group")}</TableHead>
+                <TableHead>{lang === "bn" ? "অগ্রগতি (প্রেরিত/মোট)" : "Progress (Sent/Total)"}</TableHead>
+                <TableHead>{m.thStatus || (lang === "bn" ? "স্ট্যাটাস" : "Status")}</TableHead>
+                <TableHead className="w-28 text-right">{lang === "bn" ? "অ্যাকশন" : "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,7 +128,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                           </span>
                           {(c.failed_count ?? 0) > 0 && (
                             <span className="text-rose-400 text-[11px]">
-                              ({c.failed_count} failed)
+                              ({c.failed_count} {lang === "bn" ? "ব্যর্থ" : "failed"})
                             </span>
                           )}
                         </div>
@@ -133,7 +138,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                           <div className="space-y-1">
                             <Badge variant="outline" className="border-rose-500/40 text-rose-300 bg-rose-500/10 gap-1.5 text-[10px] animate-pulse">
                               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
-                              {c.status === "stopping" ? "Stopping..." : "Dispatching Live"}
+                              {c.status === "stopping" ? (lang === "bn" ? "থামানো হচ্ছে..." : "Stopping...") : (lang === "bn" ? "সরাসরি প্রেরিত হচ্ছে" : "Dispatching Live")}
                             </Badge>
                             {c.est_human && (
                               <div className="text-[10px] font-mono text-cyan-400 flex items-center gap-1 whitespace-nowrap">
@@ -144,12 +149,12 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                         )}
                         {c.status === "done" && (
                           <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 gap-1 text-[10px]">
-                            <CheckCircle2 className="h-3 w-3" /> Complete
+                            <CheckCircle2 className="h-3 w-3" /> {lang === "bn" ? "সম্পন্ন" : "Complete"}
                           </Badge>
                         )}
                         {(c.status === "stopped" || c.status === "failed") && (
                           <Badge variant="outline" className="border-destructive/40 text-destructive gap-1 text-[10px]">
-                            <XCircle className="h-3 w-3" /> {c.status.toUpperCase()}
+                            <XCircle className="h-3 w-3" /> {c.status === "stopped" ? (lang === "bn" ? "স্থগিত" : "STOPPED") : (lang === "bn" ? "ব্যর্থ" : "FAILED")}
                           </Badge>
                         )}
                       </TableCell>
@@ -161,7 +166,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                               variant="ghost"
                               onClick={() => setStopTargetId(c.id)}
                               className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                              title="Stop Dispatch"
+                              title={lang === "bn" ? "প্রেরণ থামান" : "Stop Dispatch"}
                             >
                               <StopCircle className="h-4 w-4" />
                             </Button>
@@ -172,7 +177,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                               variant="ghost"
                               onClick={() => setDeleteTargetId(c.id)}
                               className="h-7 w-7 text-rose-400 hover:bg-rose-500/10"
-                              title="Delete Campaign & Audit Logs"
+                              title={lang === "bn" ? "ক্যাম্পেইন ও অডিট লগ মুছুন" : "Delete Campaign & Audit Logs"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -195,7 +200,9 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                         <TableCell colSpan={6} className="p-4">
                           <div className="rounded-lg border border-border/40 p-4 bg-black/80 space-y-2 max-h-[200px] overflow-y-auto font-mono text-xs">
                             <div className="flex items-center justify-between">
-                              <div className="text-[11px] font-bold text-cyan-400">Campaign #{c.id} Audit Trail & Contact Logs:</div>
+                              <div className="text-[11px] font-bold text-cyan-400">
+                                {lang === "bn" ? `ক্যাম্পেইন #${c.id} অডিট ট্রেইল ও কন্টাক্ট লগ:` : `Campaign #${c.id} Audit Trail & Contact Logs:`}
+                              </div>
                               {isAdmin && expandedLogs.length > 0 && (
                                 <Button
                                   size="sm"
@@ -203,7 +210,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                                   onClick={() => handleClearAuditLogs(c.id)}
                                   className="h-6 px-2 text-[10px] text-rose-400 hover:bg-rose-500/10 gap-1 font-sans"
                                 >
-                                  <Trash2 className="h-3 w-3" /> Clear Audit Logs
+                                  <Trash2 className="h-3 w-3" /> {lang === "bn" ? "লগ মুছুন" : "Clear Audit Logs"}
                                 </Button>
                               )}
                             </div>
@@ -248,13 +255,15 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
                                         isInfo && "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
                                       )}
                                     >
-                                      {isSuccess ? "SUCCESS" : isError ? "FAILED" : "INFO"}
+                                      {isSuccess ? (lang === "bn" ? "সফল" : "SUCCESS") : isError ? (lang === "bn" ? "ব্যর্থ" : "FAILED") : (lang === "bn" ? "তথ্য" : "INFO")}
                                     </span>
                                   </div>
                                 );
                               })
                             ) : (
-                              <div className="text-muted-foreground italic">No detailed log entries found.</div>
+                              <div className="text-muted-foreground italic">
+                                {lang === "bn" ? "কোনো বিস্তারিত লগ পাওয়া যায়নি।" : "No detailed log entries found."}
+                              </div>
                             )}
                           </div>
                         </TableCell>
@@ -267,7 +276,7 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
               {campaigns.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12 text-xs text-muted-foreground">
-                    No campaigns launched yet.
+                    {lang === "bn" ? "এখনো কোনো ক্যাম্পেইন শুরু করা হয়নি।" : "No campaigns launched yet."}
                   </TableCell>
                 </TableRow>
               )}
@@ -280,9 +289,9 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
         open={!!stopTargetId}
         onClose={() => setStopTargetId(null)}
         onConfirm={confirmStopCampaign}
-        title="Stop Campaign Dispatch"
-        description="Are you sure you want to stop this running campaign? Message sending will be halted immediately."
-        confirmText="Stop Campaign"
+        title={lang === "bn" ? "ক্যাম্পেইন প্রেরণ থামাবেন?" : "Stop Campaign Dispatch"}
+        description={lang === "bn" ? "আপনি কি নিশ্চিত যে আপনি এই চলমান ক্যাম্পেইনটি বন্ধ করতে চান? বার্তা প্রেরণ অবিলম্বে স্থগিত হবে।" : "Are you sure you want to stop this running campaign? Message sending will be halted immediately."}
+        confirmText={lang === "bn" ? "ক্যাম্পেইন থামান" : "Stop Campaign"}
         isDanger
       />
 
@@ -290,9 +299,9 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
         open={!!deleteTargetId}
         onClose={() => setDeleteTargetId(null)}
         onConfirm={confirmDeleteCampaign}
-        title="Delete Campaign & Audit Trail"
-        description="Are you sure you want to permanently delete this campaign and all its associated audit logs?"
-        confirmText="Delete Permanently"
+        title={lang === "bn" ? "ক্যাম্পেইন ও অডিট লগ মুছুন" : "Delete Campaign & Audit Trail"}
+        description={lang === "bn" ? "আপনি কি নিশ্চিত যে আপনি এই ক্যাম্পেইনটি এবং এর সমস্ত অডিট লগ স্থায়ীভাবে মুছে ফেলতে চান?" : "Are you sure you want to permanently delete this campaign and all its associated audit logs?"}
+        confirmText={lang === "bn" ? "স্থায়ীভাবে মুছুন" : "Delete Permanently"}
         isDanger
       />
     </Card>

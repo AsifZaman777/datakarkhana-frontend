@@ -27,6 +27,7 @@ import { marketingApi } from "@/lib/api/marketing";
 import { useAuth } from "@/providers/auth-provider";
 import { toast } from "sonner";
 import type { Dataset, RecipientContact } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface EmailBuilderProps {
   recipientGroups: Dataset[];
@@ -47,6 +48,8 @@ export function EmailBuilder({
   selectedContactIds,
   onSelectGroup,
 }: EmailBuilderProps) {
+  const { t, lang } = useLanguage();
+  const m = t.marketing || {};
   const { isAdmin } = useAuth();
   const [brevoInfo, setBrevoInfo] = useState<{
     status: "none" | "pending" | "pending_email_verification" | "email_verified" | "approved" | "rejected";
@@ -553,11 +556,13 @@ Return ONLY updated HTML code.`;
             <div className="flex items-center justify-between border-b border-border/40 pb-3">
               <div className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-purple-400" />
-                <h2 className="text-lg font-bold text-foreground">AI Marketing Email Builder</h2>
+                <h2 className="text-lg font-bold text-foreground">
+                  {m.emailBuilderTitle || (lang === "bn" ? "এআই মার্কেটিং ইমেইল বিল্ডার" : "AI Marketing Email Builder")}
+                </h2>
               </div>
               {brevoInfo && isApproved && (
                 <Badge variant="outline" className="border-purple-500/40 text-purple-400 text-[11px] font-mono gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Today: {brevoInfo.today_sent} / {brevoInfo.daily_limit} Limit
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> {lang === "bn" ? "আজকের প্রেরিত:" : "Today:"} {brevoInfo.today_sent} / {brevoInfo.daily_limit} {lang === "bn" ? "টি সীমা" : "Limit"}
                 </Badge>
               )}
             </div>
@@ -566,7 +571,9 @@ Return ONLY updated HTML code.`;
             {/* Target Group */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Target Lead Group *</Label>
+                <Label className="text-xs font-semibold">
+                  {m.selectTargetGroup || (lang === "bn" ? "টার্গেট লিড গ্রুপ *" : "Target Lead Group *")}
+                </Label>
                 <Select
                   value={recipientGroup}
                   onValueChange={(val) => {
@@ -576,12 +583,12 @@ Return ONLY updated HTML code.`;
                   }}
                 >
                   <SelectTrigger className="text-xs h-9">
-                    <SelectValue placeholder="-- Target Group --" />
+                    <SelectValue placeholder={lang === "bn" ? "-- টার্গেট গ্রুপ বাছাই করুন --" : "-- Target Group --"} />
                   </SelectTrigger>
                   <SelectContent>
                     {recipientGroups.map((g) => (
                       <SelectItem key={g.id} value={`dataset_${g.id}`}>
-                        {g.name} ({g.row_count} leads)
+                        {g.name} ({g.row_count} {lang === "bn" ? "টি লিড" : "leads"})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -595,14 +602,16 @@ Return ONLY updated HTML code.`;
                   onClick={onOpenSelector}
                   className="text-xs h-9 gap-1 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
                 >
-                  Inspect Leads ({selectedContactsCount}/{totalContactsCount})
+                  {m.inspectLeadsBtn || (lang === "bn" ? "লিড বাছাই করুন" : "Inspect Leads")} ({selectedContactsCount}/{totalContactsCount})
                 </Button>
               )}
             </div>
 
             {/* Email Subject */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Email Subject Line *</Label>
+              <Label className="text-xs font-semibold">
+                {m.subjectLineLabel || (lang === "bn" ? "ইমেইল সাবজেক্ট লাইন *" : "Email Subject Line *")}
+              </Label>
               <Input
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
@@ -614,7 +623,7 @@ Return ONLY updated HTML code.`;
             {/* Template Selector & Palette Selector */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">HTML Template Preset</Label>
+                <Label className="text-xs">{m.htmlPresetLabel || (lang === "bn" ? "এইচটিএমএল টেমপ্লেট প্রিসেট" : "HTML Template Preset")}</Label>
                 <Select value={selectedTemplateIndex.toString()} onValueChange={(val) => val && handleTemplateSelect(val)}>
                   <SelectTrigger className="text-xs h-9">
                     <SelectValue />
@@ -630,7 +639,7 @@ Return ONLY updated HTML code.`;
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">Color Palette Theme</Label>
+                <Label className="text-xs">{m.paletteLabel || (lang === "bn" ? "রঙিন প্যালেট থিম" : "Color Palette Theme")}</Label>
                 <Select value={paletteIndex.toString()} onValueChange={(v) => v && setPaletteIndex(parseInt(v))}>
                   <SelectTrigger className="text-xs h-9">
                     <SelectValue />
@@ -649,23 +658,23 @@ Return ONLY updated HTML code.`;
             {/* Parameters Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-card/60 border border-border/40">
               <div className="space-y-1">
-                <Label className="text-[11px]">Brand Name</Label>
+                <Label className="text-[11px]">{m.brandNameLabel || (lang === "bn" ? "ব্র্যান্ডের নাম" : "Brand Name")}</Label>
                 <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="text-xs h-8" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Heading</Label>
+                <Label className="text-[11px]">{m.headingLabel || (lang === "bn" ? "শিরোনাম" : "Heading")}</Label>
                 <Input value={heading} onChange={(e) => setHeading(e.target.value)} className="text-xs h-8" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">Promo Code</Label>
+                <Label className="text-[11px]">{m.couponCodeLabel || (lang === "bn" ? "প্রোমো কোড" : "Promo Code")}</Label>
                 <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} className="text-xs h-8" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px]">CTA Text</Label>
+                <Label className="text-[11px]">{m.ctaTextLabel || (lang === "bn" ? "সিটিএ টেক্সট" : "CTA Text")}</Label>
                 <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} className="text-xs h-8" />
               </div>
               <div className="space-y-1 sm:col-span-2">
-                <Label className="text-[11px]">CTA Link</Label>
+                <Label className="text-[11px]">{m.ctaLinkLabel || (lang === "bn" ? "সিটিএ লিংক" : "CTA Link")}</Label>
                 <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} className="text-xs h-8" />
               </div>
             </div>
@@ -673,7 +682,7 @@ Return ONLY updated HTML code.`;
             {/* AI Helper Export */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground flex items-center gap-1 font-semibold">
-                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Refine via AI:
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> {m.aiEnhanceLabel || (lang === "bn" ? "এআই দিয়ে পরিমার্জন:" : "Refine via AI:")}
               </span>
               <Button
                 type="button"
@@ -697,7 +706,7 @@ Return ONLY updated HTML code.`;
 
             {/* Raw HTML Editor */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Raw HTML Code</Label>
+              <Label className="text-xs">{m.rawHtmlLabel || (lang === "bn" ? "এইচটিএমএল সোর্স কোড" : "Raw HTML Code")}</Label>
               <Textarea
                 value={rawHtml}
                 onChange={(e) => setRawHtml(e.target.value)}
@@ -710,7 +719,7 @@ Return ONLY updated HTML code.`;
               <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex flex-wrap items-center justify-between gap-4 font-mono text-xs my-2">
                 <div className="flex items-center gap-2 text-rose-300">
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                  <span>Email Campaign <strong className="text-foreground">{activeCampaignId}</strong> is Dispatching Live</span>
+                  <span>{lang === "bn" ? "ইমেইল ক্যাম্পেইন" : "Email Campaign"} <strong className="text-foreground">{activeCampaignId}</strong> {lang === "bn" ? "সরাসরি পাঠানো হচ্ছে" : "is Dispatching Live"}</span>
                 </div>
                 <Button
                   type="button"
@@ -719,7 +728,7 @@ Return ONLY updated HTML code.`;
                   onClick={handleStopCampaign}
                   className="h-8 gap-1.5 font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg"
                 >
-                  <Square className="h-3.5 w-3.5 fill-current" /> Stop Campaign
+                  <Square className="h-3.5 w-3.5 fill-current" /> {lang === "bn" ? "ক্যাম্পেইন থামান" : "Stop Campaign"}
                 </Button>
               </div>
             )}
@@ -730,7 +739,9 @@ Return ONLY updated HTML code.`;
               className="w-full font-bold gap-2 py-5 bg-purple-600 text-white hover:bg-purple-700"
             >
               <Send className="h-4 w-4" />
-              {isSubmitting ? "Dispatching Email Campaign..." : "Dispatch Bulk Email Campaign"}
+              {isSubmitting 
+                ? (m.dispatchingEmailBtn || (lang === "bn" ? "ইমেইল ক্যাম্পেইন পাঠানো হচ্ছে..." : "Dispatching Email Campaign..."))
+                : (m.dispatchEmailBtn || (lang === "bn" ? "বাল্ক ইমেইল ক্যাম্পেইন প্রেরণ করুন" : "Dispatch Bulk Email Campaign"))}
             </Button>
           </form>
         </CardContent>
@@ -740,7 +751,7 @@ Return ONLY updated HTML code.`;
       <Card className="lg:col-span-6 glass-panel p-6 border-purple-500/30 flex flex-col">
         <CardContent className="p-0 space-y-4 flex-1 flex flex-col">
           <div className="text-xs font-bold text-purple-400 uppercase tracking-wider">
-            Live HTML Template Preview:
+            {m.liveHtmlPreview || (lang === "bn" ? "লাইভ এইচটিএমএল প্রিভিউ:" : "Live HTML Template Preview:")}
           </div>
 
           <div className="flex-1 rounded-xl border border-border/50 bg-white overflow-hidden min-h-[450px]">

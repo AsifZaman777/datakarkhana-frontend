@@ -25,7 +25,7 @@ export default function CatalogPage() {
   const tabParam = searchParams.get("tab");
 
   const { token, user, refreshProfile, isAdmin } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const ct = t.catalog || {};
   const [catalogTab, setCatalogTab] = useState<"public" | "private">(tabParam === "private" ? "private" : "public");
 
@@ -443,9 +443,21 @@ export default function CatalogPage() {
         open={!!demoteTarget}
         onClose={() => setDemoteTarget(null)}
         onConfirm={confirmDemoteDataset}
-        title={`Demote "${demoteTarget?.name}" to Private?`}
-        description={`Demoting this dataset will unpublish it from the Public Catalog and store it inside your Private Catalogue.`}
-        confirmText={isDemoting ? "Demoting..." : "Demote to Private"}
+        title={
+          lang === "bn"
+            ? `"${demoteTarget?.name}" প্রাইভেটে স্থানান্তর করবেন?`
+            : `Demote "${demoteTarget?.name}" to Private?`
+        }
+        description={
+          lang === "bn"
+            ? "এই ডেটাসেটটি পাবলিক ক্যাটালগ থেকে প্রত্যাহার করে আপনার ব্যক্তিগত লিডস সংগ্রহে সংরক্ষণ করা হবে।"
+            : "Demoting this dataset will unpublish it from the Public Catalog and store it inside your Private Catalogue."
+        }
+        confirmText={
+          isDemoting
+            ? (lang === "bn" ? "স্থানান্তর হচ্ছে..." : "Demoting...")
+            : (lang === "bn" ? "প্রাইভেটে স্থানান্তর" : "Demote to Private")
+        }
       />
 
       {/* Public Dataset Delete Confirmation Modal */}
@@ -453,9 +465,13 @@ export default function CatalogPage() {
         open={!!deletePublicTarget}
         onClose={() => setDeletePublicTarget(null)}
         onConfirm={confirmDeletePublic}
-        title="Delete Public Dataset"
-        description={`Are you sure you want to delete the public dataset "${deletePublicTarget?.name}"? This action will permanently remove it from the public catalog.`}
-        confirmText="Delete Dataset"
+        title={lang === "bn" ? "পাবলিক ডেটাসেট মুছে ফেলুন" : "Delete Public Dataset"}
+        description={
+          lang === "bn"
+            ? `আপনি কি নিশ্চিত যে "${deletePublicTarget?.name}" পাবলিক ডেটাসেটটি মুছে ফেলতে চান? এটি ক্যাটালগ থেকে স্থায়ীভাবে মুছে যাবে।`
+            : `Are you sure you want to delete the public dataset "${deletePublicTarget?.name}"? This action will permanently remove it from the public catalog.`
+        }
+        confirmText={lang === "bn" ? "মুছে ফেলুন" : "Delete Dataset"}
         isDanger
       />
 
@@ -464,9 +480,13 @@ export default function CatalogPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDeleteJob}
-        title="Delete Private Dataset"
-        description={`Are you sure you want to delete "${deleteTarget?.query}"? This action cannot be undone.`}
-        confirmText="Delete Dataset"
+        title={lang === "bn" ? "প্রাইভেট ডেটাসেট মুছে ফেলুন" : "Delete Private Dataset"}
+        description={
+          lang === "bn"
+            ? `আপনি কি নিশ্চিত যে "${deleteTarget?.query}" মুছে ফেলতে চান? এই কাজটি আর পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।`
+            : `Are you sure you want to delete "${deleteTarget?.query}"? This action cannot be undone.`
+        }
+        confirmText={lang === "bn" ? "মুছে ফেলুন" : "Delete Dataset"}
         isDanger
       />
 
@@ -475,11 +495,15 @@ export default function CatalogPage() {
         open={!!promoteTarget}
         onClose={() => setPromoteTarget(null)}
         onConfirm={confirmPromoteJob}
-        title="Request Catalog Promotion"
-        description="Enter the proposed dataset title for approval to publish to the public catalog:"
+        title={lang === "bn" ? "ক্যাটালগে প্রকাশের আবেদন" : "Request Catalog Promotion"}
+        description={
+          lang === "bn"
+            ? "পাবলিক ক্যাটালগে প্রকাশের জন্য অনুমোদনের উদ্দেশ্যে প্রস্তাবিত ডেটাসেটের শিরোনাম লিখুন:"
+            : "Enter the proposed dataset title for approval to publish to the public catalog:"
+        }
         defaultValue={promoteTarget?.query || ""}
-        placeholder="Enter proposed title..."
-        confirmText="Submit Request"
+        placeholder={lang === "bn" ? "প্রস্তাবিত শিরোনাম লিখুন..." : "Enter proposed title..."}
+        confirmText={lang === "bn" ? "আবেদন জমা দিন" : "Submit Request"}
       />
     </div>
   );

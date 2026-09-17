@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
+import { useLanguage } from "@/providers/language-provider";
 import { authApi } from "@/lib/api/auth";
 
 interface OtpVerificationFormProps {
@@ -16,6 +17,7 @@ interface OtpVerificationFormProps {
 }
 
 export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, initialOtp = "" }: OtpVerificationFormProps) {
+  const { t, lang } = useLanguage();
   const router = useRouter();
   const { login } = useAuth();
 
@@ -128,9 +130,13 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
         <div className="inline-flex p-3 rounded-full bg-primary/10 border border-primary/20 text-primary mb-2">
           <KeyRound className="h-6 w-6" />
         </div>
-        <h2 className="text-2xl font-extrabold text-foreground">Verify OTP Code</h2>
+        <h2 className="text-2xl font-extrabold text-foreground">
+          {lang === "bn" ? "ওটিপি কোড যাচাই" : "Verify OTP Code"}
+        </h2>
         <p className="text-xs text-muted-foreground">
-          Enter the 6-digit code sent to your email to activate your account
+          {lang === "bn"
+            ? "আপনার একাউন্ট সক্রিয় করতে ইমেইলে প্রেরিত ৬-সংখ্যার ওটিপি কোডটি প্রবেশ করান"
+            : "Enter the 6-digit code sent to your email to activate your account"}
         </p>
         
         {email && !isEditingEmail ? (
@@ -142,7 +148,7 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
               onClick={() => setIsEditingEmail(true)}
               className="text-[10px] text-primary underline ml-1 hover:text-primary/80 font-sans"
             >
-              Change
+              {lang === "bn" ? "পরিবর্তন" : "Change"}
             </button>
           </div>
         ) : null}
@@ -165,7 +171,7 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
         {(!email || isEditingEmail) && (
           <div className="space-y-1 text-left">
             <label className="text-xs font-semibold text-muted-foreground">
-              Account Email
+              {lang === "bn" ? "একাউন্ট ইমেইল" : "Account Email"}
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -183,7 +189,7 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
 
         <div className="space-y-2">
           <label className="text-xs font-semibold text-center block text-muted-foreground">
-            Enter 6-Digit OTP Code:
+            {lang === "bn" ? "৬-সংখ্যার ওটিপি কোড লিখুন:" : "Enter 6-Digit OTP Code:"}
           </label>
           <div className="flex justify-center">
             <Input
@@ -199,7 +205,9 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
             />
           </div>
           <p className="text-[11px] text-center text-muted-foreground">
-            Check your email inbox or spam folder • Code is valid for 15 minutes
+            {lang === "bn"
+              ? "আপনার ইনবক্স বা স্প্যাম ফোল্ডার চেক করুন • কোডের মেয়াদ ১৫ মিনিট"
+              : "Check your email inbox or spam folder • Code is valid for 15 minutes"}
           </p>
         </div>
 
@@ -210,11 +218,13 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
         >
           {isVerifying ? (
             <span className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin" /> Verifying Code...
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              {lang === "bn" ? "কোড যাচাই হচ্ছে..." : "Verifying Code..."}
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Verify & Continue
+              <ShieldCheck className="h-4 w-4" />
+              {lang === "bn" ? "যাচাই করে এগিয়ে যান" : "Verify & Continue"}
             </span>
           )}
         </Button>
@@ -225,7 +235,8 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
             onClick={onBackToLogin}
             className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Sign In
+            <ArrowLeft className="h-3.5 w-3.5" />
+            {lang === "bn" ? "সাইন ইন-এ ফিরে যান" : "Back to Sign In"}
           </button>
 
           <button
@@ -238,13 +249,11 @@ export function OtpVerificationForm({ email: initialEmail = "", onBackToLogin, i
                 : "text-primary hover:underline cursor-pointer"
             }`}
           >
-            {isResending ? (
-              "Sending..."
-            ) : cooldown > 0 ? (
-              `Resend code (${cooldown}s)`
-            ) : (
-              "Resend code"
-            )}
+            {isResending
+              ? (lang === "bn" ? "পাঠানো হচ্ছে..." : "Sending...")
+              : cooldown > 0
+              ? (lang === "bn" ? `কোড পুনরায় পাঠান (${cooldown} সে.)` : `Resend code (${cooldown}s)`)
+              : (lang === "bn" ? "কোড পুনরায় পাঠান" : "Resend code")}
           </button>
         </div>
       </form>

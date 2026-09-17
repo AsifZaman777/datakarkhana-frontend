@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { adminApi } from "@/lib/api/admin";
 import { paymentsApi } from "@/lib/api/payments";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { PaymentConfig } from "@/lib/types";
 
 export function GatewaySettings() {
+  const { t, lang } = useLanguage();
   const [config, setConfig] = useState<PaymentConfig | null>(null);
 
   const [bkashNumber, setBkashNumber] = useState("");
@@ -47,9 +49,9 @@ export function GatewaySettings() {
     setIsSubmitting(true);
     try {
       const res = await adminApi.savePaymentSettings(formData);
-      toast.success(res.data.message || "Payment gateway settings updated!");
+      toast.success(res.data.message || (lang === "bn" ? "পেমেন্ট গেটওয়ে সেটিংস সংরক্ষিত হয়েছে!" : "Payment gateway settings updated!"));
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Failed to update settings.");
+      toast.error(err.response?.data?.detail || (lang === "bn" ? "সেটিংস সংরক্ষণ ব্যর্থ হয়েছে।" : "Failed to update settings."));
     } finally {
       setIsSubmitting(false);
     }
@@ -60,16 +62,22 @@ export function GatewaySettings() {
       <CardContent className="p-0 space-y-6">
         <div className="flex items-center gap-2 border-b border-border/40 pb-3">
           <Settings className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-lg font-bold text-foreground">Payment Gateway & QR Code Settings</h2>
+          <h2 className="text-lg font-bold text-foreground">
+            {lang === "bn" ? "পেমেন্ট গেটওয়ে ও কিউআর কোড সেটিংস" : "Payment Gateway & QR Code Settings"}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* bKash Section */}
           <div className="space-y-4 p-4 rounded-xl bg-pink-500/5 border border-pink-500/20">
-            <h3 className="text-sm font-bold text-pink-400">bKash Payment Gateway</h3>
+            <h3 className="text-sm font-bold text-pink-400">
+              {lang === "bn" ? "বিকাশ (bKash) পেমেন্ট গেটওয়ে" : "bKash Payment Gateway"}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">bKash Account Number</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "বিকাশ একাউন্ট নম্বর" : "bKash Account Number"}
+                </Label>
                 <Input
                   value={bkashNumber}
                   onChange={(e) => setBkashNumber(e.target.value)}
@@ -78,16 +86,20 @@ export function GatewaySettings() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Account Type</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "একাউন্টের ধরন" : "Account Type"}
+                </Label>
                 <Input
                   value={bkashAccountType}
                   onChange={(e) => setBkashAccountType(e.target.value)}
-                  placeholder="Personal / Send Money"
+                  placeholder={lang === "bn" ? "ব্যক্তিগত / সেন্ড মানি (Personal)" : "Personal / Send Money"}
                   className="text-xs h-9"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Upload bKash QR Image</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "বিকাশ কিউআর ছবি আপলোড" : "Upload bKash QR Image"}
+                </Label>
                 <Input
                   type="file"
                   accept="image/*"
@@ -100,10 +112,14 @@ export function GatewaySettings() {
 
           {/* Pathao Pay Section */}
           <div className="space-y-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-            <h3 className="text-sm font-bold text-emerald-400">Pathao Pay Gateway</h3>
+            <h3 className="text-sm font-bold text-emerald-400">
+              {lang === "bn" ? "পাঠাও পে (Pathao Pay) গেটওয়ে" : "Pathao Pay Gateway"}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">Pathao Pay Number</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "পাঠাও পে নম্বর" : "Pathao Pay Number"}
+                </Label>
                 <Input
                   value={pathaoNumber}
                   onChange={(e) => setPathaoNumber(e.target.value)}
@@ -112,16 +128,20 @@ export function GatewaySettings() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Account Type</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "একাউন্টের ধরন" : "Account Type"}
+                </Label>
                 <Input
                   value={pathaoAccountType}
                   onChange={(e) => setPathaoAccountType(e.target.value)}
-                  placeholder="Personal / Send Money"
+                  placeholder={lang === "bn" ? "ব্যক্তিগত / সেন্ড মানি (Personal)" : "Personal / Send Money"}
                   className="text-xs h-9"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Upload Pathao Pay QR Image</Label>
+                <Label className="text-xs">
+                  {lang === "bn" ? "পাঠাও পে কিউআর ছবি আপলোড" : "Upload Pathao Pay QR Image"}
+                </Label>
                 <Input
                   type="file"
                   accept="image/*"
@@ -134,7 +154,9 @@ export function GatewaySettings() {
 
           <Button type="submit" disabled={isSubmitting} className="w-full font-bold gap-2 py-5">
             <Save className="h-4 w-4" />
-            {isSubmitting ? "Saving Gateway Settings..." : "Save Payment Gateway Settings"}
+            {isSubmitting
+              ? (lang === "bn" ? "সেটিংস সংরক্ষণ হচ্ছে..." : "Saving Gateway Settings...")
+              : (lang === "bn" ? "পেমেন্ট গেটওয়ে সেটিংস সংরক্ষণ করুন" : "Save Payment Gateway Settings")}
           </Button>
         </form>
       </CardContent>

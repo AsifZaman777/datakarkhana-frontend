@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { RegionsConfig } from "@/lib/types";
 
 interface DatasetUploadFormProps {
@@ -28,6 +29,7 @@ export function DatasetUploadForm({
   regionsConfig,
   onSuccess,
 }: DatasetUploadFormProps) {
+  const { lang } = useLanguage();
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState(10);
@@ -50,7 +52,11 @@ export function DatasetUploadForm({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) {
-      toast.warning("Please upload a CSV or Excel file.");
+      toast.warning(
+        lang === "bn"
+          ? "অনুগ্রহ করে একটি CSV বা Excel ফাইল নির্বাচন করুন।"
+          : "Please upload a CSV or Excel file."
+      );
       return;
     }
 
@@ -66,7 +72,11 @@ export function DatasetUploadForm({
     setIsSubmitting(true);
     try {
       await adminApi.uploadDataset(formData);
-      toast.success("Dataset created and published to public catalog!");
+      toast.success(
+        lang === "bn"
+          ? "ডাটাবেস সফলভাবে তৈরি ও ক্যাটালগে প্রকাশিত হয়েছে!"
+          : "Dataset created and published to public catalog!"
+      );
       setName("");
       setCategory("");
       setPrice(10);
@@ -76,7 +86,10 @@ export function DatasetUploadForm({
       setFile(null);
       onSuccess();
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Upload failed.");
+      toast.error(
+        err.response?.data?.detail ||
+          (lang === "bn" ? "আপলোড ব্যর্থ হয়েছে।" : "Upload failed.")
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -87,27 +100,45 @@ export function DatasetUploadForm({
       <CardContent className="p-0 space-y-6">
         <div className="flex items-center gap-2 border-b border-border/40 pb-3">
           <Upload className="h-5 w-5 text-cyan-400" />
-          <h2 className="text-lg font-bold text-foreground">Upload Public Dataset (CSV / Excel)</h2>
+          <h2 className="text-lg font-bold text-foreground">
+            {lang === "bn"
+              ? "পাবলিক ডাটাবেস আপলোড করুন (CSV / Excel)"
+              : "Upload Public Dataset (CSV / Excel)"}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Dataset Title *</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn" ? "ডাটাবেসের নাম *" : "Dataset Title *"}
+              </Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="e.g. Coaching Centers Dhaka 2026"
+                placeholder={
+                  lang === "bn"
+                    ? "যেমন: কোচিং সেন্টার ঢাকা ২০২৬"
+                    : "e.g. Coaching Centers Dhaka 2026"
+                }
                 className="text-xs h-9"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Category *</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn" ? "ক্যাটাগরি *" : "Category *"}
+              </Label>
               <Select value={category} onValueChange={(val) => setCategory(val || "")} required>
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="-- Choose Category --" />
+                  <SelectValue
+                    placeholder={
+                      lang === "bn"
+                        ? "-- ক্যাটাগরি বেছে নিন --"
+                        : "-- Choose Category --"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {categoriesList.map((cat) => (
@@ -123,7 +154,11 @@ export function DatasetUploadForm({
           {/* Price & File */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Price in Credits (0 = FREE)</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn"
+                  ? "ক্রেডিট মূল্য (০ = ফ্রি)"
+                  : "Price in Credits (0 = FREE)"}
+              </Label>
               <Input
                 type="number"
                 value={price}
@@ -135,7 +170,11 @@ export function DatasetUploadForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Target File (.csv, .xlsx) *</Label>
+              <Label className="text-xs font-semibold">
+                {lang === "bn"
+                  ? "ফাইল নির্বাচন (.csv, .xlsx) *"
+                  : "Target File (.csv, .xlsx) *"}
+              </Label>
               <Input
                 type="file"
                 accept=".csv, .xlsx, .xls"
@@ -149,10 +188,14 @@ export function DatasetUploadForm({
           {/* Location Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">Division</Label>
+              <Label className="text-xs">{lang === "bn" ? "বিভাগ" : "Division"}</Label>
               <Select value={division} onValueChange={(val) => setDivision(val || "")}>
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="All Divisions" />
+                  <SelectValue
+                    placeholder={
+                      lang === "bn" ? "সকল বিভাগ" : "All Divisions"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {divisions.map((d) => (
@@ -165,10 +208,14 @@ export function DatasetUploadForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">District</Label>
+              <Label className="text-xs">{lang === "bn" ? "জেলা" : "District"}</Label>
               <Select value={district} disabled={!division} onValueChange={(val) => setDistrict(val || "")}>
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="All Districts" />
+                  <SelectValue
+                    placeholder={
+                      lang === "bn" ? "সকল জেলা" : "All Districts"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {districts.map((d) => (
@@ -181,10 +228,14 @@ export function DatasetUploadForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Area / City</Label>
+              <Label className="text-xs">{lang === "bn" ? "এলাকা / শহর" : "Area / City"}</Label>
               <Select value={area} disabled={!district} onValueChange={(val) => setArea(val || "")}>
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="All Areas" />
+                  <SelectValue
+                    placeholder={
+                      lang === "bn" ? "সকল এলাকা" : "All Areas"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {areas.map((a) => (
@@ -199,7 +250,13 @@ export function DatasetUploadForm({
 
           <Button type="submit" disabled={isSubmitting} className="w-full font-bold gap-2 py-5">
             <FileSpreadsheet className="h-4 w-4" />
-            {isSubmitting ? "Uploading & Processing..." : "Upload & Create Public Dataset"}
+            {isSubmitting
+              ? lang === "bn"
+                ? "আপলোড ও প্রসেসিং হচ্ছে..."
+                : "Uploading & Processing..."
+              : lang === "bn"
+              ? "আপলোড ও পাবলিক ডাটা তৈরি করুন"
+              : "Upload & Create Public Dataset"}
           </Button>
         </form>
       </CardContent>

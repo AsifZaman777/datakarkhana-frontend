@@ -10,7 +10,7 @@ interface FooterProps {
 }
 
 export function Footer({ onOpenLegalModal }: FooterProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   return (
     <footer className="border-t border-border/40 bg-card/30 backdrop-blur-xl mt-auto">
@@ -37,27 +37,27 @@ export function Footer({ onOpenLegalModal }: FooterProps) {
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
                 <Link href="/catalog?category=Coaching+Center" className="hover:text-primary transition-colors">
-                  Coaching Centers
+                  {lang === "bn" ? "কোচিং সেন্টার" : "Coaching Centers"}
                 </Link>
               </li>
               <li>
                 <Link href="/catalog?category=Pharmacy" className="hover:text-primary transition-colors">
-                  Pharmacies
+                  {lang === "bn" ? "ফার্মেসি" : "Pharmacies"}
                 </Link>
               </li>
               <li>
                 <Link href="/catalog?category=Restaurant" className="hover:text-primary transition-colors">
-                  Restaurants
+                  {lang === "bn" ? "রেস্তোরাঁ ও হোটেল" : "Restaurants"}
                 </Link>
               </li>
               <li>
                 <Link href="/catalog?category=Hospital+%26+Clinic" className="hover:text-primary transition-colors">
-                  Hospitals & Clinics
+                  {lang === "bn" ? "হাসপাতাল ও ক্লিনিক" : "Hospitals & Clinics"}
                 </Link>
               </li>
               <li>
                 <Link href="/catalog?category=School+%26+College" className="hover:text-primary transition-colors">
-                  Schools & Colleges
+                  {lang === "bn" ? "স্কুল ও কলেজ" : "Schools & Colleges"}
                 </Link>
               </li>
             </ul>
@@ -69,22 +69,22 @@ export function Footer({ onOpenLegalModal }: FooterProps) {
             <ul className="space-y-2 text-xs text-muted-foreground">
               <li>
                 <Link href="/#pricing" className="hover:text-primary transition-colors">
-                  Starter Pack (৳200/mo)
+                  {lang === "bn" ? "স্টার্টার প্যাক (৳২০০/মাস)" : "Starter Pack (৳200/mo)"}
                 </Link>
               </li>
               <li>
                 <Link href="/#pricing" className="hover:text-primary transition-colors">
-                  Growth Pack (৳500/mo)
+                  {lang === "bn" ? "গ্রোথ প্যাক (৳৫০০/মাস)" : "Growth Pack (৳500/mo)"}
                 </Link>
               </li>
               <li>
                 <Link href="/#pricing" className="hover:text-primary transition-colors">
-                  Credit Packs (from ৳50)
+                  {lang === "bn" ? "ক্রেডিট প্যাক (৳৫০ থেকে)" : "Credit Packs (from ৳50)"}
                 </Link>
               </li>
               <li>
                 <Link href="/#contact" className="hover:text-primary transition-colors">
-                  Enterprise ERP Pack
+                  {lang === "bn" ? "এন্টারপ্রাইজ ইআরপি প্যাক" : "Enterprise ERP Pack"}
                 </Link>
               </li>
             </ul>
@@ -100,7 +100,7 @@ export function Footer({ onOpenLegalModal }: FooterProps) {
                   onClick={() => onOpenLegalModal?.("privacy")}
                   className="hover:text-primary transition-colors text-left"
                 >
-                  Privacy Policy
+                  {lang === "bn" ? "গোপনীয়তা নীতি" : "Privacy Policy"}
                 </button>
               </li>
               <li>
@@ -109,17 +109,17 @@ export function Footer({ onOpenLegalModal }: FooterProps) {
                   onClick={() => onOpenLegalModal?.("terms")}
                   className="hover:text-primary transition-colors text-left"
                 >
-                  Terms of Service
+                  {lang === "bn" ? "ব্যবহারের শর্তাবলী" : "Terms of Service"}
                 </button>
               </li>
               <li>
                 <Link href="/#contact" className="hover:text-primary transition-colors">
-                  Contact Sales
+                  {lang === "bn" ? "সেলস যোগাযোগ" : "Contact Sales"}
                 </Link>
               </li>
               <li>
                 <Link href="/auth" className="hover:text-primary transition-colors">
-                  Login / Register
+                  {lang === "bn" ? "লগইন / রেজিস্টার" : "Login / Register"}
                 </Link>
               </li>
             </ul>

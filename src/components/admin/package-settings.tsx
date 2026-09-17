@@ -21,10 +21,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { paymentsApi } from "@/lib/api/payments";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { PaymentPackage } from "@/lib/types";
 import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 
 export function PackageSettings() {
+  const { t, lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [packages, setPackages] = useState<PaymentPackage[]>([]);
@@ -135,7 +137,15 @@ export function PackageSettings() {
   };
 
   if (loading) {
-    return <LoadingBackdrop variant="inline" label="Loading package configuration..." color="amber" size="md" className="py-24" />;
+    return (
+      <LoadingBackdrop
+        variant="inline"
+        label={lang === "bn" ? "প্যাকেজ কনফিগারেশন লোড হচ্ছে..." : "Loading package configuration..."}
+        color="amber"
+        size="md"
+        className="py-24"
+      />
+    );
   }
 
   return (
@@ -145,16 +155,19 @@ export function PackageSettings() {
         <div>
           <h2 className="text-xl font-extrabold text-foreground flex items-center gap-2">
             <Coins className="h-5 w-5 text-amber-500" />
-            Package Settings & Pricing Control
+            {lang === "bn" ? "প্যাকেজ সেটিংস ও মূল্য নিয়ন্ত্রণ" : "Package Settings & Pricing Control"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure subscription tier pricing, credit allocations, and feature lists per package in real-time
+            {lang === "bn"
+              ? "সাবস্ক্রিপশন প্যাকেজের মূল্য, ক্রেডিট বরাদ্দ এবং বৈশিষ্ট্য রিয়েল-টাইমে কনফিগার করুন"
+              : "Configure subscription tier pricing, credit allocations, and feature lists per package in real-time"}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="border-purple-500/40 text-purple-400 gap-1.5 py-1 text-xs">
-            <ShieldCheck className="h-3.5 w-3.5" /> Super Admin Access
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {lang === "bn" ? "সুপার অ্যাডমিন অ্যাক্সেস" : "Super Admin Access"}
           </Badge>
           <Button
             onClick={handleSave}
@@ -162,7 +175,9 @@ export function PackageSettings() {
             className="gap-2 font-bold bg-amber-500 text-black hover:bg-amber-600"
           >
             <Save className="h-4 w-4" />
-            {saving ? "Saving Changes..." : "Save Package Settings"}
+            {saving
+              ? (lang === "bn" ? "সংরক্ষণ হচ্ছে..." : "Saving Changes...")
+              : (lang === "bn" ? "প্যাকেজ সেটিংস সংরক্ষণ করুন" : "Save Package Settings")}
           </Button>
         </div>
       </div>
@@ -172,7 +187,9 @@ export function PackageSettings() {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-amber-500" />
-            Active Subscription Packages ({packages.length})
+            {lang === "bn"
+              ? `সক্রিয় সাবস্ক্রিপশন প্যাকেজ (${packages.length}টি)`
+              : `Active Subscription Packages (${packages.length})`}
           </h3>
           <Button
             size="sm"
@@ -180,7 +197,7 @@ export function PackageSettings() {
             onClick={handleAddPackage}
             className="gap-1.5 text-xs border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
           >
-            <Plus className="h-3.5 w-3.5" /> Add New Package Tier
+            <Plus className="h-3.5 w-3.5" /> {lang === "bn" ? "নতুন প্যাকেজ যুক্ত করুন" : "Add New Package Tier"}
           </Button>
         </div>
 
@@ -202,7 +219,7 @@ export function PackageSettings() {
                   </Badge>
                   {pkg.popular && (
                     <Badge className="bg-amber-500 text-black text-[10px] font-bold">
-                      {pkg.badge || "POPULAR"}
+                      {pkg.badge || (lang === "bn" ? "জনপ্রিয়" : "POPULAR")}
                     </Badge>
                   )}
                 </div>
@@ -219,7 +236,7 @@ export function PackageSettings() {
               {/* Package Details Form */}
               <div className="space-y-3 text-xs">
                 <div>
-                  <Label className="text-[11px]">Package Name *</Label>
+                  <Label className="text-[11px]">{lang === "bn" ? "প্যাকেজের নাম *" : "Package Name *"}</Label>
                   <Input
                     value={pkg.name}
                     onChange={(e) => handleUpdatePackage(pIdx, "name", e.target.value)}
@@ -229,7 +246,7 @@ export function PackageSettings() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-[11px]">Price (৳ BDT) *</Label>
+                    <Label className="text-[11px]">{lang === "bn" ? "মূল্য (৳ বিডিটি) *" : "Price (৳ BDT) *"}</Label>
                     <Input
                       type="number"
                       value={pkg.price_bdt}
@@ -238,7 +255,7 @@ export function PackageSettings() {
                     />
                   </div>
                   <div>
-                    <Label className="text-[11px]">Credits Provided *</Label>
+                    <Label className="text-[11px]">{lang === "bn" ? "প্রদত্ত ক্রেডিট *" : "Credits Provided *"}</Label>
                     <Input
                       type="number"
                       value={pkg.credits}
@@ -250,11 +267,11 @@ export function PackageSettings() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-[11px]">Badge Text</Label>
+                    <Label className="text-[11px]">{lang === "bn" ? "ব্যাজ টেক্সট" : "Badge Text"}</Label>
                     <Input
                       value={pkg.badge || ""}
                       onChange={(e) => handleUpdatePackage(pIdx, "badge", e.target.value)}
-                      placeholder="e.g. Most Popular"
+                      placeholder={lang === "bn" ? "যেমন: মোস্ট পপুলার" : "e.g. Most Popular"}
                       className="text-xs h-8 mt-1"
                     />
                   </div>
@@ -265,13 +282,13 @@ export function PackageSettings() {
                       onCheckedChange={(c) => handleUpdatePackage(pIdx, "popular", !!c)}
                     />
                     <label htmlFor={`popular-${pIdx}`} className="text-[11px] font-semibold text-foreground cursor-pointer">
-                      Highlight Popular
+                      {lang === "bn" ? "জনপ্রিয় হাইলাইট" : "Highlight Popular"}
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-[11px]">Package Description</Label>
+                  <Label className="text-[11px]">{lang === "bn" ? "প্যাকেজের বিবরণ" : "Package Description"}</Label>
                   <Textarea
                     value={pkg.description || ""}
                     onChange={(e) => handleUpdatePackage(pIdx, "description", e.target.value)}
@@ -284,7 +301,9 @@ export function PackageSettings() {
                 <div className="space-y-2 pt-2 border-t border-border/30">
                   <div className="flex items-center justify-between">
                     <Label className="text-[11px] font-bold text-foreground">
-                      Features List ({pkg.features?.length || 0})
+                      {lang === "bn"
+                        ? `ফিচারের তালিকা (${pkg.features?.length || 0})`
+                        : `Features List (${pkg.features?.length || 0})`}
                     </Label>
                     <Button
                       type="button"
@@ -293,7 +312,7 @@ export function PackageSettings() {
                       onClick={() => handleAddFeature(pIdx)}
                       className="h-6 text-[10px] px-2 gap-1 text-primary hover:bg-primary/10"
                     >
-                      <Plus className="h-3 w-3" /> Add Line
+                      <Plus className="h-3 w-3" /> {lang === "bn" ? "নতুন লাইন" : "Add Line"}
                     </Button>
                   </div>
 
@@ -304,7 +323,7 @@ export function PackageSettings() {
                         <Input
                           value={feat}
                           onChange={(e) => handleUpdateFeature(pIdx, fIdx, e.target.value)}
-                          placeholder="Feature description line..."
+                          placeholder={lang === "bn" ? "ফিচারের বিবরণ..." : "Feature description line..."}
                           className="text-xs h-7 flex-1"
                         />
                         <Button
@@ -331,12 +350,16 @@ export function PackageSettings() {
         <CardContent className="p-0 space-y-4">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <Zap className="h-4 w-4 text-cyan-400" />
-            Custom Credit Calculator Settings (Seek Bar Slider Configuration)
+            {lang === "bn"
+              ? "কাস্টম ক্রেডিট ক্যালকুলেটর সেটিংস (স্লাইডার কনফিগারেশন)"
+              : "Custom Credit Calculator Settings (Seek Bar Slider Configuration)"}
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div>
-              <Label className="text-[11px] font-semibold">Custom Rate (৳ BDT per Credit) *</Label>
+              <Label className="text-[11px] font-semibold">
+                {lang === "bn" ? "কাস্টম রেট (প্রতি ক্রেডিট ৳ বিডিটি) *" : "Custom Rate (৳ BDT per Credit) *"}
+              </Label>
               <Input
                 type="number"
                 step="0.5"
@@ -346,7 +369,9 @@ export function PackageSettings() {
               />
             </div>
             <div>
-              <Label className="text-[11px] font-semibold">Minimum Credit Limit *</Label>
+              <Label className="text-[11px] font-semibold">
+                {lang === "bn" ? "সর্বনিম্ন ক্রেডিট সীমা *" : "Minimum Credit Limit *"}
+              </Label>
               <Input
                 type="number"
                 value={minCredits}
@@ -355,7 +380,9 @@ export function PackageSettings() {
               />
             </div>
             <div>
-              <Label className="text-[11px] font-semibold">Maximum Credit Limit *</Label>
+              <Label className="text-[11px] font-semibold">
+                {lang === "bn" ? "সর্বোচ্চ ক্রেডিট সীমা *" : "Maximum Credit Limit *"}
+              </Label>
               <Input
                 type="number"
                 value={maxCredits}

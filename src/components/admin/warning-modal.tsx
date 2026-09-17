@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 import type { User } from "@/lib/types";
 
 interface WarningModalProps {
@@ -78,6 +79,7 @@ const PRESETS = [
 ];
 
 export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalProps) {
+  const { lang } = useLanguage();
   const [warningType, setWarningType] = useState("Important Information");
   const [warningMsg, setWarningMsg] = useState(targetUser?.warning_message || "");
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -93,13 +95,21 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
       await adminApi.setWarning(targetUser.id, msgToSave);
       toast.success(
         msgToSave
-          ? `Warning issued to ${targetUser.email}!`
+          ? lang === "bn"
+            ? `${targetUser.email} কে সফলভাবে সতর্কতা বার্তা পাঠানো হয়েছে!`
+            : `Warning issued to ${targetUser.email}!`
+          : lang === "bn"
+          ? `${targetUser.email} এর সতর্কতা মুছে ফেলা হয়েছে।`
           : `Warning cleared for ${targetUser.email}.`
       );
       onSuccess();
       onClose();
     } catch {
-      toast.error("Failed to update warning.");
+      toast.error(
+        lang === "bn"
+          ? "সতর্কতা বার্তা আপডেট করতে ব্যর্থ হয়েছে।"
+          : "Failed to update warning."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -121,10 +131,14 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
       <DialogContent className="glass-panel max-w-lg border-amber-500/50 p-5 space-y-4">
         <DialogHeader className="pb-2 border-b border-border/40">
           <DialogTitle className="flex items-center gap-2 text-base font-extrabold text-amber-500">
-            <Bell className="h-4 w-4 animate-pulse text-amber-400" /> Issue Application Warning Notice
+            <Bell className="h-4 w-4 animate-pulse text-amber-400" />{" "}
+            {lang === "bn"
+              ? "সতর্কবার্তা নোটিশ প্রদান করুন"
+              : "Issue Application Warning Notice"}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
-            Target Customer: <strong className="text-foreground">{targetUser.email}</strong> (ID #{targetUser.id})
+            {lang === "bn" ? "নির্দিষ্ট গ্রাহক: " : "Target Customer: "}
+            <strong className="text-foreground">{targetUser.email}</strong> (ID #{targetUser.id})
           </p>
         </DialogHeader>
 
@@ -132,9 +146,11 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
           {/* Icon-Driven Category Pill Grid */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <Label className="text-xs font-bold text-foreground">Category Icon Selector:</Label>
+              <Label className="text-xs font-bold text-foreground">
+                {lang === "bn" ? "ক্যাটাগরি আইকন নির্বাচন:" : "Category Icon Selector:"}
+              </Label>
               <Badge variant="outline" className={`text-[10px] ${activeCatObj.badgeClass}`}>
-                Active: {activeCatObj.title}
+                {lang === "bn" ? "সক্রিয়: " : "Active: "}{activeCatObj.title}
               </Badge>
             </div>
 
@@ -164,7 +180,9 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
 
           {/* Quick Presets */}
           <div className="space-y-1">
-            <Label className="text-[11px] font-semibold text-muted-foreground">Quick Presets:</Label>
+            <Label className="text-[11px] font-semibold text-muted-foreground">
+              {lang === "bn" ? "দ্রুত প্রিসেটসমূহ:" : "Quick Presets:"}
+            </Label>
             <div className="flex flex-wrap gap-1.5">
               {PRESETS.map((p) => {
                 const isActive = activePreset === p.label;
@@ -190,7 +208,9 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
 
           {/* Custom Message Area */}
           <div className="space-y-1">
-            <Label className="text-xs font-bold text-foreground">Custom Warning Message Text:</Label>
+            <Label className="text-xs font-bold text-foreground">
+              {lang === "bn" ? "কাস্টম সতর্কবার্তা টেক্সট:" : "Custom Warning Message Text:"}
+            </Label>
             <Textarea
               value={warningMsg}
               onChange={(e) => {
@@ -198,7 +218,11 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
                 setActivePreset(null);
               }}
               rows={3}
-              placeholder="Type customer warning text..."
+              placeholder={
+                lang === "bn"
+                  ? "গ্রাহকের সতর্কবার্তা টেক্সট লিখুন..."
+                  : "Type customer warning text..."
+              }
               className="text-xs font-mono leading-relaxed"
             />
           </div>
@@ -206,13 +230,15 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
           {/* Live Preview */}
           <div className={`p-3 rounded-lg border text-xs space-y-1 transition-all ${activeCatObj.activeClass}`}>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase tracking-wider">User Dashboard Live Preview</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                {lang === "bn" ? "ইউজার ড্যাশবোর্ড লাইভ প্রিভিউ" : "User Dashboard Live Preview"}
+              </span>
               <Badge variant="outline" className={`text-[10px] ${activeCatObj.badgeClass}`}>
                 {activeCatObj.title}
               </Badge>
             </div>
             <div className="text-foreground leading-relaxed font-semibold text-[11px]">
-              ⚠️ {warningMsg || "(No text specified - warning notice will be cleared)"}
+              ⚠️ {warningMsg || (lang === "bn" ? "(কোনো টেক্সট দেওয়া হয়নি - নোটিশ মুছে ফেলা হবে)" : "(No text specified - warning notice will be cleared)")}
             </div>
           </div>
         </div>
@@ -226,12 +252,13 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
             disabled={isSubmitting}
             className="gap-1 text-xs h-8 font-bold"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Clear Warning
+            <Trash2 className="h-3.5 w-3.5" />{" "}
+            {lang === "bn" ? "ওয়ার্নিং মুছুন" : "Clear Warning"}
           </Button>
 
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs h-8">
-              Cancel
+              {lang === "bn" ? "বাতিল" : "Cancel"}
             </Button>
             <Button
               type="button"
@@ -240,7 +267,8 @@ export function WarningModal({ targetUser, onClose, onSuccess }: WarningModalPro
               disabled={isSubmitting}
               className="bg-amber-500 text-black hover:bg-amber-600 font-extrabold gap-1 text-xs h-8 px-4"
             >
-              <Save className="h-3.5 w-3.5" /> Save Warning
+              <Save className="h-3.5 w-3.5" />{" "}
+              {lang === "bn" ? "ওয়ার্নিং সংরক্ষণ" : "Save Warning"}
             </Button>
           </div>
         </DialogFooter>

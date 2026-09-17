@@ -17,7 +17,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ onSelectPackage }: PricingSectionProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { user } = useAuth();
   const [config, setConfig] = useState<PaymentConfig | null>(null);
 
@@ -111,15 +111,15 @@ export function PricingSection({ onSelectPackage }: PricingSectionProps) {
                     {!onSelectPackage ? (
                       user ? (
                         <Link href="/upgrade" className="w-full text-center">
-                          Upgrade to {pkg.name}
+                          {lang === "bn" ? `${pkg.name}-এ আপগ্রেড` : `Upgrade to ${pkg.name}`}
                         </Link>
                       ) : (
                         <a href="#download" className="w-full text-center">
-                          Download App to Start
+                          {lang === "bn" ? "শুরু করতে অ্যাপ ডাউনলোড করুন" : "Download App to Start"}
                         </a>
                       )
                     ) : (
-                      <span>Select {pkg.name}</span>
+                      <span>{lang === "bn" ? `${pkg.name} নির্বাচন করুন` : `Select ${pkg.name}`}</span>
                     )}
                   </Button>
                 </CardContent>

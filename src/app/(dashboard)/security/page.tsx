@@ -7,7 +7,7 @@ import { useLanguage } from "@/providers/language-provider";
 import type { SecurityViolation } from "@/lib/types";
 
 export default function SecurityPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const st = t.security || {};
   const [violations, setViolations] = useState<SecurityViolation[]>([]);
 
@@ -25,9 +25,15 @@ export default function SecurityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-foreground">{st.title || "Security Control Module"}</h1>
+        <h1 className="text-2xl font-extrabold text-foreground">
+          {lang === "bn"
+            ? "সিকিউরিটি কন্ট্রোল মডিউল"
+            : (st.title || "Security Control Module")}
+        </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          {st.subtitle || "Monitor intercepted screenshot attempts, DevTools focus grabs, and security sensor violation logs"}
+          {lang === "bn"
+            ? "স্ক্রিনশট প্রচেষ্টা, ডেভেলপার টুলস খোলার চেষ্টা এবং সিকিউরিটি সেন্সর ভায়োলেশন লগ পর্যবেক্ষণ করুন"
+            : (st.subtitle || "Monitor intercepted screenshot attempts, DevTools focus grabs, and security sensor violation logs")}
         </p>
       </div>
 

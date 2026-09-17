@@ -24,6 +24,7 @@ import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import { marketingApi } from "@/lib/api/marketing";
 import { toast } from "sonner";
 import type { DashboardStats as StatsType } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface DashboardStatsProps {
   stats: StatsType | null;
@@ -31,6 +32,8 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
+  const { t, lang } = useLanguage();
+  const m = t.marketing || {};
   const [activeLogs, setActiveLogs] = useState<string[]>([]);
   const [stoppingCampaignId, setStoppingCampaignId] = useState<string | number | null>(null);
   const [stopModalOpen, setStopModalOpen] = useState(false);
@@ -51,9 +54,9 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
 
   // Pie Chart Segment Data
   const pieSegments = [
-    { label: "Sent / Dispatched", value: totalSent, color: "#10b981", percent: totalContacts > 0 ? Math.round((totalSent / totalContacts) * 100) : 100 },
-    { label: "Pending / In-Progress", value: totalRemaining, color: "#06b6d4", percent: totalContacts > 0 ? Math.round((totalRemaining / totalContacts) * 100) : 0 },
-    { label: "Failed / Bounced", value: totalFailed, color: "#f43f5e", percent: totalContacts > 0 ? Math.round((totalFailed / totalContacts) * 100) : 0 },
+    { label: lang === "bn" ? "প্রেরিত / সফল" : "Sent / Dispatched", value: totalSent, color: "#10b981", percent: totalContacts > 0 ? Math.round((totalSent / totalContacts) * 100) : 100 },
+    { label: lang === "bn" ? "অপেক্ষমান / চলমান" : "Pending / In-Progress", value: totalRemaining, color: "#06b6d4", percent: totalContacts > 0 ? Math.round((totalRemaining / totalContacts) * 100) : 0 },
+    { label: lang === "bn" ? "ব্যর্থ / বাউন্স" : "Failed / Bounced", value: totalFailed, color: "#f43f5e", percent: totalContacts > 0 ? Math.round((totalFailed / totalContacts) * 100) : 0 },
   ];
 
   // Auto poll logs & live stats whenever campaigns are active
@@ -93,10 +96,10 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
     setStoppingCampaignId(targetStopCampaignId);
     try {
       await marketingApi.stopCampaign(targetStopCampaignId);
-      toast.success("Campaign stopped immediately.");
+      toast.success(lang === "bn" ? "ক্যাম্পেইন অবিলম্বে বন্ধ করা হয়েছে।" : "Campaign stopped immediately.");
       if (onRefresh) onRefresh();
     } catch {
-      toast.error("Failed to stop campaign.");
+      toast.error(lang === "bn" ? "ক্যাম্পেইন বন্ধ করা সম্ভব হয়নি।" : "Failed to stop campaign.");
     } finally {
       setStoppingCampaignId(null);
       setStopModalOpen(false);
@@ -110,7 +113,7 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
         <div className="min-h-[360px] rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 shadow-xl">
           <LoadingBackdrop
             variant="inline"
-            label="Loading marketing campaign metrics & activity..."
+            label={lang === "bn" ? "মার্কেটিং ক্যাম্পেইনের মেট্রিক্স ও অ্যাক্টিভিটি লোড হচ্ছে..." : "Loading marketing campaign metrics & activity..."}
             color="cyan"
             size="md"
           />
@@ -129,28 +132,28 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
 
   const cards = [
     {
-      title: "Total Campaigns Launched",
+      title: m.statTotalCampaigns || (lang === "bn" ? "মোট চালুকৃত ক্যাম্পেইন" : "Total Campaigns Launched"),
       value: totalCampaigns,
       icon: Layers,
       color: "text-cyan-400",
       bg: "bg-cyan-500/10 border-cyan-500/20",
     },
     {
-      title: "Total Messages Dispatched",
+      title: m.statTotalDispatched || (lang === "bn" ? "মোট প্রেরিত বার্তা" : "Total Messages Dispatched"),
       value: totalSent,
       icon: Send,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10 border-emerald-500/20",
     },
     {
-      title: "Delivery Failures / Bounces",
+      title: m.statTotalFailures || (lang === "bn" ? "ব্যর্থতা / বাউন্স" : "Delivery Failures / Bounces"),
       value: totalFailed,
       icon: AlertTriangle,
       color: "text-rose-400",
       bg: "bg-rose-500/10 border-rose-500/20",
     },
     {
-      title: "Campaign Success Rate",
+      title: m.statDeliveryRate || (lang === "bn" ? "ক্যাম্পেইন সফলতার হার" : "Campaign Success Rate"),
       value: `${stats?.success_rate ?? 100}%`,
       icon: CheckCircle2,
       color: "text-purple-400",
@@ -189,9 +192,11 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
                 <Zap className="h-5 w-5 animate-pulse" />
               </div>
               <div>
-                <CardTitle className="text-base font-bold">Overall Campaign Progress & Dispatch Controller</CardTitle>
+                <CardTitle className="text-base font-bold">
+                  {lang === "bn" ? "সার্বিক ক্যাম্পেইন অগ্রগতি ও প্রেরণ নিয়ন্ত্রণ" : "Overall Campaign Progress & Dispatch Controller"}
+                </CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Live real-time message dispatch ratio across all active and completed marketing campaigns
+                  {lang === "bn" ? "সকল সক্রিয় ও সম্পন্ন ক্যাম্পেইনের রিয়েল-টাইম বার্তা প্রেরণ অগ্রগতি" : "Live real-time message dispatch ratio across all active and completed marketing campaigns"}
                 </p>
               </div>
             </div>
@@ -200,17 +205,17 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
               {activeCount > 0 ? (
                 <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse gap-1.5 py-1 px-3">
                   <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-                  {activeCount} Campaign(s) Dispatching Live
+                  {activeCount} {lang === "bn" ? "টি ক্যাম্পেইন সক্রিয়ভাবে বার্তা পাঠাচ্ছে" : "Campaign(s) Dispatching Live"}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-emerald-400 border-emerald-500/40 bg-emerald-500/10 gap-1.5 py-1 px-3">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> All Dispatches Complete
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {lang === "bn" ? "সকল প্রেরণ সম্পন্ন" : "All Dispatches Complete"}
                 </Badge>
               )}
 
               {onRefresh && (
                 <Button size="sm" variant="outline" onClick={onRefresh} className="h-8 text-xs gap-1">
-                  <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                  <RefreshCw className="h-3.5 w-3.5" /> {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
                 </Button>
               )}
             </div>
@@ -222,9 +227,9 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-mono font-medium">
               <span>
-                Total Dispatched: <strong className="text-cyan-400 text-sm">{totalSent}</strong> / {totalContacts} Leads
+                {lang === "bn" ? "মোট প্রেরিত:" : "Total Dispatched:"} <strong className="text-cyan-400 text-sm">{totalSent}</strong> / {totalContacts} {lang === "bn" ? "টি লিড" : "Leads"}
               </span>
-              <span className="text-cyan-400 font-bold">{progressPercentage}% Completed</span>
+              <span className="text-cyan-400 font-bold">{progressPercentage}% {lang === "bn" ? "সম্পন্ন" : "Completed"}</span>
             </div>
 
             <div className="w-full h-3 bg-secondary/80 rounded-full overflow-hidden border border-border/40 p-0.5">
@@ -244,10 +249,10 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
                   </span>
-                  <span>Active Running Campaigns ({stats.campaigns.filter((c) => c.status === "running" || c.status === "stopping").length})</span>
+                  <span>{lang === "bn" ? "সক্রিয় চলমান ক্যাম্পেইন" : "Active Running Campaigns"} ({stats.campaigns.filter((c) => c.status === "running" || c.status === "stopping").length})</span>
                 </span>
                 <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                  <Activity className="h-3 w-3 animate-pulse" /> Live Real-Time Dispatch Stream
+                  <Activity className="h-3 w-3 animate-pulse" /> {lang === "bn" ? "লাইভ রিয়েল-টাইম প্রেরণ স্ট্রিম" : "Live Real-Time Dispatch Stream"}
                 </span>
               </div>
 
@@ -288,13 +293,13 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
 
                           <div className="text-xs text-muted-foreground font-mono flex items-center gap-3 flex-wrap pt-0.5">
                             <span>
-                              Dispatched:{" "}
-                              <strong className="text-cyan-400 text-sm font-bold">{sentCnt}</strong> / {totalCnt} leads
+                              {lang === "bn" ? "প্রেরিত:" : "Dispatched:"}{" "}
+                              <strong className="text-cyan-400 text-sm font-bold">{sentCnt}</strong> / {totalCnt} {lang === "bn" ? "টি লিড" : "leads"}
                             </span>
                             <span className="text-emerald-400 font-bold">({pct}%)</span>
                             {c.failed_count !== undefined && c.failed_count > 0 && (
                               <span className="text-rose-400 font-medium">
-                                ({c.failed_count} unreachable/failed)
+                                ({c.failed_count} {lang === "bn" ? "ব্যর্থ" : "unreachable/failed"})
                               </span>
                             )}
                           </div>
@@ -304,10 +309,10 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
                         <div className="flex items-center gap-3">
                           <div className="px-3 py-1.5 rounded-lg bg-cyan-950/40 border border-cyan-500/30 font-mono text-right">
                             <div className="text-[10px] text-muted-foreground flex items-center gap-1 justify-end">
-                              <Clock className="h-3 w-3 text-cyan-400" /> EST to Complete:
+                              <Clock className="h-3 w-3 text-cyan-400" /> {lang === "bn" ? "আনুমানিক সময়:" : "EST to Complete:"}
                             </div>
                             <div className="text-xs font-extrabold text-cyan-300">
-                              {c.est_human || "Calculating..."}
+                              {c.est_human || (lang === "bn" ? "গণনা করা হচ্ছে..." : "Calculating...")}
                             </div>
                           </div>
 
@@ -319,7 +324,7 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
                             className="h-9 px-3 text-xs font-bold gap-1.5 bg-rose-600 hover:bg-rose-500 text-white shadow-lg shrink-0"
                           >
                             <Square className="h-3.5 w-3.5 fill-current" />
-                            {isStop ? "Stopping..." : "Stop Campaign"}
+                            {isStop ? (lang === "bn" ? "থামানো হচ্ছে..." : "Stopping...") : (lang === "bn" ? "ক্যাম্পেইন থামান" : "Stop Campaign")}
                           </Button>
                         </div>
                       </div>
@@ -354,10 +359,12 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
           <CardHeader className="p-0 pb-4 border-b border-border/30 flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <PieIcon className="h-4 w-4 text-cyan-400" />
-              <CardTitle className="text-sm font-bold">Live Lead Delivery Breakdown (Pie Chart)</CardTitle>
+              <CardTitle className="text-sm font-bold">
+                {lang === "bn" ? "লাইভ লিড ডেলিভারি বিশ্লেষণ (পাই চার্ট)" : "Live Lead Delivery Breakdown (Pie Chart)"}
+              </CardTitle>
             </div>
             <Badge variant="outline" className="text-[10px] font-mono">
-              Total {totalContacts} Targets
+              {lang === "bn" ? `মোট ${totalContacts} টি টার্গেট` : `Total ${totalContacts} Targets`}
             </Badge>
           </CardHeader>
 
@@ -409,7 +416,9 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
 
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-2xl font-extrabold font-mono text-cyan-400">{progressPercentage}%</span>
-                <span className="text-[10px] text-muted-foreground uppercase font-mono">Dispatched</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-mono">
+                  {lang === "bn" ? "প্রেরিত" : "Dispatched"}
+                </span>
               </div>
             </div>
 
@@ -436,7 +445,9 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
           <CardHeader className="p-0 pb-4 border-b border-border/30 flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-purple-400" />
-              <CardTitle className="text-sm font-bold">Channel Dispatch Comparison (Bar Chart)</CardTitle>
+              <CardTitle className="text-sm font-bold">
+                {lang === "bn" ? "চ্যানেলভিত্তিক প্রেরণ তুলনা (বার চার্ট)" : "Channel Dispatch Comparison (Bar Chart)"}
+              </CardTitle>
             </div>
             <Badge variant="outline" className="text-[10px] font-mono">
               WhatsApp vs Email
@@ -448,9 +459,11 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="flex items-center gap-1.5 text-emerald-400">
-                  <Send className="h-3.5 w-3.5" /> WhatsApp Automation Engine
+                  <Send className="h-3.5 w-3.5" /> {lang === "bn" ? "হোয়াটসঅ্যাপ অটোমেশন ইঞ্জিন" : "WhatsApp Automation Engine"}
                 </span>
-                <span className="font-mono text-muted-foreground">{waCount} Campaigns Launched</span>
+                <span className="font-mono text-muted-foreground">
+                  {waCount} {lang === "bn" ? "টি ক্যাম্পেইন চালু" : "Campaigns Launched"}
+                </span>
               </div>
               <div className="w-full h-4 bg-secondary/80 rounded-full overflow-hidden border border-border/40 p-0.5">
                 <div
@@ -464,9 +477,11 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="flex items-center gap-1.5 text-purple-400">
-                  <Zap className="h-3.5 w-3.5" /> HTML Email Marketing Engine
+                  <Zap className="h-3.5 w-3.5" /> {lang === "bn" ? "এইচটিএমএল ইমেইল মার্কেটিং ইঞ্জিন" : "HTML Email Marketing Engine"}
                 </span>
-                <span className="font-mono text-muted-foreground">{emailCount} Campaigns Dispatched</span>
+                <span className="font-mono text-muted-foreground">
+                  {emailCount} {lang === "bn" ? "টি ক্যাম্পেইন প্রেরিত" : "Campaigns Dispatched"}
+                </span>
               </div>
               <div className="w-full h-4 bg-secondary/80 rounded-full overflow-hidden border border-border/40 p-0.5">
                 <div
@@ -480,7 +495,7 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="flex items-center gap-1.5 text-cyan-400">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Overall Delivery Efficiency Rate
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {lang === "bn" ? "সার্বিক ডেলিভারি কার্যকারিতা হার" : "Overall Delivery Efficiency Rate"}
                 </span>
                 <span className="font-mono text-cyan-400">{stats?.success_rate ?? 100}%</span>
               </div>
@@ -500,10 +515,12 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
         <CardHeader className="p-0 pb-3 flex-row items-center justify-between border-b border-border/30">
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-cyan-400" />
-            <CardTitle className="text-sm font-bold">Live System Activity & Dispatch Stream</CardTitle>
+            <CardTitle className="text-sm font-bold">
+              {lang === "bn" ? "লাইভ সিস্টেম অ্যাক্টিভিটি ও প্রেরণ স্ট্রিম" : "Live System Activity & Dispatch Stream"}
+            </CardTitle>
           </div>
           <Badge variant="outline" className="text-[10px] font-mono text-cyan-400 border-cyan-500/40 bg-cyan-500/10">
-            Real-Time Stream Active
+            {lang === "bn" ? "রিয়েল-টাইম স্ট্রিম সক্রিয়" : "Real-Time Stream Active"}
           </Badge>
         </CardHeader>
 
@@ -518,7 +535,9 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
               ))
             ) : (
               <div className="text-muted-foreground text-center py-4 font-sans text-xs">
-                No active campaign dispatches currently streaming. Select WhatsApp or Email tab to launch.
+                {lang === "bn" 
+                  ? "বর্তমানে কোনো ক্যাম্পেইনের সরাসরি স্ট্রিমিং নেই। শুরু করতে হোয়াটসঅ্যাপ বা ইমেইল ট্যাব নির্বাচন করুন।" 
+                  : "No active campaign dispatches currently streaming. Select WhatsApp or Email tab to launch."}
               </div>
             )}
           </div>
@@ -529,9 +548,11 @@ export function DashboardStats({ stats, onRefresh }: DashboardStatsProps) {
         open={stopModalOpen}
         onClose={() => setStopModalOpen(false)}
         onConfirm={confirmStopCampaign}
-        title="Stop Active Campaign?"
-        description="Are you sure you want to stop this running campaign immediately? All further dispatches will halt right away."
-        confirmText="Stop Campaign"
+        title={lang === "bn" ? "চলমান ক্যাম্পেইন বন্ধ করবেন?" : "Stop Active Campaign?"}
+        description={lang === "bn" 
+          ? "আপনি কি নিশ্চিত যে আপনি অবিলম্বে এই চলমান ক্যাম্পেইনটি বন্ধ করতে চান? পরবর্তী সকল বার্তা প্রেরণ সাথে সাথে বন্ধ হয়ে যাবে।" 
+          : "Are you sure you want to stop this running campaign immediately? All further dispatches will halt right away."}
+        confirmText={lang === "bn" ? "ক্যাম্পেইন বন্ধ করুন" : "Stop Campaign"}
         isDanger
       />
     </div>

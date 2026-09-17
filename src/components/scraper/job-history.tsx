@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ScraperJob } from "@/lib/types";
 import { ScrapedDataModal } from "./scraped-data-modal";
+import { useLanguage } from "@/providers/language-provider";
 
 interface JobHistoryProps {
   jobs: ScraperJob[];
@@ -41,6 +42,7 @@ interface JobHistoryProps {
 
 export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHistoryProps) {
   const router = useRouter();
+  const { lang } = useLanguage();
 
   // Modal State for Data Preview
   const [previewJobId, setPreviewJobId] = useState<number | null>(null);
@@ -56,10 +58,10 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
     setStoppingJobId(jobId);
     try {
       await scraperApi.stopJob(jobId);
-      toast.info(`Stop request sent for Job #${jobId}. Saving partial scraped records...`);
+      toast.info(lang === "bn" ? `কাজ #${jobId}-এর বন্ধের অনুরোধ পাঠানো হয়েছে। আংশিক ডেটা সংরক্ষণ করা হচ্ছে...` : `Stop request sent for Job #${jobId}. Saving partial scraped records...`);
       setTimeout(onRefresh, 1500);
     } catch {
-      toast.error("Failed to send stop signal.");
+      toast.error(lang === "bn" ? "বন্ধের সিগন্যাল পাঠানো ব্যর্থ হয়েছে।" : "Failed to send stop signal.");
     } finally {
       setStoppingJobId(null);
     }
@@ -70,11 +72,11 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
     setIsDeleting(true);
     try {
       await scraperApi.deleteJob(deleteTargetId);
-      toast.success(`Job #${deleteTargetId} deleted.`);
+      toast.success(lang === "bn" ? `কাজ #${deleteTargetId} মুছে ফেলা হয়েছে।` : `Job #${deleteTargetId} deleted.`);
       setDeleteTargetId(null);
       onRefresh();
     } catch {
-      toast.error("Failed to delete scrape job.");
+      toast.error(lang === "bn" ? "স্ক্র্যাপ কাজ মুছে ফেলা ব্যর্থ হয়েছে।" : "Failed to delete scrape job.");
     } finally {
       setIsDeleting(false);
     }
@@ -100,11 +102,11 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5 text-cyan-400" />
             <h2 className="text-sm font-bold text-foreground font-mono">
-              Scraping Job History & Private Datasets ({jobs.length})
+              {lang === "bn" ? "স্ক্র্যাপিং হিস্ট্রি ও নিজস্ব ডেটাসেটসমূহ" : "Scraping Job History & Private Datasets"} ({jobs.length})
             </h2>
           </div>
           <Button variant="ghost" size="sm" onClick={onRefresh} className="text-xs text-muted-foreground">
-            Refresh List
+            {lang === "bn" ? "তালিকা রিফ্রেশ" : "Refresh List"}
           </Button>
         </div>
 
@@ -113,13 +115,23 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="text-xs font-bold text-foreground w-[90px]">Job ID</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Search Query / Location</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Status</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Items Parsed</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Created At</TableHead>
+                  <TableHead className="text-xs font-bold text-foreground w-[90px]">
+                    {lang === "bn" ? "কাজের আইডি" : "Job ID"}
+                  </TableHead>
+                  <TableHead className="text-xs font-bold text-foreground">
+                    {lang === "bn" ? "অনুসন্ধান কুয়েরি / অবস্থান" : "Search Query / Location"}
+                  </TableHead>
+                  <TableHead className="text-xs font-bold text-foreground">
+                    {lang === "bn" ? "স্ট্যাটাস" : "Status"}
+                  </TableHead>
+                  <TableHead className="text-xs font-bold text-foreground">
+                    {lang === "bn" ? "সংগৃহীত লিড" : "Items Parsed"}
+                  </TableHead>
+                  <TableHead className="text-xs font-bold text-foreground">
+                    {lang === "bn" ? "তৈরির সময়" : "Created At"}
+                  </TableHead>
                   <TableHead className="text-xs font-bold text-foreground text-right min-w-[280px]">
-                    Actions (View / Campaign / Download / Delete)
+                    {lang === "bn" ? "অ্যাকশন (দেখুন / ক্যাম্পেইন / ডাউনলোড / মুছুন)" : "Actions (View / Campaign / Download / Delete)"}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -159,29 +171,29 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                         {isRunning && (
                           <Badge variant="outline" className="border-cyan-400/50 text-cyan-400 gap-1 text-[10px] animate-pulse">
                             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-                            Scraping Active
+                            {lang === "bn" ? "স্ক্র্যাপিং চলছে" : "Scraping Active"}
                           </Badge>
                         )}
                         {job.status === "done" && (
                           <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 gap-1 text-[10px]">
-                            <CheckCircle2 className="h-3 w-3" /> Completed
+                            <CheckCircle2 className="h-3 w-3" /> {lang === "bn" ? "সম্পন্ন" : "Completed"}
                           </Badge>
                         )}
                         {job.status === "stopped" && (
                           <Badge variant="outline" className="border-amber-500/40 text-amber-400 gap-1 text-[10px]">
-                            <Square className="h-3 w-3" /> Stopped (Saved)
+                            <Square className="h-3 w-3" /> {lang === "bn" ? "স্থগিত (সংরক্ষিত)" : "Stopped (Saved)"}
                           </Badge>
                         )}
                         {job.status === "failed" && (
                           <Badge variant="outline" className="border-destructive/40 text-destructive gap-1 text-[10px]">
-                            <XCircle className="h-3 w-3" /> Failed
+                            <XCircle className="h-3 w-3" /> {lang === "bn" ? "ব্যর্থ" : "Failed"}
                           </Badge>
                         )}
                       </TableCell>
 
                       <TableCell className="font-mono font-semibold text-foreground">
                         {itemCount > 0 ? (
-                          <span className="text-emerald-400 font-bold">{itemCount} leads</span>
+                          <span className="text-emerald-400 font-bold">{itemCount} {lang === "bn" ? "টি লিড" : "leads"}</span>
                         ) : (
                           <span className="text-muted-foreground/60">0</span>
                         )}
@@ -205,10 +217,10 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                                   ? "bg-cyan-500 text-black border-cyan-400 hover:bg-cyan-400"
                                   : "border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/20"
                               }`}
-                              title="Stream Google Maps and live logs"
+                              title={lang === "bn" ? "গুগল ম্যাপস ও লাইভ লগ দেখুন" : "Stream Google Maps and live logs"}
                             >
                               <Radio className="h-3 w-3 animate-pulse text-cyan-400" />
-                              {activeJobId === job.id ? "Watching Live" : "Watch Live"}
+                              {activeJobId === job.id ? (lang === "bn" ? "লাইভ দেখা হচ্ছে" : "Watching Live") : (lang === "bn" ? "লাইভ দেখুন" : "Watch Live")}
                             </Button>
                           )}
 
@@ -223,9 +235,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                                   ? "text-cyan-400 font-bold bg-cyan-500/10"
                                   : "text-muted-foreground hover:text-cyan-300"
                               }`}
-                              title="Inspect logs and Google Maps capture"
+                              title={lang === "bn" ? "লগ এবং গুগল ম্যাপস ক্যাপচার দেখুন" : "Inspect logs and Google Maps capture"}
                             >
-                              <Eye className="h-3 w-3 text-cyan-400" /> Logs & Map
+                              <Eye className="h-3 w-3 text-cyan-400" /> {lang === "bn" ? "লগ ও ম্যাপ" : "Logs & Map"}
                             </Button>
                           )}
 
@@ -237,9 +249,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                               disabled={stoppingJobId === job.id}
                               onClick={() => handleStopJob(job.id)}
                               className="h-7 px-2 text-[11px] font-bold gap-1"
-                              title="Stop scraping immediately & keep partial data"
+                              title={lang === "bn" ? "অবিলম্বে স্ক্র্যাপিং বন্ধ করুন এবং সংগৃহীত ডেটা রাখুন" : "Stop scraping immediately & keep partial data"}
                             >
-                              <Square className="h-3 w-3" /> Stop
+                              <Square className="h-3 w-3" /> {lang === "bn" ? "থামান" : "Stop"}
                             </Button>
                           )}
 
@@ -250,9 +262,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                             disabled={!isDone || itemCount === 0}
                             onClick={() => handleViewData(job.id)}
                             className="h-7 px-2 text-[11px] gap-1 border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
-                            title="View collected dataset in private catalogue"
+                            title={lang === "bn" ? "প্রাইভেট ক্যাটালগে সংগৃহীত ডেটাসেট দেখুন" : "View collected dataset in private catalogue"}
                           >
-                            <Eye className="h-3 w-3" /> View Data
+                            <Eye className="h-3 w-3" /> {lang === "bn" ? "ডেটা দেখুন" : "View Data"}
                           </Button>
 
                           {/* 2. USE IN CAMPAIGN BUTTON */}
@@ -262,9 +274,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                             disabled={!isDone || itemCount === 0}
                             onClick={() => handleUseInCampaign(job.id)}
                             className="h-7 px-2 text-[11px] gap-1 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
-                            title="Use dataset for WhatsApp marketing campaign"
+                            title={lang === "bn" ? "হোয়াটসঅ্যাপ মার্কেটিং ক্যাম্পেইনে এই ডেটাসেট ব্যবহার করুন" : "Use dataset for WhatsApp marketing campaign"}
                           >
-                            <Send className="h-3 w-3" /> Use
+                            <Send className="h-3 w-3" /> {lang === "bn" ? "ব্যবহার" : "Use"}
                           </Button>
 
                           {/* 3. DOWNLOAD EXCEL BUTTON */}
@@ -274,9 +286,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                             disabled={!isDone || itemCount === 0}
                             onClick={() => handleDownloadExcel(job.id)}
                             className="h-7 px-2 text-[11px] gap-1 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-                            title="Download Excel spreadsheet"
+                            title={lang === "bn" ? "এক্সেল স্প্রেডশিট ডাউনলোড করুন" : "Download Excel spreadsheet"}
                           >
-                            <Download className="h-3 w-3" /> Download
+                            <Download className="h-3 w-3" /> {lang === "bn" ? "ডাউনলোড" : "Download"}
                           </Button>
 
                           {/* 4. DELETE BUTTON */}
@@ -285,7 +297,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                             size="sm"
                             onClick={() => setDeleteTargetId(job.id)}
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                            title="Delete scrape job"
+                            title={lang === "bn" ? "স্ক্র্যাপ কাজ মুছে ফেলুন" : "Delete scrape job"}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -298,7 +310,9 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
             </Table>
           ) : (
             <div className="text-center py-12 text-xs text-muted-foreground">
-              No scrape jobs launched yet. Use the form above to start Google Maps scraping.
+              {lang === "bn" 
+                ? "এখনো কোনো স্ক্র্যাপ শুরু করা হয়নি। উপরে ফর্ম পূরণ করে গুগল ম্যাপস স্ক্র্যাপিং শুরু করুন।" 
+                : "No scrape jobs launched yet. Use the form above to start Google Maps scraping."}
             </div>
           )}
         </div>
@@ -316,9 +330,11 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
         open={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
         onConfirm={confirmDeleteJob}
-        title={`Delete Scrape Job #${deleteTargetId}?`}
-        description="This action will permanently delete this scrape job, its output Excel file, and all associated execution logs."
-        confirmText={isDeleting ? "Deleting..." : "Delete Job"}
+        title={lang === "bn" ? `স্ক্র্যাপ কাজ #${deleteTargetId} মুছে ফেলবেন?` : `Delete Scrape Job #${deleteTargetId}?`}
+        description={lang === "bn" 
+          ? "এই কাজটি স্থায়ীভাবে মুছে ফেলা হবে, যার মধ্যে এর আউটপুট এক্সেল ফাইল এবং সমস্ত সংশ্লিষ্ট লগ অন্তর্ভুক্ত।" 
+          : "This action will permanently delete this scrape job, its output Excel file, and all associated execution logs."}
+        confirmText={isDeleting ? (lang === "bn" ? "মুছে ফেলা হচ্ছে..." : "Deleting...") : (lang === "bn" ? "কাজ মুছে ফেলুন" : "Delete Job")}
         isDanger
       />
     </Card>

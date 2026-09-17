@@ -22,6 +22,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import type { RecipientContact } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface ContactSelectorModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function ContactSelectorModal({
   selectedIds,
   onSelectionChange,
 }: ContactSelectorModalProps) {
+  const { lang } = useLanguage();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "phone" | "email">("all");
 
@@ -96,15 +98,17 @@ export function ContactSelectorModal({
                 <User className="h-5 w-5" />
               </div>
               <div>
-                <span>Granular Target Lead Selector & Inspector</span>
+                <span>{lang === "bn" ? "টার্গেট লিড নির্বাচক ও পরিদর্শক" : "Granular Target Lead Selector & Inspector"}</span>
                 <p className="text-xs font-normal text-muted-foreground mt-0.5">
-                  Inspect lead attributes and customize recipient target list for maximum campaign conversion
+                  {lang === "bn" 
+                    ? "লিডের বিবরণ দেখুন এবং ক্যাম্পেইন রূপান্তরের জন্য প্রাপকের তালিকা কাস্টমাইজ করুন" 
+                    : "Inspect lead attributes and customize recipient target list for maximum campaign conversion"}
                 </p>
               </div>
             </DialogTitle>
 
             <Badge variant="outline" className="font-mono text-xs py-1 px-3 border-cyan-500/40 text-cyan-400 bg-cyan-500/5">
-              {totalCount} Leads Loaded
+              {totalCount} {lang === "bn" ? "টি লিড লোড করা হয়েছে" : "Leads Loaded"}
             </Badge>
           </div>
         </DialogHeader>
@@ -117,7 +121,7 @@ export function ContactSelectorModal({
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search leads by name, phone, email, location..."
+                placeholder={lang === "bn" ? "নাম, ফোন, ইমেইল, এলাকা ইত্যাদি দিয়ে অনুসন্ধান করুন..." : "Search leads by name, phone, email, location..."}
                 className="pl-9 text-xs h-9 bg-background/80"
               />
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -131,7 +135,7 @@ export function ContactSelectorModal({
                 onClick={() => setFilterType("all")}
                 className="text-xs h-7 px-2.5 font-medium"
               >
-                All ({contacts.length})
+                {lang === "bn" ? "সব" : "All"} ({contacts.length})
               </Button>
               <Button
                 size="sm"
@@ -139,7 +143,7 @@ export function ContactSelectorModal({
                 onClick={() => setFilterType("phone")}
                 className="text-xs h-7 px-2.5 gap-1.5 font-medium"
               >
-                <Phone className="h-3 w-3 text-emerald-400" /> Phone Valid ({validPhoneCount})
+                <Phone className="h-3 w-3 text-emerald-400" /> {lang === "bn" ? "ফোন নম্বর আছে" : "Phone Valid"} ({validPhoneCount})
                 {invalidPhoneCount > 0 && (
                   <span className="text-[11px] text-rose-400 font-mono font-semibold ml-0.5">
                     (-{invalidPhoneCount})
@@ -152,7 +156,7 @@ export function ContactSelectorModal({
                 onClick={() => setFilterType("email")}
                 className="text-xs h-7 px-2.5 gap-1.5 font-medium"
               >
-                <Mail className="h-3 w-3 text-purple-400" /> Email Valid ({validEmailCount})
+                <Mail className="h-3 w-3 text-purple-400" /> {lang === "bn" ? "ইমেইল আছে" : "Email Valid"} ({validEmailCount})
                 {invalidEmailCount > 0 && (
                   <span className="text-[11px] text-rose-400 font-mono font-semibold ml-0.5">
                     (-{invalidEmailCount})
@@ -169,7 +173,7 @@ export function ContactSelectorModal({
                 onClick={handleSelectAllFiltered}
                 className="text-xs h-8 gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
               >
-                <CheckCircle2 className="h-3.5 w-3.5" /> Select All ({filtered.length})
+                <CheckCircle2 className="h-3.5 w-3.5" /> {lang === "bn" ? "সব নির্বাচন" : "Select All"} ({filtered.length})
               </Button>
               <Button
                 size="sm"
@@ -177,21 +181,19 @@ export function ContactSelectorModal({
                 onClick={handleDeselectAllFiltered}
                 className="text-xs h-8 gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
               >
-                <XCircle className="h-3.5 w-3.5" /> Unselect All
+                <XCircle className="h-3.5 w-3.5" /> {lang === "bn" ? "সব বাতিল" : "Unselect All"}
               </Button>
             </div>
           </div>
-
-
 
           {/* Dynamic Selection Dashboard Banner */}
           <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-background to-cyan-950/20 border border-cyan-500/30 flex flex-wrap gap-4 justify-between items-center text-xs">
             <div className="flex items-center gap-3">
               <div className="font-mono text-sm font-semibold">
-                <span className="text-cyan-400 text-base">{selectedCount}</span> / {totalCount} Leads Target Active
+                <span className="text-cyan-400 text-base">{selectedCount}</span> / {totalCount} {lang === "bn" ? "টি সক্রিয় লিড টার্গেট" : "Leads Target Active"}
               </div>
               <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-mono">
-                {percentage}% Target Selected
+                {percentage}% {lang === "bn" ? "টার্গেট নির্বাচিত" : "Target Selected"}
               </Badge>
             </div>
 
@@ -216,13 +218,13 @@ export function ContactSelectorModal({
                         onCheckedChange={(c) => (c ? handleSelectAllFiltered() : handleDeselectAllFiltered())}
                       />
                     </TableHead>
-                    <TableHead className="w-16 font-mono text-[11px]">ID</TableHead>
-                    <TableHead className="text-xs font-semibold">Lead / Business Name</TableHead>
-                    <TableHead className="text-xs font-semibold">Phone Number</TableHead>
-                    <TableHead className="text-xs font-semibold">Email Address</TableHead>
-                    <TableHead className="text-xs font-semibold">Location / Area</TableHead>
-                    <TableHead className="text-xs font-semibold text-center">Target Status</TableHead>
-                    <TableHead className="text-xs font-semibold text-right pr-6">Action</TableHead>
+                    <TableHead className="w-16 font-mono text-[11px]">{lang === "bn" ? "আইডি" : "ID"}</TableHead>
+                    <TableHead className="text-xs font-semibold">{lang === "bn" ? "লিড / প্রতিষ্ঠানের নাম" : "Lead / Business Name"}</TableHead>
+                    <TableHead className="text-xs font-semibold">{lang === "bn" ? "ফোন নম্বর" : "Phone Number"}</TableHead>
+                    <TableHead className="text-xs font-semibold">{lang === "bn" ? "ইমেইল ঠিকানা" : "Email Address"}</TableHead>
+                    <TableHead className="text-xs font-semibold">{lang === "bn" ? "অবস্থান / এলাকা" : "Location / Area"}</TableHead>
+                    <TableHead className="text-xs font-semibold text-center">{lang === "bn" ? "টার্গেট স্ট্যাটাস" : "Target Status"}</TableHead>
+                    <TableHead className="text-xs font-semibold text-right pr-6">{lang === "bn" ? "অ্যাকশন" : "Action"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -231,8 +233,12 @@ export function ContactSelectorModal({
                       <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <Filter className="h-8 w-8 text-muted-foreground/40" />
-                          <p className="font-semibold text-sm">No lead contacts match your active filter query</p>
-                          <p className="text-xs">Select a different dataset or clear search parameters</p>
+                          <p className="font-semibold text-sm">
+                            {lang === "bn" ? "আপনার ফিল্টারের সাথে কোনো লিড মিলছে না" : "No lead contacts match your active filter query"}
+                          </p>
+                          <p className="text-xs">
+                            {lang === "bn" ? "অন্য একটি ডেটাসেট নির্বাচন করুন বা সার্চ ফিল্টার মুছুন" : "Select a different dataset or clear search parameters"}
+                          </p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -264,7 +270,7 @@ export function ContactSelectorModal({
                               </span>
                             ) : (
                               <span className="text-rose-400/80 bg-rose-500/10 px-1.5 py-0.5 rounded text-[10px]">
-                                Missing Phone
+                                {lang === "bn" ? "ফোন নেই" : "Missing Phone"}
                               </span>
                             )}
                           </TableCell>
@@ -276,24 +282,24 @@ export function ContactSelectorModal({
                               </span>
                             ) : (
                               <span className="text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded text-[10px]">
-                                Missing Email
+                                {lang === "bn" ? "ইমেইল নেই" : "Missing Email"}
                               </span>
                             )}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-muted-foreground/70 shrink-0" />
-                              {c.area || "Bangladesh"}
+                              {c.area || (lang === "bn" ? "বাংলাদেশ" : "Bangladesh")}
                             </span>
                           </TableCell>
                           <TableCell className="text-center">
                             {isChecked ? (
                               <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/40 text-[10px] py-0.5">
-                                ✓ INCLUDE
+                                {lang === "bn" ? "✓ অন্তর্ভুক্ত" : "✓ INCLUDE"}
                               </Badge>
                             ) : (
                               <Badge variant="outline" className="text-[10px] text-muted-foreground py-0.5">
-                                EXCLUDE
+                                {lang === "bn" ? "বাদ" : "EXCLUDE"}
                               </Badge>
                             )}
                           </TableCell>
@@ -308,7 +314,7 @@ export function ContactSelectorModal({
                                   : "bg-cyan-500 text-black hover:bg-cyan-400"
                               }`}
                             >
-                              {isChecked ? "Remove" : "+ Target"}
+                              {isChecked ? (lang === "bn" ? "বাদ দিন" : "Remove") : (lang === "bn" ? "+ যোগ" : "+ Target")}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -323,10 +329,10 @@ export function ContactSelectorModal({
 
         <DialogFooter className="border-t border-border/40 pt-4 gap-3">
           <Button variant="outline" onClick={onClose} size="sm" className="text-xs h-9">
-            Cancel
+            {lang === "bn" ? "বাতিল" : "Cancel"}
           </Button>
           <Button onClick={onClose} size="sm" className="gap-2 font-bold text-xs h-9 bg-cyan-500 hover:bg-cyan-400 text-black px-5">
-            <CheckCircle2 className="h-4 w-4" /> Confirm Selection ({selectedCount} Contacts)
+            <CheckCircle2 className="h-4 w-4" /> {lang === "bn" ? `বাছাই নিশ্চিত করুন (${selectedCount} জন প্রাপক)` : `Confirm Selection (${selectedCount} Contacts)`}
           </Button>
         </DialogFooter>
       </DialogContent>

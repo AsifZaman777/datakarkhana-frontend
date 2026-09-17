@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLocalWsBase, TOKEN_KEY } from "@/lib/constants";
 import { scraperApi } from "@/lib/api/scraper";
 import { toast } from "sonner";
+import { useLanguage } from "@/providers/language-provider";
 
 type StreamStatus = "idle" | "connecting" | "live" | "ended" | "error";
 type LayoutMode = "split" | "stacked";
@@ -37,6 +38,8 @@ export function ScraperTerminal({
   isJobRunning = false,
   onJobFinished,
 }: ScraperTerminalProps) {
+  const { t, lang } = useLanguage();
+  const sc = t.scraper || {};
   const terminalRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const jobEndedRef = useRef(false);
@@ -259,7 +262,7 @@ export function ScraperTerminal({
             <div className="flex items-center gap-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />
               <span className="font-mono text-xs font-bold text-zinc-200">
-                Google Maps Live Debugger {activeJobId ? `[Job #${activeJobId}]` : ""}
+                {sc.terminalTitle || (lang === "bn" ? "গুগল ম্যাপস লাইভ টার্মিনাল" : "Google Maps Live Debugger")} {activeJobId ? `[#${activeJobId}]` : ""}
               </span>
             </div>
           </div>
@@ -282,7 +285,7 @@ export function ScraperTerminal({
                 variant="outline"
                 className="border-emerald-500/40 bg-emerald-950/40 text-emerald-300 font-mono text-[10px] px-2 py-0.5"
               >
-                Leads: <strong className="ml-1 text-white">{discoveredCount}</strong>
+                {sc.discoveredLeads || (lang === "bn" ? "সংগৃহীত লিড" : "Leads")}: <strong className="ml-1 text-white">{discoveredCount}</strong>
               </Badge>
             )}
 
@@ -290,19 +293,19 @@ export function ScraperTerminal({
             {streamStatus === "live" && (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-950/60 border border-red-500/50 text-red-400 font-mono text-[10px]">
                 <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                <span>LIVE ({frameCount}f)</span>
+                <span>{sc.streamLive || (lang === "bn" ? "লাইভ" : "LIVE")} ({frameCount}f)</span>
               </div>
             )}
             {streamStatus === "connecting" && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/40 text-amber-400 font-mono text-[10px]">
                 <Wifi className="h-3 w-3 animate-pulse" />
-                CONNECTING
+                {sc.streamConnecting || (lang === "bn" ? "সংযুক্ত হচ্ছে" : "CONNECTING")}
               </div>
             )}
             {streamStatus === "ended" && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-400 font-mono text-[10px]">
                 <WifiOff className="h-3 w-3" />
-                ENDED
+                {sc.streamEnded || (lang === "bn" ? "সমাপ্ত" : "ENDED")}
               </div>
             )}
 
@@ -313,7 +316,7 @@ export function ScraperTerminal({
                 size="sm"
                 onClick={() => setLayoutMode("stacked")}
                 className={`h-6 w-6 p-0 text-xs ${layoutMode === "stacked" ? "bg-zinc-800 text-cyan-400" : "text-zinc-400"}`}
-                title="Stacked View (Map on top, Logs below)"
+                title={sc.layoutStacked || (lang === "bn" ? "স্ট্যাকড ভিউ" : "Stacked View")}
               >
                 <Rows className="h-3.5 w-3.5" />
               </Button>
@@ -322,7 +325,7 @@ export function ScraperTerminal({
                 size="sm"
                 onClick={() => setLayoutMode("split")}
                 className={`h-6 w-6 p-0 text-xs ${layoutMode === "split" ? "bg-zinc-800 text-cyan-400" : "text-zinc-400"}`}
-                title="Split View (Side-by-side Map & Logs)"
+                title={sc.layoutSplit || (lang === "bn" ? "পাশাপাশি ভিউ" : "Split View")}
               >
                 <Columns className="h-3.5 w-3.5" />
               </Button>
@@ -334,7 +337,7 @@ export function ScraperTerminal({
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
               className="h-7 w-7 p-0 text-zinc-400 hover:text-white"
-              title={isExpanded ? "Collapse Viewport" : "Expand Full Viewport"}
+              title={isExpanded ? (lang === "bn" ? "ছোট করুন" : "Collapse Viewport") : (lang === "bn" ? "বড় করুন" : "Expand Full Viewport")}
             >
               {isExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </Button>
@@ -384,10 +387,12 @@ export function ScraperTerminal({
                   <MapPin className="h-7 w-7 text-red-500 animate-pulse relative z-10" />
                 </div>
                 <div className="font-mono text-xs font-semibold text-zinc-200">
-                  Connecting to Google Maps Automated Session...
+                  {lang === "bn" ? "গুগল ম্যাপস অটোমেটেড সেশনে সংযুক্ত হচ্ছে..." : "Connecting to Google Maps Automated Session..."}
                 </div>
                 <p className="font-mono text-[11px] text-zinc-500 max-w-xs">
-                  Chrome driver is launching and querying Google Maps. Live map frames and interactive markers will appear here in real-time.
+                  {lang === "bn" 
+                    ? "ক্রোম ড্রাইভার চালু হচ্ছে এবং গুগল ম্যাপস অনুসন্ধান করছে। লাইভ ম্যাপ ফ্রেম এবং মার্কার এখানে প্রদর্শিত হবে।"
+                    : "Chrome driver is launching and querying Google Maps. Live map frames and interactive markers will appear here in real-time."}
                 </p>
               </div>
             ) : (
@@ -395,10 +400,12 @@ export function ScraperTerminal({
               <div className="p-8 flex flex-col items-center justify-center text-center space-y-2 min-h-[160px]">
                 <MapPin className="h-6 w-6 text-zinc-600" />
                 <div className="font-mono text-xs font-semibold text-zinc-400">
-                  Debugger Standby
+                  {lang === "bn" ? "ডিবাগার স্ট্যান্ডবাই" : "Debugger Standby"}
                 </div>
                 <p className="font-mono text-[11px] text-zinc-600 max-w-xs">
-                  Launch a search query above to see live Google Maps automation, clicks, and real-time lead extraction.
+                  {lang === "bn"
+                    ? "লাইভ গুগল ম্যাপস অটোমেশন, ক্লিক এবং রিয়েল-টাইম লিড এক্সট্রাকশন দেখতে উপরে অনুসন্ধান শুরু করুন।"
+                    : "Launch a search query above to see live Google Maps automation, clicks, and real-time lead extraction."}
                 </p>
               </div>
             )}
@@ -414,7 +421,7 @@ export function ScraperTerminal({
             <div className="bg-zinc-950 px-3 py-1.5 border-b border-zinc-800 flex items-center justify-between text-[10px] font-mono text-zinc-400">
               <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
                 <Terminal className="h-3.5 w-3.5" />
-                LIVE STREAM CONSOLE ({displayLogs.length} events)
+                {lang === "bn" ? "লাইভ স্ট্রিম কনসোল" : "LIVE STREAM CONSOLE"} ({displayLogs.length} {lang === "bn" ? "টি ইভেন্ট" : "events"})
               </span>
 
               <div className="flex items-center gap-2">
@@ -425,9 +432,9 @@ export function ScraperTerminal({
                       ? "bg-cyan-950 border-cyan-500/40 text-cyan-300"
                       : "bg-zinc-900 border-zinc-700 text-zinc-500"
                   }`}
-                  title="Toggle Auto-scroll"
+                  title={lang === "bn" ? "অটো-স্ক্রোল টগল করুন" : "Toggle Auto-scroll"}
                 >
-                  Auto-scroll: {autoScroll ? "ON" : "OFF"}
+                  {lang === "bn" ? "অটো-স্ক্রোল" : "Auto-scroll"}: {autoScroll ? (lang === "bn" ? "চালু" : "ON") : (lang === "bn" ? "বন্ধ" : "OFF")}
                 </button>
 
                 <Button
@@ -438,7 +445,7 @@ export function ScraperTerminal({
                   className="h-6 px-2 text-[10px] font-mono gap-1 text-zinc-400 hover:text-white"
                 >
                   {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? (lang === "bn" ? "কপি হয়েছে" : "Copied") : (lang === "bn" ? "কপি" : "Copy")}
                 </Button>
               </div>
             </div>
@@ -493,7 +500,9 @@ export function ScraperTerminal({
                 })
               ) : (
                 <div className="h-full flex items-center justify-center text-zinc-600 text-xs italic">
-                  {activeJobId ? "Awaiting real-time debugger events..." : "No active job running. Launch a search query to begin."}
+                  {activeJobId 
+                    ? (lang === "bn" ? "রিয়েল-টাইম ডিবাগার ইভেন্টের জন্য অপেক্ষা করা হচ্ছে..." : "Awaiting real-time debugger events...") 
+                    : (lang === "bn" ? "কোনো সক্রিয় কাজ চলছে না। শুরু করতে উপরে একটি অনুসন্ধান শুরু করুন।" : "No active job running. Launch a search query to begin.")}
                 </div>
               )}
             </div>

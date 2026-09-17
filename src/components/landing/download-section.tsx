@@ -4,8 +4,11 @@ import { useState, useEffect } from "react";
 import { Download, Monitor, Apple, ShieldCheck, Cpu, HardDrive, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getApiBase } from "@/lib/constants";
+import { useLanguage } from "@/providers/language-provider";
 
 export function DownloadSection() {
+  const { t, lang } = useLanguage();
+  const dt = t.download || {};
   const [detectedOs, setDetectedOs] = useState<"windows" | "mac" | "other">("windows");
   const apiBase = getApiBase();
 
@@ -39,19 +42,19 @@ export function DownloadSection() {
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold tracking-wide shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-            <span>DESKTOP APPLICATION • STANDALONE V2.0</span>
+            <span>{dt.badge || "DESKTOP APPLICATION • STANDALONE V2.0"}</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground">
-            Download Desktop Version for{" "}
+            {dt.title || "Download Desktop Version for "}{" "}
             <span className="bg-gradient-to-r from-cyan-400 via-primary to-blue-500 bg-clip-text text-transparent">
-              Your PC & Mac
+              {dt.titleHighlight || (lang === "bn" ? "আপনার পিসি ও ম্যাকের জন্য" : "Your PC & Mac")}
             </span>
           </h2>
 
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Run automated B2B lead scraping and search intelligence directly on your local computer.
-            Zero cloud or proxy costs, complete data privacy, and 1-click desktop launch.
+            {dt.subtitle ||
+              "Run automated B2B lead scraping and search intelligence directly on your local computer. Zero cloud or proxy costs, complete data privacy, and 1-click desktop launch."}
           </p>
         </div>
 
@@ -68,7 +71,7 @@ export function DownloadSection() {
             {detectedOs === "windows" && (
               <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold tracking-wide uppercase shadow-md flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Recommended for your PC
+                {dt.winCardRec || "Recommended for your PC"}
               </div>
             )}
 
@@ -79,38 +82,38 @@ export function DownloadSection() {
                   <Monitor className="h-7 w-7" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Windows PC</h3>
-                  <p className="text-xs text-muted-foreground">Windows 10 / 11 (64-bit)</p>
+                  <h3 className="text-2xl font-bold text-foreground">{dt.winCardTitle || "Windows PC"}</h3>
+                  <p className="text-xs text-muted-foreground">{dt.winCardSub || "Windows 10 / 11 (64-bit)"}</p>
                 </div>
               </div>
 
               <div className="space-y-3 py-2 border-y border-border/40 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Includes Desktop App Icon & Start Menu shortcut</span>
+                  <span>{dt.winF1 || "Includes Desktop App Icon & Start Menu shortcut"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Built-in standard uninstaller (Windows Settings ➔ Apps)</span>
+                  <span>{dt.winF2 || "Built-in standard uninstaller (Windows Settings ➔ Apps)"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Zero Command Prompt / CMD terminal popups</span>
+                  <span>{dt.winF3 || "Zero Command Prompt / CMD terminal popups"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>100% standalone binary installer (.exe)</span>
+                  <span>{dt.winF4 || "100% standalone binary installer (.exe)"}</span>
                 </div>
               </div>
 
               {/* Specs pill */}
               <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/40">
                 <span className="flex items-center gap-1">
-                  <HardDrive className="h-3.5 w-3.5 text-primary" /> Size: ~185 MB
+                  <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.winSize || "Size: ~185 MB"}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Cpu className="h-3.5 w-3.5 text-primary" /> Format: .exe (NSIS)
+                  <Cpu className="h-3.5 w-3.5 text-primary" /> {dt.winFormat || "Format: .exe (NSIS)"}
                 </span>
               </div>
             </div>
@@ -127,11 +130,11 @@ export function DownloadSection() {
                   }`}
                 >
                   <Download className="h-4 w-4" />
-                  Download for Windows (.exe)
+                  {dt.winBtn || "Download for Windows (.exe)"}
                 </Button>
               </a>
               <p className="text-[11px] text-center text-muted-foreground mt-2">
-                Double-click installer to set up desktop icon automatically
+                {dt.winNote || "Double-click installer to set up desktop icon automatically"}
               </p>
             </div>
           </div>
@@ -147,7 +150,7 @@ export function DownloadSection() {
             {detectedOs === "mac" && (
               <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold tracking-wide uppercase shadow-md flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Recommended for your Mac
+                {dt.macCardRec || "Recommended for your Mac"}
               </div>
             )}
 
@@ -158,38 +161,38 @@ export function DownloadSection() {
                   <Apple className="h-7 w-7" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Apple macOS</h3>
-                  <p className="text-xs text-muted-foreground">macOS 11.0+ (Apple Silicon & Intel)</p>
+                  <h3 className="text-2xl font-bold text-foreground">{dt.macCardTitle || "Apple macOS"}</h3>
+                  <p className="text-xs text-muted-foreground">{dt.macCardSub || "macOS 11.0+ (Apple Silicon & Intel)"}</p>
                 </div>
               </div>
 
               <div className="space-y-3 py-2 border-y border-border/40 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Native .app bundle with custom 3D Cyber Icon</span>
+                  <span>{dt.macF1 || "Native .app bundle with custom 3D Cyber Icon"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Drag & Drop installation into Applications folder</span>
+                  <span>{dt.macF2 || "Drag & Drop installation into Applications folder"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Zero Terminal windows open during app execution</span>
+                  <span>{dt.macF3 || "Zero Terminal windows open during app execution"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Simple uninstall by dragging to macOS Trash</span>
+                  <span>{dt.macF4 || "Simple uninstall by dragging to macOS Trash"}</span>
                 </div>
               </div>
 
               {/* Specs pill */}
               <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/40">
                 <span className="flex items-center gap-1">
-                  <HardDrive className="h-3.5 w-3.5 text-primary" /> Size: ~196 MB
+                  <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.macSize || "Size: ~196 MB"}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Cpu className="h-3.5 w-3.5 text-primary" /> Format: .dmg Disk Image
+                  <Cpu className="h-3.5 w-3.5 text-primary" /> {dt.macFormat || "Format: .dmg Disk Image"}
                 </span>
               </div>
             </div>
@@ -206,11 +209,11 @@ export function DownloadSection() {
                   }`}
                 >
                   <Download className="h-4 w-4" />
-                  Download for Mac (.dmg)
+                  {dt.macBtn || "Download for Mac (.dmg)"}
                 </Button>
               </a>
               <p className="text-[11px] text-center text-muted-foreground mt-2">
-                Mount DMG and drag to Applications for 1-click launch
+                {dt.macNote || "Mount DMG and drag to Applications for 1-click launch"}
               </p>
             </div>
           </div>
@@ -223,12 +226,12 @@ export function DownloadSection() {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Zero Code Exposure & Tamper-Proof Cryptography</p>
-              <p className="text-[11px]">Clean binary distributions without exposed scripts, database credentials, or secret keys.</p>
+              <p className="font-semibold text-foreground">{dt.secTitle || "Zero Code Exposure & Tamper-Proof Cryptography"}</p>
+              <p className="text-[11px]">{dt.secDesc || "Clean binary distributions without exposed scripts, database credentials, or secret keys."}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 font-mono text-[11px] text-primary">
-            <span>Requires Production License Key to Activate</span>
+            <span>{dt.secLicense || "Requires Production License Key to Activate"}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </div>
         </div>

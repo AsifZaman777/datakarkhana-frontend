@@ -15,7 +15,11 @@ import { requestsApi } from "@/lib/api/requests";
 import { toast } from "sonner";
 import type { RegionsConfig, DatasetRequest, ScraperJob } from "@/lib/types";
 
+import { useLanguage } from "@/providers/language-provider";
+
 export default function ScraperPage() {
+  const { t, lang } = useLanguage();
+  const sc = t.scraper || {};
   const [regionsConfig, setRegionsConfig] = useState<RegionsConfig | null>(null);
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
   const [isJobRunning, setIsJobRunning] = useState(false);
@@ -69,14 +73,14 @@ export default function ScraperPage() {
       setIsJobRunning(false);
       refreshJobs();
       if (status === "done") {
-        toast.success(`Scraping completed! Collected ${resultCount} business leads.`);
+        toast.success(lang === "bn" ? `স্ক্র্যাপিং সম্পন্ন! ${resultCount} টি লিড সংগৃহীত হয়েছে।` : `Scraping completed! Collected ${resultCount} business leads.`);
       } else if (status === "stopped") {
-        toast.info(`Scraping stopped. Preserved ${resultCount} collected leads.`);
+        toast.info(lang === "bn" ? `স্ক্র্যাপিং বন্ধ করা হয়েছে। ${resultCount} টি লিড সংরক্ষিত।` : `Scraping stopped. Preserved ${resultCount} collected leads.`);
       } else {
-        toast.error("Scraper job finished with 0 records or errors.");
+        toast.error(lang === "bn" ? "স্ক্র্যাপার জব সম্পন্ন হয়েছে (০ টি রেকর্ড বা ত্রুটি)।" : "Scraper job finished with 0 records or errors.");
       }
     },
-    [refreshJobs]
+    [refreshJobs, lang]
   );
 
   // Cooldown timer effect
@@ -95,10 +99,10 @@ export default function ScraperPage() {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-extrabold text-foreground">
-          Live Google Maps Scraper & Request Console
+          {sc.pageTitle || "Live Google Maps Scraper & Request Console"}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Execute real-time web scraping across Google Maps for Bangladesh business leads or submit custom dataset requests
+          {sc.pageSubtitle || "Execute real-time web scraping across Google Maps for Bangladesh business leads or submit custom dataset requests"}
         </p>
       </div>
 
@@ -106,11 +110,11 @@ export default function ScraperPage() {
         <TabsList className="bg-card/60 border border-border/40 p-1">
           <TabsTrigger value="scraper" className="gap-2 text-xs font-semibold">
             <Search className="h-4 w-4 text-cyan-400" />
-            Live Scraper Console
+            {sc.tabConsole || "Live Scraper Console"}
           </TabsTrigger>
           <TabsTrigger value="request" className="gap-2 text-xs font-semibold">
             <Inbox className="h-4 w-4 text-amber-500" />
-            Submit Custom Dataset Request
+            {sc.tabRequest || "Submit Custom Dataset Request"}
           </TabsTrigger>
         </TabsList>
 
@@ -162,7 +166,9 @@ export default function ScraperPage() {
 
             {/* Requests History List */}
             <div className="lg:col-span-6 space-y-4">
-              <h3 className="text-sm font-bold text-foreground">Your Submitted Dataset Requests</h3>
+              <h3 className="text-sm font-bold text-foreground">
+                {sc.submittedRequestsTitle || "Your Submitted Dataset Requests"}
+              </h3>
               <div className="space-y-3">
                 {myRequests.map((req) => (
                   <Card key={req.id} className="p-4 glass-panel space-y-2">
@@ -170,30 +176,30 @@ export default function ScraperPage() {
                       <div className="space-y-0.5">
                         <div className="font-bold text-sm text-foreground">{req.category_query}</div>
                         <div className="text-xs text-muted-foreground">
-                          Location: {[req.division, req.district, req.area].filter(Boolean).join(", ") || "Bangladesh"}
+                          {sc.locationPrefix || "Location:"} {[req.division, req.district, req.area].filter(Boolean).join(", ") || (lang === "bn" ? "বাংলাদেশ" : "Bangladesh")}
                         </div>
                       </div>
 
                       {req.status === "pending" && (
                         <Badge variant="outline" className="border-amber-500/40 text-amber-500 gap-1 text-[10px]">
-                          <Clock className="h-3 w-3" /> Pending Scrape
+                          <Clock className="h-3 w-3" /> {sc.pendingScrapeBadge || "Pending Scrape"}
                         </Badge>
                       )}
                       {req.status === "fulfilled" && (
                         <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 gap-1 text-[10px]">
-                          <CheckCircle2 className="h-3 w-3" /> Fulfilled in Catalog
+                          <CheckCircle2 className="h-3 w-3" /> {sc.fulfilledBadge || "Fulfilled in Catalog"}
                         </Badge>
                       )}
                       {req.status === "rejected" && (
                         <Badge variant="outline" className="border-destructive/40 text-destructive gap-1 text-[10px]">
-                          <XCircle className="h-3 w-3" /> Unable to Fulfill
+                          <XCircle className="h-3 w-3" /> {sc.rejectedBadge || "Unable to Fulfill"}
                         </Badge>
                       )}
                     </div>
 
                     {req.additional_notes && (
                       <div className="text-xs text-muted-foreground italic pt-1 border-t border-border/40">
-                        Notes: &quot;{req.additional_notes}&quot;
+                        {sc.notesPrefix || "Notes:"} &quot;{req.additional_notes}&quot;
                       </div>
                     )}
                   </Card>
@@ -201,7 +207,7 @@ export default function ScraperPage() {
 
                 {myRequests.length === 0 && (
                   <div className="text-center py-12 text-xs text-muted-foreground glass-panel">
-                    No custom dataset requests submitted yet. Use the form on the left to request custom lead scraping.
+                    {sc.noRequestsSubmitted || "No custom dataset requests submitted yet. Use the form on the left to request custom lead scraping."}
                   </div>
                 )}
               </div>

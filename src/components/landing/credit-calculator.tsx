@@ -17,7 +17,7 @@ export function CreditCalculator({
   minCredits = 5,
   maxCredits = 500,
 }: CreditCalculatorProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [credits, setCredits] = useState(50);
 
   const totalBDT = (credits * customRate).toFixed(
@@ -41,7 +41,7 @@ export function CreditCalculator({
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">{t.pricing.calcSelectLabel}</span>
               <span className="font-mono font-bold text-amber-500 text-lg">
-                {credits} Credits
+                {credits} {lang === "bn" ? "ক্রেডিট" : "Credits"}
               </span>
             </div>
 
@@ -73,7 +73,9 @@ export function CreditCalculator({
               ৳{totalBDT} BDT
             </div>
             <div className="text-xs text-muted-foreground">
-              @ ৳{customRate} BDT / Credit (Min: {minCredits} Credits)
+              {lang === "bn"
+                ? `@ প্রতি ক্রেডিট ৳${customRate} বিডিটি (সর্বনিম্ন: ${minCredits} ক্রেডিট)`
+                : `@ ৳${customRate} BDT / Credit (Min: ${minCredits} Credits)`}
             </div>
           </div>
         </div>

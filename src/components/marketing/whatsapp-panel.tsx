@@ -22,6 +22,7 @@ import { marketingApi } from "@/lib/api/marketing";
 import { toast } from "sonner";
 import { scraperApi } from "@/lib/api/scraper";
 import type { Dataset, RecipientContact, ScraperJob } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface WhatsAppPanelProps {
   recipientGroups: Dataset[];
@@ -44,6 +45,8 @@ export function WhatsAppPanel({
   onSelectGroup,
   initialGroup,
 }: WhatsAppPanelProps) {
+  const { t, lang } = useLanguage();
+  const m = t.marketing || {};
   const [waStatus, setWaStatus] = useState<string>("Checking...");
   const [recipientGroup, setRecipientGroup] = useState<string>("");
   const [scrapedJobs, setScrapedJobs] = useState<ScraperJob[]>([]);
@@ -379,7 +382,9 @@ Return ONLY updated template.`;
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-emerald-400" />
-            <h2 className="text-lg font-bold text-foreground">WhatsApp Campaign Engine</h2>
+            <h2 className="text-lg font-bold text-foreground">
+              {m.waEngineTitle || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন ইঞ্জিন" : "WhatsApp Campaign Engine")}
+            </h2>
           </div>
 
           <div className="flex items-center gap-3">
@@ -391,14 +396,18 @@ Return ONLY updated template.`;
                   : "border-amber-500/40 text-amber-500 bg-amber-500/10"
               }
             >
-              ● {waStatus}
+              ● {waStatus === "Session Active" 
+                  ? (lang === "bn" ? "সেশন সক্রিয়" : "Session Active") 
+                  : waStatus === "No Active Session" 
+                  ? (lang === "bn" ? "সেশন বন্ধ" : "No Active Session") 
+                  : waStatus}
             </Badge>
 
             <Button size="sm" variant="outline" onClick={handleScanQR} className="gap-1 text-xs h-8">
-              <UserCheck className="h-3.5 w-3.5" /> Connect / Scan QR
+              <UserCheck className="h-3.5 w-3.5" /> {m.connectQrBtn || (lang === "bn" ? "কানেক্ট / কিউআর স্ক্যান" : "Connect / Scan QR")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setResetConfirmOpen(true)} className="gap-1 text-xs h-8 text-destructive border-destructive/40">
-              <RefreshCw className="h-3.5 w-3.5" /> Reset
+              <RefreshCw className="h-3.5 w-3.5" /> {m.resetBtn || (lang === "bn" ? "রিসেট" : "Reset")}
             </Button>
           </div>
         </div>
@@ -407,7 +416,9 @@ Return ONLY updated template.`;
           {/* Target Group Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div className="space-y-2">
-              <Label className="text-xs font-semibold">Select Target Lead Group *</Label>
+              <Label className="text-xs font-semibold">
+                {m.selectTargetGroup || (lang === "bn" ? "টার্গেট লিড গ্রুপ নির্বাচন করুন *" : "Select Target Lead Group *")}
+              </Label>
               <Select
                 value={recipientGroup}
                 onValueChange={(val) => {
@@ -417,23 +428,27 @@ Return ONLY updated template.`;
                 }}
               >
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder="-- Choose Recipient Group --" />
+                  <SelectValue placeholder={lang === "bn" ? "-- প্রাপক গ্রুপ বাছাই করুন --" : "-- Choose Recipient Group --"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel className="text-[11px] text-muted-foreground font-mono">Catalog Datasets</SelectLabel>
+                    <SelectLabel className="text-[11px] text-muted-foreground font-mono">
+                      {lang === "bn" ? "ক্যাটালগ ডেটাসেট" : "Catalog Datasets"}
+                    </SelectLabel>
                     {recipientGroups.map((g) => (
                       <SelectItem key={g.id} value={`dataset_${g.id}`}>
-                        {g.name} ({g.row_count} leads)
+                        {g.name} ({g.row_count} {lang === "bn" ? "টি লিড" : "leads"})
                       </SelectItem>
                     ))}
                   </SelectGroup>
                   {scrapedJobs.length > 0 && (
                     <SelectGroup>
-                      <SelectLabel className="text-[11px] text-cyan-400 font-mono">Private Scraped Datasets</SelectLabel>
+                      <SelectLabel className="text-[11px] text-cyan-400 font-mono">
+                        {lang === "bn" ? "প্রাইভেট স্ক্র্যাপড ডেটাসেট" : "Private Scraped Datasets"}
+                      </SelectLabel>
                       {scrapedJobs.map((j) => (
                         <SelectItem key={j.id} value={`job_${j.id}`}>
-                          Job #{j.id}: {j.query} ({j.result_count} leads)
+                          {lang === "bn" ? "কাজ" : "Job"} #{j.id}: {j.query} ({j.result_count} {lang === "bn" ? "টি লিড" : "leads"})
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -444,7 +459,7 @@ Return ONLY updated template.`;
 
             {recipientGroup && (
               <Button type="button" variant="outline" onClick={onOpenSelector} className="text-xs h-9 font-semibold">
-                Inspect / Select Leads ({selectedContactsCount} / {totalContactsCount})
+                {m.inspectLeadsBtn || (lang === "bn" ? "লিড বাছাই ও পরিদর্শন করুন" : "Inspect / Select Leads")} ({selectedContactsCount} / {totalContactsCount})
               </Button>
             )}
           </div>
@@ -452,27 +467,27 @@ Return ONLY updated template.`;
           {/* Parameters Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <Label className="text-xs">Brand Name</Label>
+              <Label className="text-xs">{m.brandNameLabel || (lang === "bn" ? "ব্র্যান্ডের নাম" : "Brand Name")}</Label>
               <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-8 text-xs" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Heading</Label>
+              <Label className="text-xs">{m.headingLabel || (lang === "bn" ? "শিরোনাম" : "Heading")}</Label>
               <Input value={heading} onChange={(e) => setHeading(e.target.value)} className="h-8 text-xs" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Coupon Code</Label>
+              <Label className="text-xs">{m.couponCodeLabel || (lang === "bn" ? "কুপন কোড" : "Coupon Code")}</Label>
               <Input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} className="h-8 text-xs font-mono" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">CTA Text</Label>
+              <Label className="text-xs">{m.ctaTextLabel || (lang === "bn" ? "সিটিএ টেক্সট" : "CTA Text")}</Label>
               <Input value={ctaText} onChange={(e) => setCtaText(e.target.value)} className="h-8 text-xs" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">CTA Link</Label>
+              <Label className="text-xs">{m.ctaLinkLabel || (lang === "bn" ? "সিটিএ লিংক" : "CTA Link")}</Label>
               <Input value={ctaLink} onChange={(e) => setCtaLink(e.target.value)} className="h-8 text-xs font-mono" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Offer Description</Label>
+              <Label className="text-xs">{m.descriptionLabel || (lang === "bn" ? "অফারের বিবরণ" : "Offer Description")}</Label>
               <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-8 text-xs" />
             </div>
           </div>
@@ -480,10 +495,12 @@ Return ONLY updated template.`;
           {/* Template presets & AI Enhancers */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Label className="text-xs font-semibold">Pre-built Campaign Templates:</Label>
+              <Label className="text-xs font-semibold">
+                {m.presetTemplates || (lang === "bn" ? "তৈরি ক্যাম্পেইন টেমপ্লেট:" : "Pre-built Campaign Templates:")}
+              </Label>
               <Select onValueChange={handleTemplateSelect}>
                 <SelectTrigger className="text-xs h-8 w-[200px]">
-                  <SelectValue placeholder="Select preset template" />
+                  <SelectValue placeholder={lang === "bn" ? "টেমপ্লেট নির্বাচন করুন" : "Select preset template"} />
                 </SelectTrigger>
                 <SelectContent>
                   {WHATSAPP_TEMPLATES.map((t, idx) => (
@@ -496,7 +513,7 @@ Return ONLY updated template.`;
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Enhance via AI:</span>
+              <span className="text-xs text-muted-foreground">{m.aiEnhanceLabel || (lang === "bn" ? "এআই দিয়ে উন্নত করুন:" : "Enhance via AI:")}</span>
               <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("ChatGPT")} className="h-7 text-xs gap-1 border-emerald-500/40 text-emerald-400">
                 <Sparkles className="h-3 w-3" /> ChatGPT Prompt
               </Button>
@@ -508,7 +525,9 @@ Return ONLY updated template.`;
 
           {/* Message Editor */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold">Message Template Editor</Label>
+            <Label className="text-xs font-semibold">
+              {m.messageEditorLabel || (lang === "bn" ? "মেসেজ টেমপ্লেট এডিটর" : "Message Template Editor")}
+            </Label>
             <textarea
               value={templateText}
               onChange={(e) => setTemplateText(e.target.value)}
@@ -520,7 +539,7 @@ Return ONLY updated template.`;
           {/* Live Preview */}
           <div className="p-4 rounded-xl bg-black/90 border border-border/40 space-y-2">
             <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
-              Live Recipient Message Preview:
+              {m.livePreviewLabel || (lang === "bn" ? "প্রাপক মেসেজের লাইভ প্রিভিউ:" : "Live Recipient Message Preview:")}
             </div>
             <pre className="text-xs font-mono text-foreground whitespace-pre-wrap leading-relaxed">
               {getResolvedMessage()}
@@ -545,9 +564,9 @@ Return ONLY updated template.`;
                   <span>
                     WhatsApp Campaign <strong className="text-foreground">#{activeCampaignId}</strong>{" "}
                     {isCampaignRunning
-                      ? "is Dispatching Live in Background"
+                      ? (lang === "bn" ? "ব্যাকগ্রাউন্ডে পাঠানো হচ্ছে" : "is Dispatching Live in Background")
                       : liveCampaignDetails.status === "done"
-                      ? "Finished Successfully"
+                      ? (lang === "bn" ? "সফলভাবে সম্পন্ন হয়েছে" : "Finished Successfully")
                       : `Status: ${liveCampaignDetails.status.toUpperCase()}`}
                   </span>
                 </div>
@@ -556,7 +575,7 @@ Return ONLY updated template.`;
                   {isCampaignRunning && liveCampaignDetails?.est_human && (
                     <div className="px-2.5 py-1 rounded-md bg-cyan-950/50 border border-cyan-500/30 text-[11px] text-cyan-300 flex items-center gap-1.5">
                       <Clock className="h-3 w-3 text-cyan-400 shrink-0" />
-                      <span>EST: {liveCampaignDetails.est_human}</span>
+                      <span>{lang === "bn" ? "আনুমানিক সময়:" : "EST:"} {liveCampaignDetails.est_human}</span>
                     </div>
                   )}
 
@@ -568,7 +587,7 @@ Return ONLY updated template.`;
                       onClick={() => setStopConfirmOpen(true)}
                       className="h-8 gap-1.5 font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg"
                     >
-                      <Square className="h-3.5 w-3.5 fill-current" /> Stop Campaign
+                      <Square className="h-3.5 w-3.5 fill-current" /> {m.stopWaBtn || (lang === "bn" ? "ক্যাম্পেইন থামান" : "Stop Campaign")}
                     </Button>
                   ) : (
                     <Button
@@ -584,7 +603,7 @@ Return ONLY updated template.`;
                       }}
                       className="h-8 gap-1.5 font-bold text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
                     >
-                      Start New Campaign
+                      {lang === "bn" ? "নতুন ক্যাম্পেইন শুরু করুন" : "Start New Campaign"}
                     </Button>
                   )}
                 </div>
@@ -593,11 +612,11 @@ Return ONLY updated template.`;
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    Dispatched:{" "}
+                    {lang === "bn" ? "প্রেরিত:" : "Dispatched:"}{" "}
                     <strong className="text-cyan-400 text-sm font-bold">
                       {liveCampaignDetails.sent}
                     </strong>{" "}
-                    / {liveCampaignDetails.total} contacts
+                    / {liveCampaignDetails.total} {lang === "bn" ? "জন প্রাপক" : "contacts"}
                   </span>
                   <span className="text-emerald-400 font-bold">{liveCampaignDetails.pct}%</span>
                 </div>
@@ -626,10 +645,10 @@ Return ONLY updated template.`;
           >
             <Play className="h-4 w-4" />
             {isSubmitting
-              ? "Launching WhatsApp Campaign..."
+              ? (m.launchingWaBtn || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন শুরু হচ্ছে..." : "Launching WhatsApp Campaign..."))
               : isCampaignRunning
-              ? "Campaign Dispatching Live in Background (Multi-Page Protected)..."
-              : "Launch WhatsApp Campaign"}
+              ? (lang === "bn" ? "ক্যাম্পেইন ব্যাকগ্রাউন্ডে চলছে (সুরক্ষিত)..." : "Campaign Dispatching Live in Background (Multi-Page Protected)...")
+              : (m.launchWaBtn || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন শুরু করুন" : "Launch WhatsApp Campaign"))}
           </Button>
         </form>
       </CardContent>
@@ -638,9 +657,9 @@ Return ONLY updated template.`;
         open={resetConfirmOpen}
         onClose={() => setResetConfirmOpen(false)}
         onConfirm={confirmResetSession}
-        title="Reset WhatsApp Session"
-        description="Are you sure you want to disconnect the current WhatsApp session and scan a new account?"
-        confirmText="Reset Session"
+        title={lang === "bn" ? "হোয়াটসঅ্যাপ সেশন রিসেট" : "Reset WhatsApp Session"}
+        description={lang === "bn" ? "আপনি কি বর্তমান সেশন বিচ্ছিন্ন করে নতুন অ্যাকাউন্টে কিউআর স্ক্যান করতে চান?" : "Are you sure you want to disconnect the current WhatsApp session and scan a new account?"}
+        confirmText={lang === "bn" ? "সেশন রিসেট করুন" : "Reset Session"}
         isDanger
       />
 
@@ -648,9 +667,9 @@ Return ONLY updated template.`;
         open={stopConfirmOpen}
         onClose={() => setStopConfirmOpen(false)}
         onConfirm={confirmStopCampaign}
-        title="Stop WhatsApp Campaign?"
-        description="Are you sure you want to terminate this WhatsApp campaign immediately? Sent messages cannot be recalled, but all remaining dispatches will halt right away."
-        confirmText="Stop Campaign"
+        title={lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন বন্ধ করবেন?" : "Stop WhatsApp Campaign?"}
+        description={lang === "bn" ? "আপনি কি নিশ্চিত যে আপনি অবিলম্বে এই হোয়াটসঅ্যাপ ক্যাম্পেইনটি বন্ধ করতে চান? ইতিমধ্যে পাঠানো বার্তা ফিরিয়ে নেওয়া যাবে না, তবে অবশিষ্ট বার্তাগুলো সাথে সাথে বন্ধ হবে।" : "Are you sure you want to terminate this WhatsApp campaign immediately? Sent messages cannot be recalled, but all remaining dispatches will halt right away."}
+        confirmText={lang === "bn" ? "ক্যাম্পেইন বন্ধ করুন" : "Stop Campaign"}
         isDanger
       />
     </Card>

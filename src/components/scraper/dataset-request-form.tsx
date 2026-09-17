@@ -17,6 +17,7 @@ import {
 import { requestsApi } from "@/lib/api/requests";
 import { toast } from "sonner";
 import type { RegionsConfig } from "@/lib/types";
+import { useLanguage } from "@/providers/language-provider";
 
 interface DatasetRequestFormProps {
   regionsConfig: RegionsConfig | null;
@@ -27,6 +28,7 @@ export function DatasetRequestForm({
   regionsConfig,
   onRequestSubmitted,
 }: DatasetRequestFormProps) {
+  const { lang } = useLanguage();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [division, setDivision] = useState("");
@@ -94,11 +96,11 @@ export function DatasetRequestForm({
     }
 
     if (allQueries.length === 0) {
-      toast.warning("Please add at least one query tag.");
+      toast.warning(lang === "bn" ? "অনুগ্রহ করে অন্তত একটি কুয়েরি ট্যাগ যোগ করুন।" : "Please add at least one query tag.");
       return;
     }
     if (!phone.trim()) {
-      toast.warning("Please enter your contact phone number.");
+      toast.warning(lang === "bn" ? "অনুগ্রহ করে যোগাযোগের ফোন নম্বর লিখুন।" : "Please enter your contact phone number.");
       return;
     }
 
@@ -118,7 +120,7 @@ export function DatasetRequestForm({
         additional_notes: notes,
       });
 
-      toast.success(res.data.message || "Dataset request submitted!");
+      toast.success(res.data.message || (lang === "bn" ? "ডেটাসেট রিকোয়েস্ট জমা হয়েছে!" : "Dataset request submitted!"));
       setTags([]);
       setTagInput("");
       setDivision("");
@@ -132,7 +134,7 @@ export function DatasetRequestForm({
       setNotes("");
       onRequestSubmitted();
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Failed to submit request.");
+      toast.error(err.response?.data?.detail || (lang === "bn" ? "রিকোয়েস্ট জমা দিতে সমস্যা হয়েছে।" : "Failed to submit request."));
     } finally {
       setIsSubmitting(false);
     }
@@ -143,18 +145,22 @@ export function DatasetRequestForm({
       <CardContent className="p-0 space-y-6">
         <div className="flex items-center gap-2 border-b border-border/40 pb-3">
           <Inbox className="h-5 w-5 text-amber-500" />
-          <h2 className="text-lg font-bold text-foreground">Submit Dataset Custom Request</h2>
+          <h2 className="text-lg font-bold text-foreground">
+            {lang === "bn" ? "কাস্টম ডেটাসেট রিকোয়েস্ট জমা দিন" : "Submit Dataset Custom Request"}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Query tags input */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold">Data Category / Search Queries *</Label>
+            <Label className="text-xs font-semibold">
+              {lang === "bn" ? "ডেটা ক্যাটাগরি / সার্চ কুয়েরি *" : "Data Category / Search Queries *"}
+            </Label>
             <div className="flex gap-2">
               <Input
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                placeholder="e.g. Restaurants, Garments, Coaching..."
+                placeholder={lang === "bn" ? "যেমনঃ রেস্তোরাঁ, গার্মেন্টস, কোচিং..." : "e.g. Restaurants, Garments, Coaching..."}
                 className="text-xs h-9"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -164,7 +170,7 @@ export function DatasetRequestForm({
                 }}
               />
               <Button type="button" variant="outline" size="sm" onClick={handleAddTag} className="h-9 gap-1 text-xs">
-                <Plus className="h-3.5 w-3.5" /> Add Tag
+                <Plus className="h-3.5 w-3.5" /> {lang === "bn" ? "ট্যাগ যোগ করুন" : "Add Tag"}
               </Button>
             </div>
 
@@ -188,10 +194,10 @@ export function DatasetRequestForm({
           {/* Location Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Division</Label>
+              <Label className="text-xs font-semibold">{lang === "bn" ? "বিভাগ" : "Division"}</Label>
               <Select value={division} onValueChange={(val) => handleDivisionChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Divisions" />
+                  <SelectValue placeholder={lang === "bn" ? "সকল বিভাগ" : "All Divisions"} />
                 </SelectTrigger>
                 <SelectContent>
                   {divisions.map((d) => (
@@ -199,24 +205,24 @@ export function DatasetRequestForm({
                       {d}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {division === "Other" && (
                 <Input
                   value={customDivision}
                   onChange={(e) => setCustomDivision(e.target.value)}
-                  placeholder="Type custom division..."
+                  placeholder={lang === "bn" ? "কাস্টম বিভাগ লিখুন..." : "Type custom division..."}
                   className="text-xs h-9 mt-1.5 border-amber-500/50"
                 />
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">District</Label>
+              <Label className="text-xs font-semibold">{lang === "bn" ? "জেলা" : "District"}</Label>
               <Select value={district} disabled={!division} onValueChange={(val) => handleDistrictChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Districts" />
+                  <SelectValue placeholder={lang === "bn" ? "সকল জেলা" : "All Districts"} />
                 </SelectTrigger>
                 <SelectContent>
                   {districts.map((d) => (
@@ -224,24 +230,24 @@ export function DatasetRequestForm({
                       {d}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {district === "Other" && (
                 <Input
                   value={customDistrict}
                   onChange={(e) => setCustomDistrict(e.target.value)}
-                  placeholder="Type custom district..."
+                  placeholder={lang === "bn" ? "কাস্টম জেলা লিখুন..." : "Type custom district..."}
                   className="text-xs h-9 mt-1.5 border-amber-500/50"
                 />
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Area / City</Label>
+              <Label className="text-xs font-semibold">{lang === "bn" ? "এলাকা / শহর" : "Area / City"}</Label>
               <Select value={area} disabled={!district} onValueChange={(val) => handleAreaChange(val || "")}>
                 <SelectTrigger className="w-full text-xs h-9">
-                  <SelectValue placeholder="All Areas" />
+                  <SelectValue placeholder={lang === "bn" ? "সকল এলাকা" : "All Areas"} />
                 </SelectTrigger>
                 <SelectContent>
                   {areas.map((a) => (
@@ -249,14 +255,14 @@ export function DatasetRequestForm({
                       {a}
                     </SelectItem>
                   ))}
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Other">{lang === "bn" ? "অন্যান্য" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
               {area === "Other" && (
                 <Input
                   value={customArea}
                   onChange={(e) => setCustomArea(e.target.value)}
-                  placeholder="Type custom area..."
+                  placeholder={lang === "bn" ? "কাস্টম এলাকা লিখুন..." : "Type custom area..."}
                   className="text-xs h-9 mt-1.5 border-amber-500/50"
                 />
               )}
@@ -266,16 +272,16 @@ export function DatasetRequestForm({
           {/* Business & Phone */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">Business Name</Label>
+              <Label className="text-xs">{lang === "bn" ? "ব্যবসার নাম" : "Business Name"}</Label>
               <Input
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Your Company Name"
+                placeholder={lang === "bn" ? "আপনার প্রতিষ্ঠানের নাম" : "Your Company Name"}
                 className="text-xs h-9"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Contact Phone *</Label>
+              <Label className="text-xs">{lang === "bn" ? "যোগাযোগের ফোন *" : "Contact Phone *"}</Label>
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -288,11 +294,11 @@ export function DatasetRequestForm({
 
           {/* Additional Notes */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Additional Instructions / Requirements</Label>
+            <Label className="text-xs">{lang === "bn" ? "অতিরিক্ত নির্দেশনা বা চাহিদা" : "Additional Instructions / Requirements"}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Target row counts, specific criteria..."
+              placeholder={lang === "bn" ? "কাঙ্ক্ষিত লিড সংখ্যা, বিশেষ শর্ত..." : "Target row counts, specific criteria..."}
               rows={3}
               className="text-xs"
             />
@@ -300,7 +306,9 @@ export function DatasetRequestForm({
 
           <Button type="submit" disabled={isSubmitting} className="w-full font-bold gap-2 py-5 bg-amber-500 text-black hover:bg-amber-600">
             <Send className="h-4 w-4" />
-            {isSubmitting ? "Submitting Request..." : "Submit Dataset Request"}
+            {isSubmitting 
+              ? (lang === "bn" ? "রিকোয়েস্ট জমা হচ্ছে..." : "Submitting Request...") 
+              : (lang === "bn" ? "ডেটাসেট রিকোয়েস্ট পাঠান" : "Submit Dataset Request")}
           </Button>
         </form>
       </CardContent>
