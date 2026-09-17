@@ -874,9 +874,6 @@ export function AdminDashboard() {
                   {/* Row 2: Stats */}
                   <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
                     <span>
-                      {lang === "bn" ? "কাজ #" : "Job #"}{ds.id}
-                    </span>
-                    <span>
                       {ds.result_count || 0} {lang === "bn" ? "সারি" : "rows"}
                     </span>
                     <span>

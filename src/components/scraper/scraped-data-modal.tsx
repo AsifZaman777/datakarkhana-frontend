@@ -33,7 +33,7 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
       .jobData(jobId)
       .then((res) => {
         setData(res.data.data || []);
-        setQuery(res.data.query || `Job #${jobId}`);
+        setQuery(res.data.query || "Scraped Dataset");
       })
       .catch((err) => {
         toast.error("Failed to load scraped data records.");
@@ -74,9 +74,6 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <span>Private Scraped Catalogue Data</span>
-              <Badge variant="outline" className="border-cyan-500/40 text-cyan-400 text-xs font-mono">
-                Job #{jobId}
-              </Badge>
             </DialogTitle>
           </div>
           <DialogDescription className="text-xs text-muted-foreground">

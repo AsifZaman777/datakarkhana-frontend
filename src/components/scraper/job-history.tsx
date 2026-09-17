@@ -58,7 +58,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
     setStoppingJobId(jobId);
     try {
       await scraperApi.stopJob(jobId);
-      toast.info(lang === "bn" ? `কাজ #${jobId}-এর বন্ধের অনুরোধ পাঠানো হয়েছে। আংশিক ডেটা সংরক্ষণ করা হচ্ছে...` : `Stop request sent for Job #${jobId}. Saving partial scraped records...`);
+      toast.info(lang === "bn" ? "কাজ বন্ধের অনুরোধ পাঠানো হয়েছে। আংশিক ডেটা সংরক্ষণ করা হচ্ছে..." : "Stop request sent. Saving partial scraped records...");
       setTimeout(onRefresh, 1500);
     } catch {
       toast.error(lang === "bn" ? "বন্ধের সিগন্যাল পাঠানো ব্যর্থ হয়েছে।" : "Failed to send stop signal.");
@@ -72,7 +72,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
     setIsDeleting(true);
     try {
       await scraperApi.deleteJob(deleteTargetId);
-      toast.success(lang === "bn" ? `কাজ #${deleteTargetId} মুছে ফেলা হয়েছে।` : `Job #${deleteTargetId} deleted.`);
+      toast.success(lang === "bn" ? "স্ক্র্যাপড ডেটাসেট মুছে ফেলা হয়েছে।" : "Scraped dataset deleted.");
       setDeleteTargetId(null);
       onRefresh();
     } catch {
@@ -136,7 +136,7 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {jobs.map((job) => {
+                {jobs.map((job, idx) => {
                   const isRunning = job.status === "running";
                   const isDone = job.status === "done" || job.status === "stopped";
                   const itemCount = job.result_count || 0;
@@ -150,8 +150,8 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                           : "hover:bg-cyan-500/5"
                       }`}
                     >
-                      <TableCell className="font-mono font-bold text-cyan-400">
-                        #{job.id}
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {idx + 1}
                       </TableCell>
                       <TableCell>
                         <div className="space-y-0.5">
@@ -330,11 +330,11 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
         open={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
         onConfirm={confirmDeleteJob}
-        title={lang === "bn" ? `স্ক্র্যাপ কাজ #${deleteTargetId} মুছে ফেলবেন?` : `Delete Scrape Job #${deleteTargetId}?`}
+        title={lang === "bn" ? "স্ক্র্যাপড ডেটাসেট মুছে ফেলবেন?" : "Delete Scraped Dataset?"}
         description={lang === "bn" 
-          ? "এই কাজটি স্থায়ীভাবে মুছে ফেলা হবে, যার মধ্যে এর আউটপুট এক্সেল ফাইল এবং সমস্ত সংশ্লিষ্ট লগ অন্তর্ভুক্ত।" 
-          : "This action will permanently delete this scrape job, its output Excel file, and all associated execution logs."}
-        confirmText={isDeleting ? (lang === "bn" ? "মুছে ফেলা হচ্ছে..." : "Deleting...") : (lang === "bn" ? "কাজ মুছে ফেলুন" : "Delete Job")}
+          ? "এই ডেটাসেটটি স্থায়ীভাবে মুছে ফেলা হবে, যার মধ্যে এর আউটপুট এক্সেল ফাইল এবং সমস্ত সংশ্লিষ্ট লগ অন্তর্ভুক্ত।" 
+          : "This action will permanently delete this scrape dataset, its output Excel file, and all associated execution logs."}
+        confirmText={isDeleting ? (lang === "bn" ? "মুছে ফেলা হচ্ছে..." : "Deleting...") : (lang === "bn" ? "মুছে ফেলুন" : "Delete Dataset")}
         isDanger
       />
     </Card>
