@@ -257,7 +257,7 @@ export function ContactSelectorModal({
                             <Checkbox checked={isChecked} onCheckedChange={() => handleToggle(c.id)} />
                           </TableCell>
                           <TableCell className="text-xs font-mono text-muted-foreground">
-                            #{c.id + 1}
+                            {c.id + 1}
                           </TableCell>
                           <TableCell className="font-semibold text-xs text-foreground">
                             {c.name}

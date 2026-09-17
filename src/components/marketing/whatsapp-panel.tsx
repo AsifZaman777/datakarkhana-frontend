@@ -448,7 +448,7 @@ Return ONLY updated template.`;
                       </SelectLabel>
                       {scrapedJobs.map((j) => (
                         <SelectItem key={j.id} value={`job_${j.id}`}>
-                          {lang === "bn" ? "কাজ" : "Job"} #{j.id}: {j.query} ({j.result_count} {lang === "bn" ? "টি লিড" : "leads"})
+                          {j.query || (lang === "bn" ? "স্ক্র্যাপড লিড" : "Scraped Leads")} ({j.result_count || 0} {lang === "bn" ? "টি লিড" : "leads"})
                         </SelectItem>
                       ))}
                     </SelectGroup>

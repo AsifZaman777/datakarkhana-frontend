@@ -18,15 +18,18 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { EMAIL_TEMPLATES, EMAIL_PALETTES } from "@/data/email-templates";
 import { marketingApi } from "@/lib/api/marketing";
+import { scraperApi } from "@/lib/api/scraper";
 import { useAuth } from "@/providers/auth-provider";
 import { toast } from "sonner";
-import type { Dataset, RecipientContact } from "@/lib/types";
+import type { Dataset, RecipientContact, ScraperJob } from "@/lib/types";
 import { useLanguage } from "@/providers/language-provider";
 
 interface EmailBuilderProps {
@@ -67,6 +70,8 @@ export function EmailBuilder({
   const [bizSocial, setBizSocial] = useState("");
   const [isApplying, setIsApplying] = useState(false);
 
+  const [scrapedJobs, setScrapedJobs] = useState<ScraperJob[]>([]);
+
   const loadBrevoStatus = () => {
     marketingApi
       .brevoStatus()
@@ -76,6 +81,12 @@ export function EmailBuilder({
 
   useEffect(() => {
     loadBrevoStatus();
+    scraperApi
+      .listJobs()
+      .then((res) => {
+        setScrapedJobs(res.data.filter((j) => (j.status === "done" || j.status === "stopped") && (j.result_count || 0) > 0));
+      })
+      .catch(() => {});
   }, []);
 
   const handleApplyBrevo = async (e: FormEvent) => {
@@ -586,11 +597,28 @@ Return ONLY updated HTML code.`;
                     <SelectValue placeholder={lang === "bn" ? "-- টার্গেট গ্রুপ বাছাই করুন --" : "-- Target Group --"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {recipientGroups.map((g) => (
-                      <SelectItem key={g.id} value={`dataset_${g.id}`}>
-                        {g.name} ({g.row_count} {lang === "bn" ? "টি লিড" : "leads"})
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px] text-muted-foreground font-mono">
+                        {lang === "bn" ? "ক্যাটালগ ডেটাসেট" : "Catalog Datasets"}
+                      </SelectLabel>
+                      {recipientGroups.map((g) => (
+                        <SelectItem key={g.id} value={`dataset_${g.id}`}>
+                          {g.name} ({g.row_count} {lang === "bn" ? "টি লিড" : "leads"})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    {scrapedJobs.length > 0 && (
+                      <SelectGroup>
+                        <SelectLabel className="text-[11px] text-cyan-400 font-mono">
+                          {lang === "bn" ? "প্রাইভেট স্ক্র্যাপড ডেটাসেট" : "Private Scraped Datasets"}
+                        </SelectLabel>
+                        {scrapedJobs.map((j) => (
+                          <SelectItem key={j.id} value={`job_${j.id}`}>
+                            {j.query || (lang === "bn" ? "স্ক্র্যাপড লিড" : "Scraped Leads")} ({j.result_count || 0} {lang === "bn" ? "টি লিড" : "leads"})
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
