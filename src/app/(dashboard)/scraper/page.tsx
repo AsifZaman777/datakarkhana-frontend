@@ -107,7 +107,7 @@ export default function ScraperPage() {
       </div>
 
       <Tabs defaultValue="scraper" className="w-full">
-        <TabsList className="bg-card/60 border border-border/40 p-1">
+        <TabsList data-tour="scraper-tabs" className="bg-card/60 border border-border/40 p-1">
           <TabsTrigger value="scraper" className="gap-2 text-xs font-semibold">
             <Search className="h-4 w-4 text-cyan-400" />
             {sc.tabConsole || "Live Scraper Console"}
@@ -129,7 +129,7 @@ export default function ScraperPage() {
               />
             </div>
 
-            <div className="lg:col-span-7">
+            <div data-tour="scraper-terminal" className="lg:col-span-7">
               <ScraperTerminal
                 logs={activeLogs}
                 activeJobId={activeJobId}
@@ -140,18 +140,20 @@ export default function ScraperPage() {
           </div>
 
           {/* Scraper Job History & Private Datasets */}
-          <JobHistory
-            jobs={recentJobs}
-            onRefresh={refreshJobs}
-            activeJobId={activeJobId}
-            onViewLogs={(jobId) => {
-              const targetJob = recentJobs.find((j) => j.id === jobId);
-              const isRunning = targetJob?.status === "running";
-              setActiveJobId(jobId);
-              setIsJobRunning(isRunning);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
+          <div data-tour="scraper-history">
+            <JobHistory
+              jobs={recentJobs}
+              onRefresh={refreshJobs}
+              activeJobId={activeJobId}
+              onViewLogs={(jobId) => {
+                const targetJob = recentJobs.find((j) => j.id === jobId);
+                const isRunning = targetJob?.status === "running";
+                setActiveJobId(jobId);
+                setIsJobRunning(isRunning);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </div>
         </TabsContent>
 
         {/* TAB: DATASET REQUEST PORTAL */}

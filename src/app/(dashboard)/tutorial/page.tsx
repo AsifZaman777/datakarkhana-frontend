@@ -134,7 +134,7 @@ export default function TutorialPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12 animate-fade-in">
       {/* ── Page Header ── */}
-      <div className="space-y-3 border-b border-border/40 pb-6">
+      <div data-tour="tutorial-header" className="space-y-3 border-b border-border/40 pb-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold tracking-wide">
           <BookOpen className="h-3.5 w-3.5 text-primary" />
           <span>{tut.badge || "PLATFORM USER GUIDE & WORKFLOWS"}</span>
@@ -149,7 +149,7 @@ export default function TutorialPage() {
         </p>
 
         {/* ── Interactive Search ── */}
-        <div className="pt-2 max-w-xl">
+        <div data-tour="tutorial-search" className="pt-2 max-w-xl">
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -177,7 +177,7 @@ export default function TutorialPage() {
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
           {/* Tabs header: horizontal scrollable on mobile */}
-          <TabsList className="bg-card/70 border border-border/50 p-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap rounded-xl shadow-sm">
+          <TabsList data-tour="tutorial-categories" className="bg-card/70 border border-border/50 p-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap rounded-xl shadow-sm">
             {filteredCategories.map((cat) => {
               const Icon = cat.icon;
               return (

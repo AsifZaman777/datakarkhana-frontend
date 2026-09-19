@@ -55,9 +55,9 @@ export function DatasetFilters({
       : [];
 
   return (
-    <div className="flex flex-wrap gap-3 items-center">
+    <div data-tour="catalog-filters" className="flex flex-wrap gap-3 items-center">
       {/* Search Input */}
-      <div className="relative flex-1 min-w-[200px]">
+      <div data-tour="catalog-search" className="relative flex-1 min-w-[200px]">
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}

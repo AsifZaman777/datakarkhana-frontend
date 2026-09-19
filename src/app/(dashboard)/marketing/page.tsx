@@ -87,7 +87,7 @@ export default function MarketingPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-card/60 border border-border/40 p-1 flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap">
+        <TabsList data-tour="marketing-tabs" className="bg-card/60 border border-border/40 p-1 flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto h-auto justify-start flex-nowrap">
           <TabsTrigger value="dashboard" className="gap-2 text-xs font-semibold shrink-0">
             <BarChart3 className="h-4 w-4 text-cyan-400" /> 
             {m.tabDashboard || (lang === "bn" ? "ড্যাশবোর্ড ওভারভিউ" : "Dashboard Overview")}

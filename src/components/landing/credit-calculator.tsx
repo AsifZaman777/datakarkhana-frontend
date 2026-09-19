@@ -25,7 +25,7 @@ export function CreditCalculator({
   );
 
   return (
-    <Card className="glass-panel border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-card to-card p-6 sm:p-8 mt-12">
+    <Card data-tour="upgrade-payment-methods" className="glass-panel border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-card to-card p-6 sm:p-8 mt-12">
       <CardContent className="p-0 space-y-6">
         {/* Title */}
         <div className="flex items-center gap-2">

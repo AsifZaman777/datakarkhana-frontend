@@ -206,7 +206,7 @@ export function ScraperForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Queries Inputs */}
-          <div className="space-y-2">
+          <div data-tour="scraper-query-input" className="space-y-2">
             <Label className="text-xs font-semibold">
               {sc.searchQueriesLabel || (lang === "bn" ? "সার্চ কিওয়ার্ডসমূহ *" : "Search Queries *")}
             </Label>
@@ -245,7 +245,7 @@ export function ScraperForm({
           </div>
 
           {/* Region Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div data-tour="scraper-location-selects" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Division */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">
@@ -345,6 +345,7 @@ export function ScraperForm({
 
           {/* Submit */}
           <Button
+            data-tour="scraper-launch-btn"
             type="submit"
             disabled={isSubmitting || cooldownRemaining > 0}
             className="w-full font-bold gap-2 py-5"

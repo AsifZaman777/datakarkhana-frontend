@@ -50,6 +50,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { APP_NAME } from "@/lib/constants";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
+import { TourButton } from "@/components/tour/tour-button";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -192,15 +193,26 @@ function SidebarInner({
 
   const groups = isAdmin ? adminGroups : userGroups;
 
+  const getTourIdForHref = (href: string) => {
+    if (href === "/catalog") return "sidebar-nav-catalog";
+    if (href === "/scraper") return "sidebar-nav-scraper";
+    if (href === "/marketing") return "sidebar-nav-marketing";
+    if (href === "/upgrade") return "sidebar-nav-upgrade";
+    if (href === "/tutorial") return "sidebar-nav-tutorial";
+    return undefined;
+  };
+
   // ── Single nav link ──
   const renderLink = (item: NavItem) => {
     const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
     const Icon = item.icon;
+    const tourId = getTourIdForHref(item.href);
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={onClose}
+        data-tour={tourId}
         className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all",
           isActive
@@ -247,6 +259,7 @@ function SidebarInner({
       >
         {/* ── Brand Header ── */}
         <div
+          data-tour="sidebar-brand"
           className={cn(
             "flex items-center shrink-0 border-b border-border/40",
             collapsed ? "justify-center p-3 h-14" : "justify-between px-4 h-14"
@@ -380,47 +393,53 @@ function SidebarInner({
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleLang}
-                className="w-full text-xs h-8 gap-2 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
-              >
-                <Globe className="h-3.5 w-3.5" />
-                {st.langSwitchText || (lang === "en" ? "🇧🇩 বাংলা ভাষা" : "🇺🇸 English")}
-              </Button>
+              <div className="space-y-1.5 w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleLang}
+                  className="w-full text-xs h-8 gap-2 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  {st.langSwitchText || (lang === "en" ? "🇧🇩 বাংলা ভাষা" : "🇺🇸 English")}
+                </Button>
+
+                <TourButton variant="sidebar" tab="sidebar" />
+              </div>
 
               <div className="pt-0.5 pb-1">
                 <ConnectionStatusDots className="w-full justify-between text-[10px] py-1 px-2.5" />
               </div>
 
-              <div
-                className="text-xs text-muted-foreground truncate px-1"
-                title={user?.email}
-              >
-                <User className="h-3 w-3 inline mr-1 opacity-60" />
-                {user?.email}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={onOpenPaymentModal}
-                  className="flex-1 text-xs h-8 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold hover:from-amber-600 hover:to-amber-700"
+              <div data-tour="sidebar-user-credits" className="space-y-2">
+                <div
+                  className="text-xs text-muted-foreground truncate px-1"
+                  title={user?.email}
                 >
-                  <Coins className="h-3.5 w-3.5 mr-1" />
-                  {user?.credits ?? 0} CR ➕ {st.buyCredits || (lang === "bn" ? "কিনুন" : "Buy")}
-                </Button>
+                  <User className="h-3 w-3 inline mr-1 opacity-60" />
+                  {user?.email}
+                </div>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={logout}
-                  className="h-8 w-8 text-muted-foreground hover:text-rose-400 shrink-0"
-                  title={st.logout || (lang === "bn" ? "লগআউট" : "Logout")}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={onOpenPaymentModal}
+                    className="flex-1 text-xs h-8 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold hover:from-amber-600 hover:to-amber-700"
+                  >
+                    <Coins className="h-3.5 w-3.5 mr-1" />
+                    {user?.credits ?? 0} CR ➕ {st.buyCredits || (lang === "bn" ? "কিনুন" : "Buy")}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={logout}
+                    className="h-8 w-8 text-muted-foreground hover:text-rose-400 shrink-0"
+                    title={st.logout || (lang === "bn" ? "লগআউট" : "Logout")}
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             </>
           )}

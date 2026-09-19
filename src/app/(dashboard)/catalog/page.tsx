@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Globe, Lock } from "lucide-react";
+import { Globe, Lock, Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DatasetCard } from "@/components/catalog/dataset-card";
 import { PrivateDatasetCard } from "@/components/catalog/private-dataset-card";
@@ -336,17 +337,30 @@ export default function CatalogPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-2xl font-extrabold text-foreground">{ct.title || "Datasets Catalog"}</h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          {ct.subtitle || "Browse verified public business leads and your private scraped datasets across Bangladesh"}
-        </p>
+      {/* Page Title & Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-foreground">{ct.title || "Datasets Catalog"}</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            {ct.subtitle || "Browse verified public business leads and your private scraped datasets across Bangladesh"}
+          </p>
+        </div>
+
+        <Button
+          data-tour="catalog-request-btn"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/scraper?tab=request")}
+          className="gap-2 text-xs font-bold border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
+        >
+          <Inbox className="h-3.5 w-3.5" />
+          {lang === "bn" ? "কাস্টম ডাটার অনুরোধ" : "Request Custom Dataset"}
+        </Button>
       </div>
 
       {/* Tabs */}
       <Tabs value={catalogTab} onValueChange={(v) => setCatalogTab(v as "public" | "private")} className="w-full">
-        <TabsList className="bg-card/60 border border-border/40 p-1">
+        <TabsList data-tour="catalog-tabs" className="bg-card/60 border border-border/40 p-1">
           <TabsTrigger value="public" className="gap-2 text-xs font-semibold">
             <Globe className="h-4 w-4 text-cyan-400" />
             {ct.tabPublic || "Public Catalog"} ({datasets.length})
@@ -374,7 +388,7 @@ export default function CatalogPage() {
             regionsConfig={regionsConfig}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div data-tour="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {datasets.map((ds) => (
               <DatasetCard
                 key={ds.id}

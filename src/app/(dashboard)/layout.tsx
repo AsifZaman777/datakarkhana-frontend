@@ -11,6 +11,8 @@ import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import { LicenseBadge } from "@/components/LicenseBadge";
 import { LicenseModal } from "@/components/LicenseModal";
 import { licenseApi } from "@/lib/api/license";
+import { TourProvider } from "@/providers/tour-provider";
+import { TourButton } from "@/components/tour/tour-button";
 
 import { useLanguage } from "@/providers/language-provider";
 
@@ -62,59 +64,62 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
-      {/* Sidebar */}
-      <Sidebar onOpenPaymentModal={() => setPaymentModalOpen(true)} />
+    <TourProvider>
+      <div className="min-h-screen flex bg-background text-foreground">
+        {/* Sidebar */}
+        <Sidebar onOpenPaymentModal={() => setPaymentModalOpen(true)} />
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-6 pt-16 lg:pt-6 lg:p-10 space-y-6 min-w-0">
-        {/* Top Desktop Bar with Status & License Badge */}
-        <div className="flex items-center justify-between pb-3 border-b border-border/30">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-medium">
-              {lang === "bn" ? "লোকাল অটোমেশন ইঞ্জিন সচল" : "Local Automation Engine"}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
-          </div>
-        </div>
-
-        {/* Admin Warning Banner for Logged-In User */}
-        {user.warning_message && (
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 shadow-lg">
-            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <div className="font-bold text-sm">
-                ⚠️ {lang === "bn" ? "সিস্টেম অ্যাডমিনিস্ট্রেটরের নোটিশ" : "Notice from System Administrator"}
-              </div>
-              <div className="text-xs text-foreground/90">{user.warning_message}</div>
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-6 pt-16 lg:pt-6 lg:p-10 space-y-6 min-w-0">
+          {/* Top Desktop Bar with Status, Tour & License Badge */}
+          <div className="flex items-center justify-between pb-3 border-b border-border/30">
+            <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-medium">
+                {lang === "bn" ? "লোকাল অটোমেশন ইঞ্জিন সচল" : "Local Automation Engine"}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <TourButton variant="topbar" />
+              <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
             </div>
           </div>
-        )}
 
-        {children}
-      </main>
+          {/* Admin Warning Banner for Logged-In User */}
+          {user.warning_message && (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 shadow-lg">
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-bold text-sm">
+                  ⚠️ {lang === "bn" ? "সিস্টেম অ্যাডমিনিস্ট্রেটরের নোটিশ" : "Notice from System Administrator"}
+                </div>
+                <div className="text-xs text-foreground/90">{user.warning_message}</div>
+              </div>
+            </div>
+          )}
 
-      {/* Payment Wizard Modal */}
-      <PaymentWizardModal
-        open={paymentModalOpen}
-        onClose={() => setPaymentModalOpen(false)}
-      />
+          {children}
+        </main>
 
-      {/* Desktop License & Renewal Modal */}
-      <LicenseModal
-        isOpen={licenseModalOpen}
-        onClose={() => setLicenseModalOpen(false)}
-        onOpenPaymentModal={() => {
-          setLicenseModalOpen(false);
-          setPaymentModalOpen(true);
-        }}
-      />
+        {/* Payment Wizard Modal */}
+        <PaymentWizardModal
+          open={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+        />
 
-      {/* Persistent Live Campaign Background Tracker */}
-      <LiveCampaignTracker />
-    </div>
+        {/* Desktop License & Renewal Modal */}
+        <LicenseModal
+          isOpen={licenseModalOpen}
+          onClose={() => setLicenseModalOpen(false)}
+          onOpenPaymentModal={() => {
+            setLicenseModalOpen(false);
+            setPaymentModalOpen(true);
+          }}
+        />
+
+        {/* Persistent Live Campaign Background Tracker */}
+        <LiveCampaignTracker />
+      </div>
+    </TourProvider>
   );
 }

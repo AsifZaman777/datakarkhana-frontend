@@ -375,11 +375,24 @@ Return ONLY updated template.`;
     });
   };
 
+  const getSelectedGroupName = (val: string) => {
+    if (!val) return "";
+    if (val.startsWith("dataset_")) {
+      const g = recipientGroups.find((item) => `dataset_${item.id}` === val);
+      if (g) return `${g.name} (${g.row_count || 0} ${lang === "bn" ? "টি লিড" : "leads"})`;
+    }
+    if (val.startsWith("job_")) {
+      const j = scrapedJobs.find((item) => `job_${item.id}` === val);
+      if (j) return `${j.query || (lang === "bn" ? "স্ক্র্যাপড লিড" : "Scraped Leads")} (${j.result_count || 0} ${lang === "bn" ? "টি লিড" : "leads"})`;
+    }
+    return val;
+  };
+
   return (
-    <Card className="glass-panel p-6 border-emerald-500/30">
+    <Card className="glass-panel border-border/50">
       <CardContent className="p-0 space-y-6">
         {/* Header with WA status */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
+        <div data-tour="marketing-whatsapp-session" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-4">
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-emerald-400" />
             <h2 className="text-lg font-bold text-foreground">
@@ -415,7 +428,7 @@ Return ONLY updated template.`;
         <form onSubmit={handleSend} className="space-y-6">
           {/* Target Group Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-            <div className="space-y-2">
+            <div data-tour="marketing-recipient-select" className="space-y-2">
               <Label className="text-xs font-semibold">
                 {m.selectTargetGroup || (lang === "bn" ? "টার্গেট লিড গ্রুপ নির্বাচন করুন *" : "Select Target Lead Group *")}
               </Label>
@@ -428,7 +441,9 @@ Return ONLY updated template.`;
                 }}
               >
                 <SelectTrigger className="text-xs h-9">
-                  <SelectValue placeholder={lang === "bn" ? "-- প্রাপক গ্রুপ বাছাই করুন --" : "-- Choose Recipient Group --"} />
+                  <SelectValue placeholder={lang === "bn" ? "-- প্রাপক গ্রুপ বাছাই করুন --" : "-- Choose Recipient Group --"}>
+                    {recipientGroup ? getSelectedGroupName(recipientGroup) : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -458,7 +473,7 @@ Return ONLY updated template.`;
             </div>
 
             {recipientGroup && (
-              <Button type="button" variant="outline" onClick={onOpenSelector} className="text-xs h-9 font-semibold">
+              <Button data-tour="marketing-inspect-btn" type="button" variant="outline" onClick={onOpenSelector} className="text-xs h-9 font-semibold">
                 {m.inspectLeadsBtn || (lang === "bn" ? "লিড বাছাই ও পরিদর্শন করুন" : "Inspect / Select Leads")} ({selectedContactsCount} / {totalContactsCount})
               </Button>
             )}
@@ -639,6 +654,7 @@ Return ONLY updated template.`;
           )}
 
           <Button
+            data-tour="marketing-send-btn"
             type="submit"
             disabled={isSubmitting || isCampaignRunning}
             className="w-full font-bold gap-2 py-5 bg-emerald-500 text-black hover:bg-emerald-600 disabled:opacity-60"

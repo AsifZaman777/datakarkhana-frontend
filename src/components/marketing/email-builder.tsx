@@ -338,6 +338,19 @@ Return ONLY updated HTML code.`;
     }
   };
 
+  const getSelectedGroupName = (val: string) => {
+    if (!val) return "";
+    if (val.startsWith("dataset_")) {
+      const g = recipientGroups.find((item) => `dataset_${item.id}` === val);
+      if (g) return `${g.name} (${g.row_count || 0} ${lang === "bn" ? "টি লিড" : "leads"})`;
+    }
+    if (val.startsWith("job_")) {
+      const j = scrapedJobs.find((item) => `job_${item.id}` === val);
+      if (j) return `${j.query || (lang === "bn" ? "স্ক্র্যাপড লিড" : "Scraped Leads")} (${j.result_count || 0} ${lang === "bn" ? "টি লিড" : "leads"})`;
+    }
+    return val;
+  };
+
   if (!isApproved) {
     return (
       <div className="space-y-6">
@@ -594,7 +607,9 @@ Return ONLY updated HTML code.`;
                   }}
                 >
                   <SelectTrigger className="text-xs h-9">
-                    <SelectValue placeholder={lang === "bn" ? "-- টার্গেট গ্রুপ বাছাই করুন --" : "-- Target Group --"} />
+                    <SelectValue placeholder={lang === "bn" ? "-- টার্গেট গ্রুপ বাছাই করুন --" : "-- Target Group --"}>
+                      {recipientGroup ? getSelectedGroupName(recipientGroup) : undefined}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
