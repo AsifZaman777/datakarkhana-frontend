@@ -12,7 +12,6 @@ import { LicenseBadge } from "@/components/LicenseBadge";
 import { LicenseModal } from "@/components/LicenseModal";
 import { licenseApi } from "@/lib/api/license";
 import { TourProvider } from "@/providers/tour-provider";
-import { TourButton } from "@/components/tour/tour-button";
 
 import { useLanguage } from "@/providers/language-provider";
 
@@ -48,7 +47,7 @@ export default function DashboardLayout({
         if (!res.data?.valid) {
           setLicenseModalOpen(true);
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, [isLoading, user, isAdmin]);
 
@@ -80,7 +79,6 @@ export default function DashboardLayout({
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <TourButton variant="topbar" />
               <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
             </div>
           </div>
