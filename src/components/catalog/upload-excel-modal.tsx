@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Upload,
   FileSpreadsheet,
@@ -13,6 +13,7 @@ import {
   Sparkles,
   Table as TableIcon,
   RefreshCw,
+  ArrowUpDown,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,6 +35,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { datasetsApi } from "@/lib/api/datasets";
 import { useLanguage } from "@/providers/language-provider";
 import { toast } from "sonner";
@@ -609,30 +626,10 @@ export function UploadExcelModal({
                   <span>Inspecting spreadsheet contents...</span>
                 </div>
               ) : previewRecords.length > 0 ? (
-                <div className="overflow-x-auto max-h-48 border border-border/30 rounded text-[11px] font-mono">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-card/70 border-b border-border/40">
-                        {previewColumns.slice(0, 7).map((col) => (
-                          <th key={col} className="p-2 font-bold text-foreground whitespace-nowrap">
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewRecords.map((row, idx) => (
-                        <tr key={idx} className="border-b border-border/20 hover:bg-card/30">
-                          {previewColumns.slice(0, 7).map((col) => (
-                            <td key={col} className="p-2 text-muted-foreground whitespace-nowrap max-w-[200px] truncate">
-                              {String(row[col] ?? "")}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ExcelPreviewTanStackTable
+                  data={previewRecords}
+                  columnsList={previewColumns}
+                />
               ) : (
                 <div className="py-6 text-center text-xs text-muted-foreground">
                   No preview rows available.
@@ -719,3 +716,82 @@ export function UploadExcelModal({
     </Dialog>
   );
 }
+
+interface ExcelPreviewTanStackTableProps {
+  data: Record<string, any>[];
+  columnsList: string[];
+}
+
+function ExcelPreviewTanStackTable({
+  data,
+  columnsList,
+}: ExcelPreviewTanStackTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo<ColumnDef<Record<string, any>>[]>(() => {
+    return columnsList.slice(0, 10).map((colKey) => ({
+      id: colKey,
+      accessorFn: (row) => row[colKey],
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-7 px-2 text-[11px] font-semibold hover:bg-transparent"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span className="truncate max-w-[120px]">{colKey}</span>
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      ),
+      cell: ({ getValue }) => {
+        const val = getValue();
+        return (
+          <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap max-w-[200px] truncate block">
+            {val !== null && val !== undefined ? String(val) : ""}
+          </span>
+        );
+      },
+    }));
+  }, [columnsList]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  return (
+    <div className="overflow-x-auto max-h-48 border border-border/30 rounded bg-background/40">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id} className="py-1.5 px-3">
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id} className="border-b border-border/20 hover:bg-card/40">
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id} className="py-1.5 px-3">
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff, FolderOpen, SlidersHorizontal, HardDrive, Database } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff, FolderOpen, SlidersHorizontal, HardDrive, Database, ArrowUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,14 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { adminApi } from "@/lib/api/admin";
 import { marketingApi } from "@/lib/api/marketing";
 import { datasetsApi } from "@/lib/api/datasets";
@@ -264,6 +272,461 @@ export function UserManagement({
     return Math.max(0, current - parsed);
   };
 
+  // TanStack Table setup for Users
+  const [userSorting, setUserSorting] = useState<SortingState>([]);
+
+  const userColumns = useMemo<ColumnDef<User>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "আইডি #" : "ID #"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-muted-foreground">
+            #{row.original.id}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "গ্রাহকের ইমেইল / নাম" : "Customer Email / Name"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <div className="text-xs font-semibold">
+              <div className="flex items-center gap-2">
+                <span>{u.email}</span>
+                {u.brevo_account_status === "email_verified" && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] border-cyan-500/40 text-cyan-400 font-mono"
+                  >
+                    {lang === "bn" ? "ইমেইল ভেরিফাইড" : "Email Verified"}
+                  </Badge>
+                )}
+                {u.brevo_account_status === "approved" && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] border-emerald-500/40 text-emerald-400 font-mono"
+                  >
+                    {lang === "bn" ? "API সক্রিয়" : "API Active"}
+                  </Badge>
+                )}
+                {u.brevo_account_status === "pending_email_verification" && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] border-amber-500/40 text-amber-400 font-mono"
+                  >
+                    {lang === "bn" ? "ইমেইল প্রেরিত" : "Brevo Email Sent"}
+                  </Badge>
+                )}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                {u.full_name}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "role",
+        header: lang === "bn" ? "রোল" : "Role",
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <Select
+              value={u.role}
+              onValueChange={(role) =>
+                role && setRoleTarget({ userId: u.id, role })
+              }
+            >
+              <SelectTrigger className="h-7 text-[11px] w-[110px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+              </SelectContent>
+            </Select>
+          );
+        },
+      },
+      {
+        accessorKey: "credits",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "ক্রেডিট ব্যালেন্স" : "Credits Balance"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-bold text-amber-500">
+            {row.original.credits} CR
+          </span>
+        ),
+      },
+      {
+        id: "status",
+        header: lang === "bn" ? "স্ট্যাটাস / ওয়ার্নিং" : "Status / Warning",
+        cell: ({ row }) => {
+          const u = row.original;
+          return u.is_banned === 1 ? (
+            <Badge variant="destructive" className="text-[10px]">
+              {lang === "bn" ? "ব্যানড" : "BANNED"}
+            </Badge>
+          ) : u.warning_message ? (
+            <Badge
+              variant="outline"
+              className="text-[10px] text-amber-500 border-amber-500/40"
+            >
+              {lang === "bn" ? "সতর্কবার্তা জারি" : "Warning Issued"}
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="text-[10px] text-emerald-400 border-emerald-500/40"
+            >
+              {lang === "bn" ? "সক্রিয়" : "Active"}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "quota",
+        header: () => (
+          <div className="text-center">
+            {lang === "bn" ? "প্ল্যান ও ক্লাউড কোটা" : "Plan & Cloud Quota"}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <div className="flex flex-col items-center gap-1.5">
+              <Badge
+                variant="outline"
+                className={`text-[9px] uppercase tracking-wider font-mono font-bold ${
+                  u.role === "admin" || u.role === "superadmin"
+                    ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
+                    : u.plan_tier === "enterprise"
+                    ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
+                    : u.plan_tier === "pro"
+                    ? "border-cyan-500/40 text-cyan-400 bg-cyan-500/10"
+                    : "border-border/60 text-muted-foreground bg-card/40"
+                }`}
+              >
+                {u.role === "admin" || u.role === "superadmin"
+                  ? "Admin"
+                  : u.plan_tier === "enterprise"
+                  ? "Enterprise"
+                  : u.plan_tier === "pro"
+                  ? "Pro Growth"
+                  : "Starter"}
+              </Badge>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isTogglingSync === u.id}
+                  onClick={() => handleToggleSync(u)}
+                  className={`h-6 text-[10px] px-2 gap-1 rounded-full transition-all ${
+                    u.allow_sync === 1
+                      ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+                      : "border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={
+                    u.allow_sync === 1
+                      ? "Custom Cloud Sync is Enabled. Click to disable."
+                      : "Custom Cloud Sync is Disabled. Click to grant sync permission."
+                  }
+                >
+                  {u.allow_sync === 1 ? (
+                    <>
+                      <Cloud className="h-3 w-3 text-emerald-400" />
+                      <span>{lang === "bn" ? "অনুমোদিত" : "Allowed"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CloudOff className="h-3 w-3" />
+                      <span>{lang === "bn" ? "বন্ধ" : "Off"}</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenLimitModal(u)}
+                  className="h-6 text-[10px] px-1.5 font-mono border-border/50 hover:border-primary/50 text-muted-foreground hover:text-foreground gap-1"
+                  title="Set user max upload/sync file limit"
+                >
+                  <SlidersHorizontal className="h-2.5 w-2.5" />
+                  <span>
+                    {u.synced_files_count ?? 0}/
+                    {u.max_sync_files === 0
+                      ? "∞"
+                      : u.max_sync_files ?? 5}
+                  </span>
+                </Button>
+              </div>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleOpenUserDatasets(u)}
+                className="h-5 text-[10px] text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-1.5 gap-1"
+                title="Inspect cloud datasets uploaded by this user"
+              >
+                <FolderOpen className="h-3 w-3" />
+                <span>
+                  {lang === "bn"
+                    ? `সিঙ্ককৃত ফাইল (${u.synced_files_count ?? 0})`
+                    : `View Synced (${u.synced_files_count ?? 0})`}
+                </span>
+              </Button>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => (
+          <div className="text-right">
+            {lang === "bn"
+              ? "অ্যাকশন (ক্রেডিট / ব্রেভো / নোটিশ / ব্যান)"
+              : "Actions (Credits / Brevo API / Notice / Ban)"}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <div className="flex justify-end items-center gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleOpenCreditModal(u, "add")}
+                className="h-7 text-[11px] px-2 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 gap-1 font-bold"
+                title="Add Credits (+)"
+              >
+                CR
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleOpenBrevoModal(u)}
+                className="h-7 text-[11px] px-2 text-purple-400 border-purple-500/40 hover:bg-purple-500/10 gap-1 font-mono"
+                title="Brevo API Key & Daily Limits"
+              >
+                <Key className="h-3 w-3" /> Brevo
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onOpenWarningModal(u)}
+                className="h-7 text-[11px] px-2 text-purple-400 border-purple-500/40 hover:bg-purple-500/10 gap-1"
+                title="Issue Notice Warning"
+              >
+                <AlertTriangle className="h-3 w-3" />{" "}
+                {lang === "bn" ? "নোটিশ" : "Warning"}
+              </Button>
+
+              <Button
+                size="sm"
+                variant={u.is_banned === 1 ? "outline" : "destructive"}
+                onClick={() => setBanTarget(u)}
+                className="h-7 text-[11px] px-2 gap-1"
+              >
+                {u.is_banned === 1 ? (
+                  <UserCheck className="h-3 w-3" />
+                ) : (
+                  <ShieldAlert className="h-3 w-3" />
+                )}
+                {u.is_banned === 1
+                  ? lang === "bn"
+                    ? "আনব্যান"
+                    : "Unban"
+                  : lang === "bn"
+                  ? "ব্যান"
+                  : "Ban"}
+              </Button>
+
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setDeleteTarget(u)}
+                className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                title="Delete Account"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [isTogglingSync, lang, onOpenWarningModal]
+  );
+
+  const userTable = useReactTable({
+    data: users,
+    columns: userColumns,
+    state: { sorting: userSorting },
+    onSortingChange: setUserSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  // TanStack Table setup for Inspect User Datasets Modal
+  const [datasetSorting, setDatasetSorting] = useState<SortingState>([]);
+
+  const datasetColumns = useMemo<ColumnDef<UserUploadedDataset>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "ডাটাবেসের নাম" : "Dataset Name"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const d = row.original;
+          return (
+            <div className="text-xs font-medium">
+              <div className="truncate max-w-[200px]" title={d.name}>{d.name}</div>
+              {d.file_path && (
+                <div className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">
+                  {d.file_path}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "category",
+        header: lang === "bn" ? "ক্যাটাগরি" : "Category",
+        cell: ({ row }) => (
+          <span className="text-xs">
+            {row.original.category || (lang === "bn" ? "স্ক্র্যাপড" : "Scraped")}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "row_count",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "রেকর্ড সংখ্যা" : "Records"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs font-mono">
+            {row.original.row_count.toLocaleString()} {lang === "bn" ? "সারি" : "rows"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "created_at",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "আপলোডের তারিখ" : "Uploaded"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {new Date(row.original.created_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US")}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => (
+          <div className="text-right">
+            {lang === "bn" ? "অ্যাকশন" : "Actions"}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const d = row.original;
+          return (
+            <div className="text-right">
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={isDesyncingId === d.id}
+                onClick={() => handleAdminDesync(d.id)}
+                className="h-7 text-[11px] px-2 gap-1"
+                title="Desync from cloud (removes from Supabase bucket & cloud DB, keeps user local file)"
+              >
+                <CloudOff className="h-3 w-3" />
+                {isDesyncingId === d.id
+                  ? lang === "bn"
+                    ? "ডিসিঙ্ক হচ্ছে..."
+                    : "Desyncing..."
+                  : lang === "bn"
+                  ? "ডিসিঙ্ক"
+                  : "Desync"}
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [isDesyncingId, lang]
+  );
+
+  const datasetTable = useReactTable({
+    data: userDatasets,
+    columns: datasetColumns,
+    state: { sorting: datasetSorting },
+    onSortingChange: setDatasetSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
@@ -360,268 +823,26 @@ export function UserManagement({
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">
-                  {lang === "bn" ? "আইডি #" : "ID #"}
-                </TableHead>
-                <TableHead>
-                  {lang === "bn" ? "গ্রাহকের ইমেইল / নাম" : "Customer Email / Name"}
-                </TableHead>
-                <TableHead>{lang === "bn" ? "রোল" : "Role"}</TableHead>
-                <TableHead>
-                  {lang === "bn" ? "ক্রেডিট ব্যালেন্স" : "Credits Balance"}
-                </TableHead>
-                <TableHead>
-                  {lang === "bn" ? "স্ট্যাটাস / ওয়ার্নিং" : "Status / Warning"}
-                </TableHead>
-                <TableHead className="w-52 text-center">
-                  {lang === "bn" ? "প্ল্যান ও ক্লাউড কোটা" : "Plan & Cloud Quota"}
-                </TableHead>
-                <TableHead className="w-72 text-right">
-                  {lang === "bn"
-                    ? "অ্যাকশন (ক্রেডিট / ব্রেভো / নোটিশ / ব্যান)"
-                    : "Actions (Credits / Brevo API / Notice / Ban)"}
-                </TableHead>
-              </TableRow>
+              {userTable.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold py-2.5">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    #{u.id}
-                  </TableCell>
-                  <TableCell className="text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <span>{u.email}</span>
-                      {u.brevo_account_status === "email_verified" && (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] border-cyan-500/40 text-cyan-400 font-mono"
-                        >
-                          {lang === "bn" ? "ইমেইল ভেরিফাইড" : "Email Verified"}
-                        </Badge>
-                      )}
-                      {u.brevo_account_status === "approved" && (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] border-emerald-500/40 text-emerald-400 font-mono"
-                        >
-                          {lang === "bn" ? "API সক্রিয়" : "API Active"}
-                        </Badge>
-                      )}
-                      {u.brevo_account_status ===
-                        "pending_email_verification" && (
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] border-amber-500/40 text-amber-400 font-mono"
-                        >
-                          {lang === "bn"
-                            ? "ইমেইল প্রেরিত"
-                            : "Brevo Email Sent"}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {u.full_name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    <Select
-                      value={u.role}
-                      onValueChange={(role) =>
-                        role && setRoleTarget({ userId: u.id, role })
-                      }
-                    >
-                      <SelectTrigger className="h-7 text-[11px] w-[110px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="superadmin">Superadmin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs font-bold text-amber-500">
-                    {u.credits} CR
-                  </TableCell>
-                  <TableCell>
-                    {u.is_banned === 1 ? (
-                      <Badge variant="destructive" className="text-[10px]">
-                        {lang === "bn" ? "ব্যানড" : "BANNED"}
-                      </Badge>
-                    ) : u.warning_message ? (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] text-amber-500 border-amber-500/40"
-                      >
-                        {lang === "bn" ? "সতর্কবার্তা জারি" : "Warning Issued"}
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] text-emerald-400 border-emerald-500/40"
-                      >
-                        {lang === "bn" ? "সক্রিয়" : "Active"}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Badge
-                        variant="outline"
-                        className={`text-[9px] uppercase tracking-wider font-mono font-bold ${
-                          u.role === "admin" || u.role === "superadmin"
-                            ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
-                            : u.plan_tier === "enterprise"
-                            ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
-                            : u.plan_tier === "pro"
-                            ? "border-cyan-500/40 text-cyan-400 bg-cyan-500/10"
-                            : "border-border/60 text-muted-foreground bg-card/40"
-                        }`}
-                      >
-                        {u.role === "admin" || u.role === "superadmin"
-                          ? "Admin"
-                          : u.plan_tier === "enterprise"
-                          ? "Enterprise"
-                          : u.plan_tier === "pro"
-                          ? "Pro Growth"
-                          : "Starter"}
-                      </Badge>
-
-                      {/* Cloud Sync Status & Quota Controls */}
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isTogglingSync === u.id}
-                          onClick={() => handleToggleSync(u)}
-                          className={`h-6 text-[10px] px-2 gap-1 rounded-full transition-all ${
-                            u.allow_sync === 1
-                              ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
-                              : "border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
-                          }`}
-                          title={
-                            u.allow_sync === 1
-                              ? "Custom Cloud Sync is Enabled. Click to disable."
-                              : "Custom Cloud Sync is Disabled. Click to grant sync permission."
-                          }
-                        >
-                          {u.allow_sync === 1 ? (
-                            <>
-                              <Cloud className="h-3 w-3 text-emerald-400" />
-                              <span>{lang === "bn" ? "অনুমোদিত" : "Allowed"}</span>
-                            </>
-                          ) : (
-                            <>
-                              <CloudOff className="h-3 w-3" />
-                              <span>{lang === "bn" ? "বন্ধ" : "Off"}</span>
-                            </>
-                          )}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenLimitModal(u)}
-                          className="h-6 text-[10px] px-1.5 font-mono border-border/50 hover:border-primary/50 text-muted-foreground hover:text-foreground gap-1"
-                          title="Set user max upload/sync file limit"
-                        >
-                          <SlidersHorizontal className="h-2.5 w-2.5" />
-                          <span>
-                            {u.synced_files_count ?? 0}/
-                            {u.max_sync_files === 0
-                              ? "∞"
-                              : u.max_sync_files ?? 5}
-                          </span>
-                        </Button>
-                      </div>
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleOpenUserDatasets(u)}
-                        className="h-5 text-[10px] text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-1.5 gap-1"
-                        title="Inspect cloud datasets uploaded by this user"
-                      >
-                        <FolderOpen className="h-3 w-3" />
-                        <span>
-                          {lang === "bn"
-                            ? `সিঙ্ককৃত ফাইল (${u.synced_files_count ?? 0})`
-                            : `View Synced (${u.synced_files_count ?? 0})`}
-                        </span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-1.5">
-                      {/* ADD CREDITS BUTTON */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleOpenCreditModal(u, "add")}
-                        className="h-7 text-[11px] px-2 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/10 gap-1 font-bold"
-                        title="Add Credits (+)"
-                      >
-                        CR
-                      </Button>
-
-                      {/* BREVO CONFIG BUTTON */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleOpenBrevoModal(u)}
-                        className="h-7 text-[11px] px-2 text-purple-400 border-purple-500/40 hover:bg-purple-500/10 gap-1 font-mono"
-                        title="Brevo API Key & Daily Limits"
-                      >
-                        <Key className="h-3 w-3" /> Brevo
-                      </Button>
-
-                      {/* WARNING BUTTON */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onOpenWarningModal(u)}
-                        className="h-7 text-[11px] px-2 text-purple-400 border-purple-500/40 hover:bg-purple-500/10 gap-1"
-                        title="Issue Notice Warning"
-                      >
-                        <AlertTriangle className="h-3 w-3" />{" "}
-                        {lang === "bn" ? "নোটিশ" : "Warning"}
-                      </Button>
-
-                      {/* BAN BUTTON */}
-                      <Button
-                        size="sm"
-                        variant={u.is_banned === 1 ? "outline" : "destructive"}
-                        onClick={() => setBanTarget(u)}
-                        className="h-7 text-[11px] px-2 gap-1"
-                      >
-                        {u.is_banned === 1 ? (
-                          <UserCheck className="h-3 w-3" />
-                        ) : (
-                          <ShieldAlert className="h-3 w-3" />
-                        )}
-                        {u.is_banned === 1
-                          ? lang === "bn"
-                            ? "আনব্যান"
-                            : "Unban"
-                          : lang === "bn"
-                          ? "ব্যান"
-                          : "Ban"}
-                      </Button>
-
-                      {/* DELETE BUTTON */}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setDeleteTarget(u)}
-                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                        title="Delete Account"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
+              {userTable.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="border-b border-border/20 hover:bg-muted/30">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="py-2.5">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
@@ -991,57 +1212,26 @@ export function UserManagement({
               <div className="rounded-md border border-border/40 overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs">
-                        {lang === "bn" ? "ডাটাবেসের নাম" : "Dataset Name"}
-                      </TableHead>
-                      <TableHead className="text-xs">
-                        {lang === "bn" ? "ক্যাটাগরি" : "Category"}
-                      </TableHead>
-                      <TableHead className="text-xs">
-                        {lang === "bn" ? "রেকর্ড সংখ্যা" : "Records"}
-                      </TableHead>
-                      <TableHead className="text-xs">
-                        {lang === "bn" ? "আপলোডের তারিখ" : "Uploaded"}
-                      </TableHead>
-                      <TableHead className="text-xs text-right">
-                        {lang === "bn" ? "অ্যাকশন" : "Actions"}
-                      </TableHead>
-                    </TableRow>
+                    {datasetTable.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id} className="text-xs font-semibold py-2.5">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
                   </TableHeader>
                   <TableBody>
-                    {userDatasets.map((d) => (
-                      <TableRow key={d.id}>
-                        <TableCell className="text-xs font-medium">
-                          <div className="truncate max-w-[200px]" title={d.name}>{d.name}</div>
-                          {d.file_path && <div className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">{d.file_path}</div>}
-                        </TableCell>
-                        <TableCell className="text-xs">{d.category || (lang === "bn" ? "স্ক্র্যাপড" : "Scraped")}</TableCell>
-                        <TableCell className="text-xs font-mono">
-                          {d.row_count.toLocaleString()} {lang === "bn" ? "সারি" : "rows"}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {new Date(d.created_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={isDesyncingId === d.id}
-                            onClick={() => handleAdminDesync(d.id)}
-                            className="h-7 text-[11px] px-2 gap-1"
-                            title="Desync from cloud (removes from Supabase bucket & cloud DB, keeps user local file)"
-                          >
-                            <CloudOff className="h-3 w-3" />
-                            {isDesyncingId === d.id
-                              ? lang === "bn"
-                                ? "ডিসিঙ্ক হচ্ছে..."
-                                : "Desyncing..."
-                              : lang === "bn"
-                              ? "ডিসিঙ্ক"
-                              : "Desync"}
-                          </Button>
-                        </TableCell>
+                    {datasetTable.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} className="border-b border-border/20 hover:bg-muted/30">
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="py-2.5">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </TableBody>

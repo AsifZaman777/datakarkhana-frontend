@@ -1,16 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Send, Phone, MapPin, ExternalLink } from "lucide-react";
+import { Search, Download, Send, Phone, MapPin, ArrowUpDown } from "lucide-react";
 import { scraperApi, type ScrapedDataItem } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 
 interface ScrapedDataModalProps {
   jobId: number | null;
@@ -23,7 +32,8 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ScrapedDataItem[]>([]);
   const [query, setQuery] = useState("");
-  const [searchFilter, setSearchFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
     if (!open || !jobId) return;
@@ -35,25 +45,127 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
         setData(res.data.data || []);
         setQuery(res.data.query || "Scraped Dataset");
       })
-      .catch((err) => {
+      .catch(() => {
         toast.error("Failed to load scraped data records.");
         setData([]);
       })
       .finally(() => setLoading(false));
   }, [open, jobId]);
 
-  const filteredData = data.filter((item) => {
-    if (!searchFilter.trim()) return true;
-    const term = searchFilter.toLowerCase();
-    return (
-      (item.Name && item.Name.toLowerCase().includes(term)) ||
-      (item.Phone && item.Phone.toLowerCase().includes(term)) ||
-      (item.Category && item.Category.toLowerCase().includes(term)) ||
-      (item.Address && item.Address.toLowerCase().includes(term))
-    );
+  const columns = useMemo<ColumnDef<ScrapedDataItem>[]>(
+    () => [
+      {
+        accessorKey: "Name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-ml-3 h-8 text-xs font-bold text-foreground hover:bg-transparent"
+          >
+            Business Name
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="font-semibold text-foreground max-w-[200px] truncate block">
+            {row.original.Name || "N/A"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "Phone",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-ml-3 h-8 text-xs font-bold text-foreground hover:bg-transparent"
+          >
+            Phone Number
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const phone = row.original.Phone;
+          return (
+            <span className="font-mono">
+              {phone ? (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  {phone}
+                </span>
+              ) : (
+                <span className="text-muted-foreground/60 italic text-[11px]">No Phone</span>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "Category",
+        header: "Category",
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{row.original.Category || "N/A"}</span>
+        ),
+      },
+      {
+        accessorKey: "Rating",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-ml-3 h-8 text-xs font-bold text-foreground hover:bg-transparent"
+          >
+            Rating
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-amber-400 font-mono">{row.original.Rating || "-"}</span>
+        ),
+      },
+      {
+        accessorKey: "Address",
+        header: "Address",
+        cell: ({ row }) => {
+          const addr = row.original.Address;
+          return (
+            <span className="text-muted-foreground max-w-[220px] truncate block">
+              {addr ? (
+                <span className="flex items-center gap-1" title={addr}>
+                  <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                  <span className="truncate">{addr}</span>
+                </span>
+              ) : (
+                "-"
+              )}
+            </span>
+          );
+        },
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const withPhoneCount = data.filter((d) => d.Phone && d.Phone.trim().length > 3).length;
+  const withPhoneCount = useMemo(
+    () => data.filter((d) => d.Phone && d.Phone.trim().length > 3).length,
+    [data]
+  );
 
   const handleUseInCampaign = () => {
     if (!jobId) return;
@@ -66,6 +178,8 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
     const url = scraperApi.downloadJobUrl(jobId);
     window.open(url, "_blank");
   };
+
+  const totalFilteredRows = table.getRowModel().rows.length;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -86,9 +200,9 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by business name, phone, or area..."
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="Search across all fields..."
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
               className="pl-9 h-9 text-xs"
             />
           </div>
@@ -104,51 +218,36 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
         <div className="flex-1 overflow-y-auto border border-border/40 rounded-lg bg-black/40">
           {loading ? (
             <LoadingBackdrop variant="inline" label="Loading scraped dataset records..." color="cyan" size="sm" />
-          ) : filteredData.length > 0 ? (
+          ) : totalFilteredRows > 0 ? (
             <Table>
-              <TableHeader className="bg-muted/30 sticky top-0 backdrop-blur">
-                <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="text-xs font-bold text-foreground">Business Name</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Phone Number</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Category</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Rating</TableHead>
-                  <TableHead className="text-xs font-bold text-foreground">Address</TableHead>
-                </TableRow>
+              <TableHeader className="bg-muted/30 sticky top-0 backdrop-blur z-10">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-border/40 hover:bg-transparent">
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className="text-xs font-bold text-foreground py-2.5">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
               </TableHeader>
               <TableBody>
-                {filteredData.map((row, idx) => (
-                  <TableRow key={idx} className="border-border/20 hover:bg-cyan-500/5 text-xs">
-                    <TableCell className="font-semibold text-foreground max-w-[200px] truncate">
-                      {row.Name || "N/A"}
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {row.Phone ? (
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          {row.Phone}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground/60 italic text-[11px]">No Phone</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{row.Category || "N/A"}</TableCell>
-                    <TableCell className="text-amber-400 font-mono">{row.Rating || "-"}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-[220px] truncate">
-                      {row.Address ? (
-                        <span className="flex items-center gap-1" title={row.Address}>
-                          <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                          <span className="truncate">{row.Address}</span>
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="border-border/20 hover:bg-cyan-500/5 text-xs">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
             <div className="text-center py-16 text-xs text-muted-foreground">
-              {searchFilter ? "No matching records found for search filter." : "No records found in this dataset."}
+              {globalFilter ? "No matching records found for search filter." : "No records found in this dataset."}
             </div>
           )}
         </div>
@@ -156,7 +255,7 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
         {/* Footer Actions */}
         <div className="pt-4 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="text-xs text-muted-foreground font-mono">
-            Total Displayed: <span className="text-foreground font-bold">{filteredData.length}</span> items
+            Total Displayed: <span className="text-foreground font-bold">{totalFilteredRows}</span> items
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">

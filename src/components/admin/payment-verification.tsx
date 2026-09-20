@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Key, Copy, Check, Calendar, MessageSquare, ShieldCheck } from "lucide-react";
+import { CheckCircle2, XCircle, Key, Copy, Check, Calendar, MessageSquare, ShieldCheck, ArrowUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,15 @@ import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
 import type { PaymentRequest } from "@/lib/types";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useMemo } from "react";
 
 interface PaymentVerificationProps {
   requests: PaymentRequest[];
@@ -125,6 +134,180 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
     toast.success("Ready-to-send WhatsApp message copied!");
   };
 
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo<ColumnDef<PaymentRequest>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-ml-3 h-8 text-xs font-bold text-foreground hover:bg-transparent"
+          >
+            {lang === "bn" ? "আইডি #" : "ID #"}
+            <ArrowUpDown className="ml-1 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-muted-foreground">
+            #{row.original.id}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "user_email",
+        header: lang === "bn" ? "গ্রাহক ইমেইল / নাম" : "Customer Email / Name",
+        cell: ({ row }) => (
+          <div className="text-xs font-semibold">
+            <div>{row.original.user_email}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {row.original.full_name || (lang === "bn" ? "গ্রাহক" : "Customer")}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "package_name",
+        header: lang === "bn" ? "প্যাকেজ" : "Package Requested",
+        cell: ({ row }) => (
+          <div className="text-xs font-bold text-cyan-400">
+            <div>{row.original.package_name}</div>
+            <div className="text-[10px] text-muted-foreground font-mono">
+              ৳{row.original.amount_bdt} BDT
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "payment_method",
+        header: lang === "bn" ? "মাধ্যম ও প্রেরক" : "Method & Sender",
+        cell: ({ row }) => (
+          <div className="text-xs font-mono">
+            <div className="uppercase font-bold text-amber-500">{row.original.payment_method}</div>
+            <div className="text-[10px] text-muted-foreground">{row.original.bkash_number}</div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "transaction_id",
+        header: lang === "bn" ? "ট্রানজেকশন আইডি (TrxID)" : "Transaction ID (TrxID)",
+        cell: ({ row }) => (
+          <span className="font-mono text-xs font-bold text-foreground tracking-wider">
+            {row.original.transaction_id}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "production_key",
+        header: lang === "bn" ? "প্রোডাকশন লাইসেন্স কি" : "Production License Key",
+        cell: ({ row }) => {
+          const req = row.original;
+          return req.production_key ? (
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-bold">
+                {req.production_key}
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                onClick={() => copyToClipboard(req.production_key!, `row-${req.id}`)}
+                title={lang === "bn" ? "প্রোডাকশন কি কপি করুন" : "Copy Production Key"}
+              >
+                {copiedKey === `row-${req.id}` ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
+          ) : (
+            <span className="text-[11px] text-muted-foreground italic">
+              {lang === "bn" ? "ইস্যু করা হয়নি" : "None issued"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: lang === "bn" ? "স্ট্যাটাস" : "Status",
+        cell: ({ row }) => {
+          const status = row.original.status;
+          return (
+            <>
+              {status === "pending" && (
+                <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
+                  {lang === "bn" ? "রিভিউ বাকি" : "Pending Review"}
+                </Badge>
+              )}
+              {status === "approved" && (
+                <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
+                  {lang === "bn" ? "অনুমোদিত" : "Approved"}
+                </Badge>
+              )}
+              {status === "rejected" && (
+                <Badge variant="outline" className="border-destructive/40 text-destructive text-[10px]">
+                  {lang === "bn" ? "বাতিল" : "Rejected"}
+                </Badge>
+              )}
+            </>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => (
+          <div className="text-right pr-2">
+            {lang === "bn" ? "অ্যাকশন" : "Actions"}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const req = row.original;
+          return req.status === "pending" ? (
+            <div className="flex justify-end gap-1">
+              <Button
+                size="sm"
+                onClick={() => openApproveModal(req)}
+                className="h-7 text-[11px] px-2.5 bg-emerald-500 text-black font-bold hover:bg-emerald-600 gap-1.5 shadow-sm"
+              >
+                <Key className="h-3 w-3" /> {lang === "bn" ? "অনুমোদন ও কি" : "Approve & Key"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setRejectTargetId(req.id)}
+                className="h-7 text-[11px] px-2 gap-1"
+              >
+                <XCircle className="h-3 w-3" /> {lang === "bn" ? "বাতিল" : "Reject"}
+              </Button>
+            </div>
+          ) : (
+            <div className="text-right pr-2">
+              <span className="text-[10px] text-muted-foreground italic">
+                {lang === "bn" ? "সম্পন্ন" : "Processed"}
+              </span>
+            </div>
+          );
+        },
+      },
+    ],
+    [lang, copiedKey]
+  );
+
+  const table = useReactTable({
+    data: requests,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
@@ -143,114 +326,36 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">{lang === "bn" ? "আইডি #" : "ID #"}</TableHead>
-                <TableHead>{lang === "bn" ? "গ্রাহক ইমেইল / নাম" : "Customer Email / Name"}</TableHead>
-                <TableHead>{lang === "bn" ? "প্যাকেজ" : "Package Requested"}</TableHead>
-                <TableHead>{lang === "bn" ? "মাধ্যম ও প্রেরক" : "Method & Sender"}</TableHead>
-                <TableHead>{lang === "bn" ? "ট্রানজেকশন আইডি (TrxID)" : "Transaction ID (TrxID)"}</TableHead>
-                <TableHead>{lang === "bn" ? "প্রোডাকশন লাইসেন্স কি" : "Production License Key"}</TableHead>
-                <TableHead>{lang === "bn" ? "স্ট্যাটাস" : "Status"}</TableHead>
-                <TableHead className="w-32 text-right">{lang === "bn" ? "অ্যাকশন" : "Actions"}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">#{req.id}</TableCell>
-                  <TableCell className="text-xs font-semibold">
-                    <div>{req.user_email}</div>
-                    <div className="text-[10px] text-muted-foreground">{req.full_name || (lang === "bn" ? "গ্রাহক" : "Customer")}</div>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-cyan-400">
-                    <div>{req.package_name}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono">৳{req.amount_bdt} BDT</div>
-                  </TableCell>
-                  <TableCell className="text-xs font-mono">
-                    <div className="uppercase font-bold text-amber-500">{req.payment_method}</div>
-                    <div className="text-[10px] text-muted-foreground">{req.bkash_number}</div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs font-bold text-foreground tracking-wider">
-                    {req.transaction_id}
-                  </TableCell>
-                  <TableCell>
-                    {req.production_key ? (
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-bold">
-                          {req.production_key}
-                        </span>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                          onClick={() => copyToClipboard(req.production_key!, `row-${req.id}`)}
-                          title={lang === "bn" ? "প্রোডাকশন কি কপি করুন" : "Copy Production Key"}
-                        >
-                          {copiedKey === `row-${req.id}` ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground italic">
-                        {lang === "bn" ? "ইস্যু করা হয়নি" : "None issued"}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {req.status === "pending" && (
-                      <Badge variant="outline" className="border-amber-500/40 text-amber-500 text-[10px]">
-                        {lang === "bn" ? "রিভিউ বাকি" : "Pending Review"}
-                      </Badge>
-                    )}
-                    {req.status === "approved" && (
-                      <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                        {lang === "bn" ? "অনুমোদিত" : "Approved"}
-                      </Badge>
-                    )}
-                    {req.status === "rejected" && (
-                      <Badge variant="outline" className="border-destructive/40 text-destructive text-[10px]">
-                        {lang === "bn" ? "বাতিল" : "Rejected"}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {req.status === "pending" ? (
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="sm"
-                          onClick={() => openApproveModal(req)}
-                          className="h-7 text-[11px] px-2.5 bg-emerald-500 text-black font-bold hover:bg-emerald-600 gap-1.5 shadow-sm"
-                        >
-                          <Key className="h-3 w-3" /> {lang === "bn" ? "অনুমোদন ও কি" : "Approve & Key"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setRejectTargetId(req.id)}
-                          className="h-7 text-[11px] px-2 gap-1"
-                        >
-                          <XCircle className="h-3 w-3" /> {lang === "bn" ? "বাতিল" : "Reject"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground italic">
-                        {lang === "bn" ? "সম্পন্ন" : "Processed"}
-                      </span>
-                    )}
-                  </TableCell>
+            <TableHeader className="bg-muted/30 sticky top-0 backdrop-blur z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-border/40 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-bold text-foreground py-2.5">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
-
-              {requests.length === 0 && (
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
+                  <TableCell colSpan={columns.length} className="text-center py-12 text-xs text-muted-foreground">
                     {lang === "bn" ? "কোনো পেমেন্ট ভেরিফিকেশন রিকোয়েস্ট নেই।" : "No payment verification requests found."}
                   </TableCell>
                 </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="border-border/20 text-xs hover:bg-muted/30 transition-colors">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Users,
   DollarSign,
@@ -16,6 +16,7 @@ import {
   Eye,
   HardDrive,
   ShieldCheck,
+  ArrowUpDown,
 } from "lucide-react";
 import {
   PieChart,
@@ -43,6 +44,14 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   Sheet,
   SheetContent,
@@ -701,88 +710,11 @@ export function AdminDashboard() {
             </div>
           ) : (
             <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {lang === "bn" ? "ব্যবহারকারী" : "User"}
-                    </TableHead>
-                    <TableHead>{lang === "bn" ? "রোল" : "Role"}</TableHead>
-                    <TableHead className="text-center">
-                      {lang === "bn" ? "ক্রেডিট" : "Credits"}
-                    </TableHead>
-                    <TableHead className="text-center">
-                      {lang === "bn" ? "মোট ডাটাবেস" : "Total Datasets"}
-                    </TableHead>
-                    <TableHead className="text-center">
-                      {lang === "bn" ? "সম্পন্ন" : "Completed"}
-                    </TableHead>
-                    <TableHead className="text-center">
-                      {lang === "bn" ? "মোট সারি" : "Total Rows"}
-                    </TableHead>
-                    <TableHead className="w-20 text-right">
-                      {lang === "bn" ? "অ্যাকশন" : "Actions"}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.users_with_datasets.map((u) => (
-                    <TableRow
-                      key={u.user_id}
-                      className="cursor-pointer hover:bg-primary/5 transition-colors"
-                      onClick={() => openUserDatasets(u)}
-                    >
-                      <TableCell>
-                        <div className="text-xs font-semibold text-foreground">
-                          {u.full_name}
-                        </div>
-                        <div className="text-[10px] text-muted-foreground">
-                          {u.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] ${
-                            u.role === "superadmin"
-                              ? "border-purple-500/40 text-purple-400"
-                              : u.role === "admin"
-                              ? "border-rose-500/40 text-rose-400"
-                              : "border-border/40 text-muted-foreground"
-                          }`}
-                        >
-                          {u.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center text-xs font-mono font-bold text-amber-500">
-                        {u.credits}
-                      </TableCell>
-                      <TableCell className="text-center text-xs font-bold text-foreground">
-                        {u.total_datasets}
-                      </TableCell>
-                      <TableCell className="text-center text-xs font-bold text-emerald-400">
-                        {u.completed_datasets}
-                      </TableCell>
-                      <TableCell className="text-center text-xs font-mono text-muted-foreground">
-                        {u.total_rows.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openUserDatasets(u);
-                          }}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <UsersWithDatasetsTable
+                users={data.users_with_datasets}
+                openUserDatasets={openUserDatasets}
+                lang={lang}
+              />
             </div>
           )}
         </CardContent>
@@ -952,3 +884,222 @@ export function AdminDashboard() {
     </div>
   );
 }
+
+interface UsersWithDatasetsTableProps {
+  users: UserDatasetSummary[];
+  openUserDatasets: (user: UserDatasetSummary) => void;
+  lang: string;
+}
+
+function UsersWithDatasetsTable({
+  users,
+  openUserDatasets,
+  lang,
+}: UsersWithDatasetsTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo<ColumnDef<UserDatasetSummary>[]>(
+    () => [
+      {
+        id: "user",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "ব্যবহারকারী" : "User"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        accessorFn: (u) => `${u.full_name} ${u.email}`,
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <div>
+              <div className="text-xs font-semibold text-foreground">
+                {u.full_name}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                {u.email}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "role",
+        header: lang === "bn" ? "রোল" : "Role",
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <Badge
+              variant="outline"
+              className={`text-[10px] ${
+                u.role === "superadmin"
+                  ? "border-purple-500/40 text-purple-400"
+                  : u.role === "admin"
+                  ? "border-rose-500/40 text-rose-400"
+                  : "border-border/40 text-muted-foreground"
+              }`}
+            >
+              {u.role}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "credits",
+        header: ({ column }) => (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs font-semibold hover:bg-transparent"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {lang === "bn" ? "ক্রেডিট" : "Credits"}
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-center text-xs font-mono font-bold text-amber-500">
+            {row.original.credits}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "total_datasets",
+        header: ({ column }) => (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs font-semibold hover:bg-transparent"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {lang === "bn" ? "মোট ডাটাবেস" : "Total Datasets"}
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-center text-xs font-bold text-foreground">
+            {row.original.total_datasets}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "completed_datasets",
+        header: ({ column }) => (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs font-semibold hover:bg-transparent"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {lang === "bn" ? "সম্পন্ন" : "Completed"}
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-center text-xs font-bold text-emerald-400">
+            {row.original.completed_datasets}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "total_rows",
+        header: ({ column }) => (
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs font-semibold hover:bg-transparent"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {lang === "bn" ? "মোট সারি" : "Total Rows"}
+              <ArrowUpDown className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-center text-xs font-mono text-muted-foreground">
+            {row.original.total_rows.toLocaleString()}
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => (
+          <div className="w-20 text-right">
+            {lang === "bn" ? "অ্যাকশন" : "Actions"}
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                openUserDatasets(row.original);
+              }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [lang, openUserDatasets]
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id} className="text-xs font-semibold py-2.5">
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow
+            key={row.id}
+            className="cursor-pointer hover:bg-primary/5 transition-colors border-b border-border/20"
+            onClick={() => openUserDatasets(row.original)}
+          >
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id} className="py-2.5">
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+

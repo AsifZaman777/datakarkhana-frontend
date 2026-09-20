@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Key, Copy, Check, Plus, RefreshCw, Calendar, AlertTriangle, ShieldCheck, ShieldAlert, Clock, Coins, UserCheck } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Key, Copy, Check, Plus, RefreshCw, Calendar, AlertTriangle, ShieldCheck, ShieldAlert, Clock, Coins, UserCheck, ArrowUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,14 @@ import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
 import type { LicenseRecord, User } from "@/lib/types";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 
 export function LicenseManagement() {
   const { t, lang } = useLanguage();
@@ -182,146 +190,19 @@ export function LicenseManagement() {
           </div>
         </div>
 
-        {/* License Table */}
+        {/* License Table (TanStack Table) */}
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">{lang === "bn" ? "আইডি" : "ID"}</TableHead>
-                <TableHead>{lang === "bn" ? "গ্রাহক" : "Customer"}</TableHead>
-                <TableHead>{lang === "bn" ? "প্রোডাকশন কি" : "Production Key"}</TableHead>
-                <TableHead>{lang === "bn" ? "ক্রেডিট ও রিডিম" : "Credits & Redeemed"}</TableHead>
-                <TableHead>{lang === "bn" ? "প্ল্যান" : "Plan"}</TableHead>
-                <TableHead>{lang === "bn" ? "মেয়াদের তারিখ" : "Expiration Date"}</TableHead>
-                <TableHead>{lang === "bn" ? "স্ট্যাটাস ও বাকি দিন" : "Status & Days Left"}</TableHead>
-                <TableHead className="w-36 text-right">{lang === "bn" ? "অ্যাকশন" : "Actions"}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {licenses.map((lic) => {
-                const isExpired = lic.is_expired || lic.days_remaining <= 0 || lic.status === "expired";
-                const isWarning = !isExpired && lic.days_remaining <= 7;
-
-                return (
-                  <TableRow key={lic.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">#{lic.id}</TableCell>
-                    <TableCell className="text-xs">
-                      <div className="font-semibold text-foreground">{lic.customer_name}</div>
-                      <div className="text-[10px] text-muted-foreground">{lic.customer_email || lic.user_email_ref || (lang === "bn" ? "সরাসরি গ্রাহক" : "Direct Customer")}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <code className="font-mono text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded font-bold">
-                          {lic.production_key}
-                        </code>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                          onClick={() => copyToClipboard(lic.production_key, `lic-${lic.id}`)}
-                          title={lang === "bn" ? "কি কপি করুন" : "Copy Key"}
-                        >
-                          {copiedId === `lic-${lic.id}` ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-xs font-mono font-bold text-primary">
-                          <Coins className="h-3 w-3 text-amber-400" />
-                          +{lic.credits_amount || 0}
-                        </div>
-                        {lic.is_redeemed ? (
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
-                            {lang === "bn" ? "রিডিমকৃত" : "Redeemed"}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-amber-500/40 text-amber-500 bg-amber-500/10">
-                            {lang === "bn" ? "বাকি আছে" : "Pending"}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px] uppercase font-mono font-bold">
-                        {lic.plan_tier || "PRO"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">
-                      {new Date(lic.expires_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      {lic.status === "revoked" ? (
-                        <Badge variant="destructive" className="text-[10px] gap-1">
-                          <ShieldAlert className="h-3 w-3" />
-                          {lang === "bn" ? "বাতিলকৃত" : "Revoked"}
-                        </Badge>
-                      ) : isExpired ? (
-                        <Badge variant="destructive" className="text-[10px] gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          {lang === "bn" ? "মেয়াদোত্তীর্ণ" : "Expired"}
-                        </Badge>
-                      ) : isWarning ? (
-                        <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-[10px] gap-1">
-                          <Clock className="h-3 w-3" />
-                          {lang === "bn" ? `${lic.days_remaining} দিন বাকি (সতর্কতা)` : `${lic.days_remaining}d left (Warning)`}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px] gap-1">
-                          <ShieldCheck className="h-3 w-3" />
-                          {lang === "bn" ? `সক্রিয় • ${lic.days_remaining} দিন বাকি` : `Active • ${lic.days_remaining}d left`}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setExtendTarget(lic);
-                            setExtendDays(30);
-                          }}
-                          className="h-7 text-[11px] px-2"
-                        >
-                          {lang === "bn" ? "মেয়াদ বৃদ্ধি" : "Extend"}
-                        </Button>
-                        {lic.status !== "revoked" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRevoke(lic.id)}
-                            className="h-7 text-[11px] px-1.5 text-muted-foreground hover:text-destructive"
-                            title={lang === "bn" ? "লাইসেন্স বাতিল করুন" : "Revoke License"}
-                          >
-                            {lang === "bn" ? "বাতিল" : "Revoke"}
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-
-              {licenses.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-xs text-muted-foreground">
-                    {lang === "bn"
-                      ? "কোনো প্রোডাকশন কি ইস্যু করা হয়নি। নতুন তৈরি করতে \"প্রোডাকশন কি তৈরি করুন\"-এ ক্লিক করুন।"
-                      : "No production keys issued yet. Click “Generate Production Key” to create one."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <LicenseTanStackTable
+            licenses={licenses}
+            copiedId={copiedId}
+            copyToClipboard={copyToClipboard}
+            onExtend={(lic) => {
+              setExtendTarget(lic);
+              setExtendDays(30);
+            }}
+            onRevoke={handleRevoke}
+            lang={lang}
+          />
         </div>
       </CardContent>
 
@@ -563,3 +444,264 @@ export function LicenseManagement() {
     </Card>
   );
 }
+
+interface LicenseTanStackTableProps {
+  licenses: LicenseRecord[];
+  copiedId: string | null;
+  copyToClipboard: (text: string, id: string) => void;
+  onExtend: (lic: LicenseRecord) => void;
+  onRevoke: (id: number) => void;
+  lang: string;
+}
+
+function LicenseTanStackTable({
+  licenses,
+  copiedId,
+  copyToClipboard,
+  onExtend,
+  onRevoke,
+  lang,
+}: LicenseTanStackTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo<ColumnDef<LicenseRecord>[]>(
+    () => [
+      {
+        accessorKey: "customer_name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "গ্রাহক" : "Customer"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const lic = row.original;
+          return (
+            <div>
+              <div className="font-semibold text-foreground">{lic.customer_name}</div>
+              {(lic.customer_email || lic.user_email_ref) && (
+                <div className="text-[11px] text-muted-foreground">
+                  {lic.customer_email || lic.user_email_ref}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "production_key",
+        header: lang === "bn" ? "প্রোডাকশন কি" : "Production Key",
+        cell: ({ row }) => {
+          const lic = row.original;
+          const isCopied = copiedId === lic.production_key;
+          return (
+            <div className="flex items-center gap-1.5">
+              <code className="text-[11px] font-mono font-semibold bg-muted/60 px-2 py-0.5 rounded border border-border/40 text-foreground">
+                {lic.production_key}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 hover:bg-primary/10"
+                onClick={() => copyToClipboard(lic.production_key, lic.production_key)}
+                title="Copy Key"
+              >
+                {isCopied ? (
+                  <Check className="h-3 w-3 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3 w-3 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "credits_amount",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "ক্রেডিট" : "Credits"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const creds = row.original.credits_amount;
+          return (
+            <Badge
+              variant="outline"
+              className="font-mono text-xs border-amber-500/40 text-amber-500 bg-amber-500/10"
+            >
+              +{creds.toLocaleString()}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "plan_tier",
+        header: lang === "bn" ? "টিয়ার" : "Tier",
+        cell: ({ row }) => {
+          const tier = row.original.plan_tier;
+          return (
+            <Badge
+              variant="secondary"
+              className="text-[10px] uppercase font-bold tracking-wider"
+            >
+              {tier}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: lang === "bn" ? "অবস্থা ও মেয়াদ" : "Status & Expiry",
+        cell: ({ row }) => {
+          const lic = row.original;
+          const isRevoked = lic.status === "revoked";
+          const isExpired = lic.is_expired || lic.days_remaining <= 0;
+
+          return (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                {isRevoked ? (
+                  <Badge variant="destructive" className="text-[10px] gap-1">
+                    <ShieldAlert className="h-2.5 w-2.5" />
+                    {lang === "bn" ? "বাতিল" : "Revoked"}
+                  </Badge>
+                ) : isExpired ? (
+                  <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/40 text-rose-400 bg-rose-500/10">
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    {lang === "bn" ? "মেয়াদ উত্তীর্ণ" : "Expired"}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] gap-1 border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
+                    <ShieldCheck className="h-2.5 w-2.5" />
+                    {lang === "bn" ? "সক্রিয়" : "Active"}
+                  </Badge>
+                )}
+
+                {!isRevoked && !isExpired && (
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    ({lic.days_remaining} {lang === "bn" ? "দিন বাকি" : "d left"})
+                  </span>
+                )}
+              </div>
+
+              <div className="text-[10px] text-muted-foreground">
+                {new Date(lic.expires_at).toLocaleDateString()}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "created_at",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "তৈরি হয়েছে" : "Created"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {new Date(row.original.created_at).toLocaleDateString()}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: lang === "bn" ? "অ্যাকশন" : "Actions",
+        cell: ({ row }) => {
+          const lic = row.original;
+          return (
+            <div className="flex items-center gap-1.5 justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[11px] gap-1"
+                onClick={() => onExtend(lic)}
+              >
+                <Clock className="h-3 w-3" />
+                {lang === "bn" ? "মেয়াদ বাড়ান" : "Extend"}
+              </Button>
+              {lic.status !== "revoked" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10"
+                  onClick={() => onRevoke(lic.id)}
+                >
+                  {lang === "bn" ? "বাতিল" : "Revoke"}
+                </Button>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [copiedId, copyToClipboard, onExtend, onRevoke, lang]
+  );
+
+  const table = useReactTable({
+    data: licenses,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  if (licenses.length === 0) {
+    return (
+      <div className="p-8 text-center text-xs text-muted-foreground">
+        {lang === "bn"
+          ? "কোনো প্রোডাকশন লাইসেন্স কি পাওয়া যায়নি।"
+          : "No production license keys found."}
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id} className="text-xs font-semibold py-2.5">
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <TableRow key={row.id} className="border-b border-border/20 hover:bg-muted/30">
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id} className="py-2.5">
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+

@@ -1,6 +1,7 @@
 "use client";
 
-import { Shield, Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Shield, Plus, ArrowUpDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,14 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
@@ -24,6 +33,7 @@ interface SecurityViolationsProps {
 
 export function SecurityViolations({ violations, onRefresh }: SecurityViolationsProps) {
   const { lang } = useLanguage();
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const handleSeed = async () => {
     try {
@@ -42,6 +52,88 @@ export function SecurityViolations({ violations, onRefresh }: SecurityViolations
       );
     }
   };
+
+  const columns = useMemo<ColumnDef<SecurityViolation>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "লগ #" : "Log #"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs text-muted-foreground">
+            #{row.original.id}
+          </span>
+        ),
+      },
+      {
+        id: "user",
+        header: lang === "bn" ? "ব্যবহারকারীর ইমেইল / আইডি" : "User Email / ID",
+        accessorFn: (v) => v.user_email || `User #${v.user_id || "Guest"}`,
+        cell: ({ getValue }) => (
+          <span className="text-xs font-semibold">{getValue() as string}</span>
+        ),
+      },
+      {
+        accessorKey: "violation_type",
+        header: lang === "bn" ? "লঙ্ঘনের ধরণ" : "Intercepted Violation Type",
+        cell: ({ row }) => (
+          <Badge
+            variant="outline"
+            className="border-destructive/40 text-destructive text-[10px]"
+          >
+            {row.original.violation_type}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "ip_address",
+        header: lang === "bn" ? "আইপি ঠিকানা" : "IP Address",
+        cell: ({ row }) => (
+          <span className="text-xs font-mono text-cyan-400">
+            {row.original.ip_address || "127.0.0.1"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "timestamp",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 text-xs font-semibold hover:bg-transparent"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {lang === "bn" ? "সময়" : "Timestamp"}
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-xs font-mono text-muted-foreground">
+            {row.original.timestamp}
+          </span>
+        ),
+      },
+    ],
+    [lang]
+  );
+
+  const table = useReactTable({
+    data: violations,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
     <Card className="glass-panel p-6 border-destructive/30">
@@ -65,26 +157,26 @@ export function SecurityViolations({ violations, onRefresh }: SecurityViolations
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">{lang === "bn" ? "লগ #" : "Log #"}</TableHead>
-                <TableHead>{lang === "bn" ? "ব্যবহারকারীর ইমেইল / আইডি" : "User Email / ID"}</TableHead>
-                <TableHead>{lang === "bn" ? "লঙ্ঘনের ধরণ" : "Intercepted Violation Type"}</TableHead>
-                <TableHead>{lang === "bn" ? "আইপি ঠিকানা" : "IP Address"}</TableHead>
-                <TableHead>{lang === "bn" ? "সময়" : "Timestamp"}</TableHead>
-              </TableRow>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-border/40 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold py-2.5">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
             </TableHeader>
             <TableBody>
-              {violations.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">#{v.id}</TableCell>
-                  <TableCell className="text-xs font-semibold">{v.user_email || `User #${v.user_id || "Guest"}`}</TableCell>
-                  <TableCell className="text-xs font-bold text-destructive">
-                    <Badge variant="outline" className="border-destructive/40 text-destructive text-[10px]">
-                      {v.violation_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs font-mono text-cyan-400">{v.ip_address || "127.0.0.1"}</TableCell>
-                  <TableCell className="text-xs font-mono text-muted-foreground">{v.timestamp}</TableCell>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="border-b border-border/20 hover:bg-muted/30">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="py-2.5">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
 
@@ -102,3 +194,4 @@ export function SecurityViolations({ violations, onRefresh }: SecurityViolations
     </Card>
   );
 }
+
