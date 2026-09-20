@@ -282,7 +282,7 @@ export function UploadExcelModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto glass-panel border-cyan-500/30 p-6 space-y-5">
+      <DialogContent className="w-[95vw] max-w-5xl lg:max-w-6xl max-h-[92vh] overflow-y-auto glass-panel border-cyan-500/30 p-6 sm:p-8 space-y-5">
         <DialogHeader className="border-b border-border/40 pb-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
@@ -521,7 +521,7 @@ export function UploadExcelModal({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 text-xs">
               <label className="flex items-start gap-2 cursor-pointer select-none text-muted-foreground hover:text-foreground">
                 <input
                   type="checkbox"
@@ -729,7 +729,7 @@ function ExcelPreviewTanStackTable({
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Record<string, any>>[]>(() => {
-    return columnsList.slice(0, 10).map((colKey) => ({
+    return columnsList.slice(0, 25).map((colKey) => ({
       id: colKey,
       accessorFn: (row) => row[colKey],
       header: ({ column }) => (
@@ -739,14 +739,14 @@ function ExcelPreviewTanStackTable({
           className="-ml-3 h-7 px-2 text-[11px] font-semibold hover:bg-transparent"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span className="truncate max-w-[120px]">{colKey}</span>
+          <span className="truncate max-w-[140px]">{colKey}</span>
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       ),
       cell: ({ getValue }) => {
         const val = getValue();
         return (
-          <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap max-w-[200px] truncate block">
+          <span className="text-[11px] font-mono text-muted-foreground whitespace-nowrap max-w-[240px] truncate block">
             {val !== null && val !== undefined ? String(val) : ""}
           </span>
         );
@@ -764,7 +764,7 @@ function ExcelPreviewTanStackTable({
   });
 
   return (
-    <div className="overflow-x-auto max-h-48 border border-border/30 rounded bg-background/40">
+    <div className="overflow-x-auto max-h-80 border border-border/30 rounded bg-background/40">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
