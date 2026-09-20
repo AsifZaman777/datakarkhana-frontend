@@ -67,6 +67,7 @@ export const datasetsApi = {
       cleaned_preview: Record<string, any>[];
     }>("/api/datasets/inspect-file", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 180000, // 3 minutes
     }),
 
   uploadPrivate: (formData: FormData) =>
@@ -79,6 +80,7 @@ export const datasetsApi = {
       message: string;
     }>("/api/datasets/upload-private", formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 300000, // 5 minutes
     }),
 
   demote: (id: number | string) =>
@@ -113,7 +115,10 @@ export const datasetsApi = {
     return apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
       "/api/datasets/sync",
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 300000, // 5 minutes
+      }
     );
   },
 
@@ -121,7 +126,10 @@ export const datasetsApi = {
     apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
       "/api/datasets/sync",
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 300000, // 5 minutes
+      }
     ),
 
   desync: (id: number | string) =>
