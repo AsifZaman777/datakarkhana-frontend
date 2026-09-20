@@ -110,10 +110,24 @@ export interface Dataset {
 export interface DatasetDetail {
   dataset: Dataset;
   leads: Lead[];
+  columns?: string[];
   unlocked: boolean;
   pages_count: number;
   current_page: number;
   notice?: string;
+}
+
+export interface InspectFileResponse {
+  success: boolean;
+  filename: string;
+  sheet_names: string[];
+  selected_sheet?: string;
+  total_rows: number;
+  total_raw_rows: number;
+  columns: string[];
+  raw_columns: string[];
+  raw_preview: Record<string, any>[];
+  cleaned_preview: Record<string, any>[];
 }
 
 export interface Lead {

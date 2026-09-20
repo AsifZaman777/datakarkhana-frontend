@@ -31,6 +31,8 @@ import {
   ArrowDown,
   Filter,
   AlertCircle,
+  Sparkles,
+  Table as TableIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,256 +99,179 @@ export function DatasetDetailView({
 
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
 
-  // TanStack Table Column Definitions with Auto Text-Wrapping & Resizing
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor(
-        (row) =>
-          row.Name ||
-          row.name ||
-          row["Business Name"] ||
-          row["Company Name"] ||
-          row["title"] ||
-          "—",
+  const [isRawView, setIsRawView] = useState(false);
+
+  // Helper to format clean header titles (e.g. phone_number -> Phone Number)
+  const formatHeaderTitle = (key: string) => {
+    return key
+      .replace(/[_-]/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+  // Determine all available column keys from dataset schema or lead items
+  const detectedKeys = useMemo(() => {
+    const keysSet = new Set<string>();
+    if (detail.columns && detail.columns.length > 0) {
+      detail.columns.forEach((c) => keysSet.add(c));
+    }
+    if (leads && leads.length > 0) {
+      leads.slice(0, 15).forEach((row) => {
+        Object.keys(row).forEach((k) => keysSet.add(k));
+      });
+    }
+    const arr = Array.from(keysSet);
+    if (arr.length > 0) return arr;
+    return ["Name", "Phone", "Email", "Address", "Website", "Category"];
+  }, [detail.columns, leads]);
+
+  // Dynamic TanStack Table Column Definitions with Auto Text-Wrapping & Clean Formatting
+  const columns = useMemo(() => {
+    return detectedKeys.map((colKey) => {
+      const lowerKey = colKey.toLowerCase();
+      const isPhone =
+        lowerKey.includes("phone") ||
+        lowerKey.includes("mobile") ||
+        lowerKey.includes("contact") ||
+        lowerKey.includes("tel") ||
+        lowerKey.includes("cell");
+      const isEmail = lowerKey.includes("email") || lowerKey.includes("mail");
+      const isWeb =
+        lowerKey.includes("website") ||
+        lowerKey.includes("url") ||
+        lowerKey.includes("web") ||
+        lowerKey.includes("link") ||
+        lowerKey.includes("domain");
+      const isMaps = lowerKey.includes("maps") || lowerKey.includes("map_url");
+      const isName =
+        lowerKey === "name" ||
+        lowerKey.includes("business") ||
+        lowerKey.includes("company") ||
+        lowerKey.includes("title");
+
+      return columnHelper.accessor(
+        (row) => {
+          const val = row[colKey];
+          if (val === undefined || val === null) return "";
+          let s = String(val);
+          if (!isRawView) {
+            if (s.toLowerCase() in { nan: 1, none: 1, null: 1, "<na>": 1, nat: 1 }) return "";
+            s = s.replace(/\.0$/, "");
+          }
+          return s;
+        },
         {
-          id: "name",
-          size: 220,
-          minSize: 120,
+          id: colKey,
+          size: isName ? 200 : isPhone ? 150 : isEmail ? 180 : 160,
+          minSize: 100,
           maxSize: 500,
           header: ({ column }) => (
             <div
               className="flex items-center justify-between gap-1.5 cursor-pointer select-none group py-1"
               onClick={column.getToggleSortingHandler()}
             >
-              <span className="font-bold text-foreground">{ct.thName || "Business / Name"}</span>
+              <span className="font-bold text-foreground text-xs">
+                {formatHeaderTitle(colKey)}
+              </span>
               {{
                 asc: <ArrowUp className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
                 desc: <ArrowDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
               }[column.getIsSorted() as string] ?? (
-                <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100 shrink-0" />
-              )}
-            </div>
-          ),
-          cell: (info) => (
-            <div className="font-semibold text-foreground text-xs leading-normal whitespace-pre-wrap break-words">
-              {String(info.getValue())}
-            </div>
-          ),
-        }
-      ),
-      columnHelper.accessor(
-        (row) =>
-          row.Phone ||
-          row.phone ||
-          row["Contact"] ||
-          row["Mobile"] ||
-          row["Contact / Mobile"] ||
-          "No contact",
-        {
-          id: "phone",
-          size: 160,
-          minSize: 100,
-          maxSize: 350,
-          header: ({ column }) => (
-            <div
-              className="flex items-center justify-between gap-1.5 cursor-pointer select-none group py-1"
-              onClick={column.getToggleSortingHandler()}
-            >
-              <span className="font-bold text-foreground">{ct.thContact || "Contact / Mobile"}</span>
-              {{
-                asc: <ArrowUp className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-                desc: <ArrowDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-              }[column.getIsSorted() as string] ?? (
-                <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100 shrink-0" />
-              )}
-            </div>
-          ),
-          cell: (info) => (
-            <div
-              className={`font-mono text-xs leading-normal whitespace-pre-wrap break-words ${
-                !unlocked ? "italic text-muted-foreground" : "text-emerald-400 font-bold"
-              }`}
-            >
-              {String(info.getValue())}
-            </div>
-          ),
-        }
-      ),
-      columnHelper.accessor(
-        (row) =>
-          row.Email ||
-          row.email ||
-          row["E-mail"] ||
-          row["Contact Email"] ||
-          row["Mail"] ||
-          "",
-        {
-          id: "email",
-          size: 200,
-          minSize: 120,
-          maxSize: 450,
-          header: ({ column }) => (
-            <div
-              className="flex items-center justify-between gap-1.5 cursor-pointer select-none group py-1"
-              onClick={column.getToggleSortingHandler()}
-            >
-              <span className="font-bold text-foreground">{ct.thEmail || "Email Address"}</span>
-              {{
-                asc: <ArrowUp className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-                desc: <ArrowDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-              }[column.getIsSorted() as string] ?? (
-                <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100 shrink-0" />
+                <ArrowUpDown className="h-3 w-3 opacity-30 group-hover:opacity-100 shrink-0" />
               )}
             </div>
           ),
           cell: (info) => {
-            const emailVal = String(info.getValue());
-            if (!unlocked) {
-              return <span className="italic text-muted-foreground text-xs">Locked</span>;
+            const rawVal = String(info.getValue() || "");
+            if (!rawVal) return <span className="text-muted-foreground text-xs">—</span>;
+
+            if (isRawView) {
+              return (
+                <div className="text-xs font-mono text-foreground whitespace-pre-wrap break-words leading-normal">
+                  {rawVal}
+                </div>
+              );
             }
-            if (emailVal) {
+
+            // Clean View custom formatters:
+            if (isPhone) {
+              const displayPhone = !unlocked ? rawVal.replace(/^(\d{5})\d+(\d{3})$/, "$1XXX$2") : rawVal;
+              return (
+                <div
+                  className={`font-mono text-xs leading-normal whitespace-nowrap ${
+                    !unlocked ? "italic text-muted-foreground" : "text-emerald-400 font-bold"
+                  }`}
+                >
+                  {displayPhone}
+                </div>
+              );
+            }
+
+            if (isEmail) {
+              if (!unlocked) {
+                return <span className="italic text-muted-foreground text-xs">Locked</span>;
+              }
               return (
                 <a
-                  href={`mailto:${emailVal}`}
-                  className="text-xs font-mono text-cyan-400 hover:underline inline-flex items-start gap-1 whitespace-normal break-all leading-normal"
+                  href={`mailto:${rawVal}`}
+                  className="text-xs font-mono text-cyan-400 hover:underline inline-flex items-center gap-1 whitespace-normal break-all leading-normal"
                 >
-                  <Mail className="h-3 w-3 shrink-0 mt-0.5" />
-                  <span>{emailVal}</span>
+                  <Mail className="h-3 w-3 shrink-0" />
+                  <span>{rawVal}</span>
                 </a>
               );
             }
-            return <span className="text-muted-foreground text-xs">—</span>;
-          },
-        }
-      ),
-      columnHelper.accessor(
-        (row) => row.Address || row.address || row["Location"] || row["location"] || "—",
-        {
-          id: "address",
-          size: 250,
-          minSize: 130,
-          maxSize: 600,
-          header: ({ column }) => (
-            <div
-              className="flex items-center justify-between gap-1.5 cursor-pointer select-none group py-1"
-              onClick={column.getToggleSortingHandler()}
-            >
-              <span className="font-bold text-foreground">{ct.thAddress || "Address / Location"}</span>
-              {{
-                asc: <ArrowUp className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-                desc: <ArrowDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-              }[column.getIsSorted() as string] ?? (
-                <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100 shrink-0" />
-              )}
-            </div>
-          ),
-          cell: (info) => (
-            <div className="text-xs text-muted-foreground leading-normal whitespace-pre-wrap break-words">
-              {String(info.getValue())}
-            </div>
-          ),
-        }
-      ),
-      columnHelper.accessor(
-        (row) => row.Website || row.website || row["URL"] || row["url"] || row["Web"] || "",
-        {
-          id: "website",
-          size: 160,
-          minSize: 100,
-          maxSize: 400,
-          header: () => (
-            <span className="font-bold text-foreground block">{ct.thWebsite || "Website URL"}</span>
-          ),
-          cell: (info) => {
-            const websiteVal = String(info.getValue());
-            if (!websiteVal) {
-              return <span className="text-muted-foreground text-xs">—</span>;
+
+            if (isWeb && !isMaps) {
+              const href = rawVal.startsWith("http") ? rawVal : `https://${rawVal}`;
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-mono text-cyan-400 hover:underline inline-flex items-center gap-1 whitespace-normal break-all leading-normal"
+                >
+                  <Globe className="h-3 w-3 shrink-0" />
+                  <span>{rawVal.replace(/^https?:\/\//, "")}</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-70 shrink-0" />
+                </a>
+              );
             }
-            const href = websiteVal.startsWith("http") ? websiteVal : `https://${websiteVal}`;
+
+            if (isMaps) {
+              const href = rawVal.startsWith("http") ? rawVal : `https://${rawVal}`;
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 font-semibold whitespace-normal break-all leading-normal"
+                >
+                  <MapPin className="h-3 w-3 text-cyan-400 shrink-0" />
+                  <span>Maps Link</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-70 shrink-0" />
+                </a>
+              );
+            }
+
+            if (isName) {
+              return (
+                <div className="font-semibold text-foreground text-xs leading-normal whitespace-pre-wrap break-words">
+                  {rawVal}
+                </div>
+              );
+            }
+
             return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono text-cyan-400 hover:underline inline-flex items-start gap-1 whitespace-normal break-all leading-normal"
-              >
-                <Globe className="h-3 w-3 shrink-0 mt-0.5" />
-                <span>{websiteVal.replace(/^https?:\/\//, "")}</span>
-                <ExternalLink className="h-2.5 w-2.5 opacity-70 shrink-0 mt-0.5" />
-              </a>
+              <div className="text-xs text-muted-foreground leading-normal whitespace-pre-wrap break-words">
+                {rawVal}
+              </div>
             );
           },
         }
-      ),
-      columnHelper.accessor(
-        (row) =>
-          row.Maps ||
-          row["Google Maps"] ||
-          row["Maps Link"] ||
-          row["map_url"] ||
-          row["link"] ||
-          row["Link"] ||
-          "",
-        {
-          id: "maps",
-          size: 130,
-          minSize: 90,
-          maxSize: 300,
-          header: () => (
-            <span className="font-bold text-foreground block">{ct.thMaps || "Google Maps"}</span>
-          ),
-          cell: (info) => {
-            const mapsVal = String(info.getValue());
-            if (!mapsVal) {
-              return <span className="text-muted-foreground text-xs">—</span>;
-            }
-            const href = mapsVal.startsWith("http") ? mapsVal : `https://${mapsVal}`;
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono text-emerald-400 hover:underline inline-flex items-center gap-1 font-semibold whitespace-normal break-all leading-normal"
-              >
-                <MapPin className="h-3 w-3 text-cyan-400 shrink-0" />
-                <span>Maps Link</span>
-                <ExternalLink className="h-2.5 w-2.5 opacity-70 shrink-0" />
-              </a>
-            );
-          },
-        }
-      ),
-      columnHelper.accessor(
-        (row) => row.Rating || row.rating || row["Reviews"] || row["Category"] || row["category"] || "—",
-        {
-          id: "rating",
-          size: 140,
-          minSize: 90,
-          maxSize: 300,
-          header: ({ column }) => (
-            <div
-              className="flex items-center justify-between gap-1.5 cursor-pointer select-none group py-1"
-              onClick={column.getToggleSortingHandler()}
-            >
-              <span className="font-bold text-foreground">{ct.thRating || "Rating / Category"}</span>
-              {{
-                asc: <ArrowUp className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-                desc: <ArrowDown className="h-3.5 w-3.5 text-cyan-400 shrink-0" />,
-              }[column.getIsSorted() as string] ?? (
-                <ArrowUpDown className="h-3 w-3 opacity-40 group-hover:opacity-100 shrink-0" />
-              )}
-            </div>
-          ),
-          cell: (info) => (
-            <div className="text-xs font-mono whitespace-pre-wrap break-words leading-normal">
-              {String(info.getValue())}
-            </div>
-          ),
-        }
-      ),
-    ],
-    [ct, unlocked]
-  );
+      );
+    });
+  }, [detectedKeys, isRawView, unlocked]);
 
   // Initialize TanStack React Table with Auto Content Wrapping, Drag Resizing, Sorting & Instant Filtering
   const table = useReactTable({
@@ -434,15 +359,42 @@ export function DatasetDetailView({
             )}
           </div>
 
-          {/* Instant Client Filter (TanStack Filter) */}
-          <div className="flex items-center gap-2 max-w-xs">
-            <Filter className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-            <Input
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Search table leads..."
-              className="h-9 text-xs"
-            />
+          {/* Table Filters & View Mode Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-2 flex-1 max-w-xs">
+              <Filter className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+              <Input
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Search table leads..."
+                className="h-9 text-xs"
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsRawView(!isRawView)}
+              className={`h-9 text-xs gap-1.5 font-semibold transition-all ${
+                isRawView
+                  ? "border-amber-500/40 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20"
+                  : "border-cyan-500/40 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20"
+              }`}
+              title={isRawView ? "Switch to Clean Formatted Mode" : "Switch to Raw Data Mode"}
+            >
+              {isRawView ? (
+                <>
+                  <TableIcon className="h-3.5 w-3.5" />
+                  <span>Raw Data Mode (Click for Clean)</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Clean Formatted Mode (Click for Raw)</span>
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>

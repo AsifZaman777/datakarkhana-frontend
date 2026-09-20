@@ -2,15 +2,27 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Globe, Lock, Inbox } from "lucide-react";
+import { Globe, Lock, Inbox, Upload, Sparkles, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DatasetCard } from "@/components/catalog/dataset-card";
 import { PrivateDatasetCard } from "@/components/catalog/private-dataset-card";
+import { CustomDatasetCard } from "@/components/catalog/custom-dataset-card";
+import { UploadExcelModal } from "@/components/catalog/upload-excel-modal";
 import { DatasetFilters } from "@/components/catalog/dataset-filters";
 import { DatasetDetailView } from "@/components/catalog/dataset-detail-view";
 import { ConfirmModal } from "@/components/ui/modal-confirm";
 import { PromptModal } from "@/components/ui/modal-prompt";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { datasetsApi } from "@/lib/api/datasets";
 import { scraperApi } from "@/lib/api/scraper";
 import { configApi } from "@/lib/api/config";
@@ -50,10 +62,20 @@ export default function CatalogPage() {
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
   const [detail, setDetail] = useState<DatasetDetail | null>(null);
 
+  // Modals & Action Targets
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; query: string } | null>(null);
   const [deletePublicTarget, setDeletePublicTarget] = useState<Dataset | null>(null);
+  const [deleteCustomTarget, setDeleteCustomTarget] = useState<Dataset | null>(null);
   const [demoteTarget, setDemoteTarget] = useState<Dataset | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<{ id: number; query: string } | null>(null);
+  const [promoteCustomTarget, setPromoteCustomTarget] = useState<Dataset | null>(null);
+  const [adminPublishTarget, setAdminPublishTarget] = useState<Dataset | null>(null);
+  const [adminPublishPrice, setAdminPublishPrice] = useState<number>(10);
+  const [adminPublishName, setAdminPublishName] = useState<string>("");
+  const [adminPublishCategory, setAdminPublishCategory] = useState<string>("General Business");
+  const [isPublishing, setIsPublishing] = useState(false);
+
   const [isDemoting, setIsDemoting] = useState(false);
   const [syncingJobId, setSyncingJobId] = useState<number | null>(null);
   const [desyncingJobId, setDesyncingJobId] = useState<number | null>(null);
@@ -308,6 +330,89 @@ export default function CatalogPage() {
     }
   };
 
+  // Sync custom uploaded dataset to cloud
+  const handleSyncCustomDataset = async (dataset: Dataset) => {
+    setSyncingJobId(dataset.id);
+    try {
+      const res = await datasetsApi.syncExistingDataset(dataset.id);
+      toast.success(res.data.message || `Dataset "${dataset.name}" synced to cloud!`);
+      loadPrivateDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to sync dataset to cloud."));
+    } finally {
+      setSyncingJobId(null);
+    }
+  };
+
+  // Desync custom uploaded dataset from cloud
+  const handleDesyncCustomDataset = async (dataset: Dataset) => {
+    setDesyncingJobId(dataset.id);
+    try {
+      const res = await datasetsApi.desync(dataset.id);
+      toast.success(res.data.message || `Dataset "${dataset.name}" desynced from cloud!`);
+      loadPrivateDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to desync dataset from cloud."));
+    } finally {
+      setDesyncingJobId(null);
+    }
+  };
+
+  // Delete custom uploaded dataset
+  const confirmDeleteCustomDataset = async () => {
+    if (!deleteCustomTarget) return;
+    try {
+      await datasetsApi.delete(deleteCustomTarget.id);
+      toast.success(`Dataset "${deleteCustomTarget.name}" deleted successfully.`);
+      loadPrivateDatasets();
+      loadPublicDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to delete dataset."));
+    } finally {
+      setDeleteCustomTarget(null);
+    }
+  };
+
+  // Promote custom dataset request (Regular User)
+  const confirmPromoteCustomDataset = async (proposedName: string) => {
+    if (!promoteCustomTarget || !proposedName) return;
+    try {
+      const formData = new FormData();
+      formData.append("dataset_id", String(promoteCustomTarget.id));
+      formData.append("proposed_name", proposedName);
+      formData.append("proposed_category", promoteCustomTarget.category || "General Business");
+      const res = await datasetsApi.promoteRequest(formData);
+      toast.success(res.data.message || "Promotion requested! An administrator will review and publish it.");
+      loadPrivateDatasets();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Promotion request failed."));
+    } finally {
+      setPromoteCustomTarget(null);
+    }
+  };
+
+  // Admin directly publish custom dataset
+  const confirmAdminPublishCustomDataset = async () => {
+    if (!adminPublishTarget) return;
+    setIsPublishing(true);
+    try {
+      const res = await datasetsApi.publish(adminPublishTarget.id, {
+        price_credits: adminPublishPrice,
+        proposed_name: adminPublishName || adminPublishTarget.name,
+        proposed_category: adminPublishCategory || adminPublishTarget.category,
+      });
+      toast.success(res.data.message || `Dataset "${adminPublishTarget.name}" published to Public Catalog!`);
+      setAdminPublishTarget(null);
+      loadPrivateDatasets();
+      loadPublicDatasets();
+      setCatalogTab("public");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to publish dataset to Public Catalog."));
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // If detail view is active, render Detail View
   if (selectedId && detail) {
     return (
@@ -332,8 +437,9 @@ export default function CatalogPage() {
     );
   }
 
-  const privateJobsCount = scraperJobs.filter((j) => j.status === "done" || j.status === "stopped").length;
-  const totalPrivateCount = privateJobsCount + myPrivateDatasets.length;
+  const customUploadedDatasets = myPrivateDatasets.filter((ds) => !ds.source_job_id);
+  const doneScraperJobs = scraperJobs.filter((j) => j.status === "done" || j.status === "stopped");
+  const totalPrivateCount = doneScraperJobs.length + customUploadedDatasets.length;
 
   return (
     <div className="space-y-6">
@@ -346,16 +452,27 @@ export default function CatalogPage() {
           </p>
         </div>
 
-        <Button
-          data-tour="catalog-request-btn"
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/scraper?tab=request")}
-          className="gap-2 text-xs font-bold border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
-        >
-          <Inbox className="h-3.5 w-3.5" />
-          {lang === "bn" ? "কাস্টম ডাটার অনুরোধ" : "Request Custom Dataset"}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            onClick={() => setUploadModalOpen(true)}
+            className="gap-2 text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {ct.btnUploadExcel || "Upload Excel / CSV"}
+          </Button>
+
+          <Button
+            data-tour="catalog-request-btn"
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/scraper?tab=request")}
+            className="gap-2 text-xs font-bold border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10"
+          >
+            <Inbox className="h-3.5 w-3.5" />
+            {lang === "bn" ? "কাস্টম ডাটার অনুরোধ" : "Request Custom Dataset"}
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -408,49 +525,97 @@ export default function CatalogPage() {
           </div>
         </TabsContent>
 
-        {/* TAB 2: PRIVATE LEADS & DEMOTED DATASETS */}
+        {/* TAB 2: PRIVATE LEADS, CUSTOM UPLOADS & DEMOTED DATASETS */}
         <TabsContent value="private" className="space-y-6 pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* 1. Scraped Jobs */}
-            {scraperJobs
-              .filter((j) => j.status === "done" || j.status === "stopped")
-              .map((job) => (
-                <PrivateDatasetCard
-                  key={`job_${job.id}`}
-                  job={job}
-                  onView={(id) => handleOpenDetails(`job_${id}`)}
-                  onUseLeads={() => router.push(`/marketing?tab=whatsapp&group=job_${job.id}`)}
-                  onDelete={(id, q) => setDeleteTarget({ id, query: q })}
-                  onPromote={(id, q) => setPromoteTarget({ id, query: q })}
-                  onSync={handleSyncJob}
-                  onDesync={handleDesyncJob}
-                  isSyncing={syncingJobId === job.id}
-                  isDesyncing={desyncingJobId === job.id}
-                  isAdmin={isAdmin}
-                  user={user}
-                />
-              ))}
+          {/* Action Banner / Upload Trigger */}
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl glass-panel border border-purple-500/20 bg-gradient-to-r from-purple-500/5 via-indigo-500/5 to-cyan-500/5">
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4 text-purple-400" />
+                {ct.btnUploadExcel || "Upload Excel / CSV Lead Files"}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {ct.btnUploadExcelSub || "Import any external spreadsheet into your private catalogue. Inspect raw data, control data cleaning, and optionally sync to cloud."}
+              </p>
+            </div>
+            <Button
+              onClick={() => setUploadModalOpen(true)}
+              className="gap-2 text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-500/20 h-9 px-4"
+            >
+              <Upload className="h-4 w-4" />
+              {ct.btnUploadExcel || "Upload Excel File"}
+            </Button>
+          </div>
 
-            {/* 2. Demoted Datasets */}
-            {myPrivateDatasets.map((ds) => (
-              <DatasetCard
-                key={`ds_${ds.id}`}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 1. Custom Uploaded Datasets & Demoted Datasets */}
+            {customUploadedDatasets.map((ds) => (
+              <CustomDatasetCard
+                key={`custom_ds_${ds.id}`}
                 dataset={ds}
+                token={token || ""}
                 isAdmin={isAdmin}
+                user={user}
                 onView={(id) => handleOpenDetails(id)}
-                onDelete={(target) => setDeletePublicTarget(target)}
+                onUseLeads={(id) => router.push(`/marketing?tab=whatsapp&group=dataset_${id}`)}
+                onDelete={(target) => setDeleteCustomTarget(target)}
+                onPromote={(target) => {
+                  if (isAdmin) {
+                    setAdminPublishTarget(target);
+                    setAdminPublishName(target.name);
+                    setAdminPublishCategory(target.category || "General Business");
+                    setAdminPublishPrice(target.price_credits && target.price_credits > 0 ? target.price_credits : 10);
+                  } else {
+                    setPromoteCustomTarget(target);
+                  }
+                }}
+                onSync={handleSyncCustomDataset}
+                onDesync={handleDesyncCustomDataset}
+                isSyncing={syncingJobId === ds.id}
+                isDesyncing={desyncingJobId === ds.id}
               />
             ))}
 
-            {scraperJobs.filter((j) => j.status === "done" || j.status === "stopped").length === 0 &&
-              myPrivateDatasets.length === 0 && (
-                <div className="col-span-full text-center py-16 text-xs text-muted-foreground glass-panel">
-                  {ct.noPrivateMatch || "No private datasets found. Launch a scraping job from the Scraper Console or demote a public dataset to store it in your private leads."}
-                </div>
-              )}
+            {/* 2. Scraped Jobs */}
+            {doneScraperJobs.map((job) => (
+              <PrivateDatasetCard
+                key={`job_${job.id}`}
+                job={job}
+                onView={(id) => handleOpenDetails(`job_${id}`)}
+                onUseLeads={() => router.push(`/marketing?tab=whatsapp&group=job_${job.id}`)}
+                onDelete={(id, q) => setDeleteTarget({ id, query: q })}
+                onPromote={(id, q) => setPromoteTarget({ id, query: q })}
+                onSync={handleSyncJob}
+                onDesync={handleDesyncJob}
+                isSyncing={syncingJobId === job.id}
+                isDesyncing={desyncingJobId === job.id}
+                isAdmin={isAdmin}
+                user={user}
+              />
+            ))}
+
+            {totalPrivateCount === 0 && (
+              <div className="col-span-full text-center py-16 text-xs text-muted-foreground glass-panel">
+                {ct.noPrivateMatch || "No private datasets found. Upload an Excel file or launch a scraping job from the Scraper Console."}
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Upload Excel Modal */}
+      <UploadExcelModal
+        open={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onSuccess={() => {
+          loadPrivateDatasets();
+          setCatalogTab("private");
+        }}
+        user={user}
+        isAdmin={isAdmin}
+        categoriesList={categoriesList}
+        regionsConfig={regionsConfig}
+      />
 
       {/* Demote Public Dataset to Private Confirmation Modal */}
       <ConfirmModal
@@ -489,7 +654,7 @@ export default function CatalogPage() {
         isDanger
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* Private Scrape Job Delete Confirmation Modal */}
       <ConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -504,7 +669,22 @@ export default function CatalogPage() {
         isDanger
       />
 
-      {/* Promote Prompt Modal */}
+      {/* Custom Dataset Delete Confirmation Modal */}
+      <ConfirmModal
+        open={!!deleteCustomTarget}
+        onClose={() => setDeleteCustomTarget(null)}
+        onConfirm={confirmDeleteCustomDataset}
+        title={lang === "bn" ? "কাস্টম ডেটাসেট মুছে ফেলুন" : "Delete Custom Dataset"}
+        description={
+          lang === "bn"
+            ? `আপনি কি নিশ্চিত যে "${deleteCustomTarget?.name}" ডেটাসেটটি মুছে ফেলতে চান? এটি আপনার প্রাইভেট ক্যাটালগ থেকে মুছে যাবে।`
+            : `Are you sure you want to delete the dataset "${deleteCustomTarget?.name}"? This action cannot be undone.`
+        }
+        confirmText={lang === "bn" ? "মুছে ফেলুন" : "Delete Dataset"}
+        isDanger
+      />
+
+      {/* Promote Prompt Modal for Scraped Jobs */}
       <PromptModal
         open={!!promoteTarget}
         onClose={() => setPromoteTarget(null)}
@@ -519,6 +699,100 @@ export default function CatalogPage() {
         placeholder={lang === "bn" ? "প্রস্তাবিত শিরোনাম লিখুন..." : "Enter proposed title..."}
         confirmText={lang === "bn" ? "আবেদন জমা দিন" : "Submit Request"}
       />
+
+      {/* Promote Prompt Modal for Custom Uploaded Datasets */}
+      <PromptModal
+        open={!!promoteCustomTarget}
+        onClose={() => setPromoteCustomTarget(null)}
+        onConfirm={confirmPromoteCustomDataset}
+        title={lang === "bn" ? "ক্যাটালগে প্রকাশের আবেদন" : "Request Catalog Promotion"}
+        description={
+          lang === "bn"
+            ? "পাবলিক ক্যাটালগে প্রকাশের জন্য অনুমোদনের উদ্দেশ্যে প্রস্তাবিত ডেটাসেটের শিরোনাম লিখুন:"
+            : "Enter the proposed dataset title for approval to publish to the public catalog:"
+        }
+        defaultValue={promoteCustomTarget?.name || ""}
+        placeholder={lang === "bn" ? "প্রস্তাবিত শিরোনাম লিখুন..." : "Enter proposed title..."}
+        confirmText={lang === "bn" ? "আবেদন জমা দিন" : "Submit Request"}
+      />
+
+      {/* Admin Publish Custom Dataset to Public Catalog Modal */}
+      <Dialog
+        open={!!adminPublishTarget}
+        onOpenChange={(v) => !v && setAdminPublishTarget(null)}
+      >
+        <DialogContent className="glass-panel border-purple-500/30 sm:max-w-md">
+          <DialogHeader className="space-y-1.5">
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+              <Sparkles className="h-4 w-4 text-purple-400" />
+              {lang === "bn" ? "পাবলিক ক্যাটালগে প্রকাশ করুন" : "Publish to Public Catalog"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              {lang === "bn"
+                ? "প্রাইভেট ডেটাসেটটি সরাসরি পাবলিক ক্যাটালগে উন্মুক্ত করুন। ব্যবহারকারীরা ক্রেডিট খরচ করে এটি আনলক করতে পারবে।"
+                : "Promote and publish this private dataset to the verified Public Catalog. Users will spend credits to unlock leads from this dataset."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Dataset Title</Label>
+              <Input
+                value={adminPublishName}
+                onChange={(e) => setAdminPublishName(e.target.value)}
+                placeholder="Enter public title..."
+                className="h-9 text-xs glass-input"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Category</Label>
+              <Input
+                value={adminPublishCategory}
+                onChange={(e) => setAdminPublishCategory(e.target.value)}
+                placeholder="e.g. Restaurants, Electronics, General Business..."
+                className="h-9 text-xs glass-input"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Unlock Price (Credits)</Label>
+              <Input
+                type="number"
+                min="0"
+                value={adminPublishPrice}
+                onChange={(e) => setAdminPublishPrice(Number(e.target.value) || 0)}
+                placeholder="10"
+                className="h-9 text-xs glass-input font-mono"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Set to 0 for a free public dataset, or specify the credit price for users to unlock.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAdminPublishTarget(null)}
+              disabled={isPublishing}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={confirmAdminPublishCustomDataset}
+              disabled={isPublishing || !adminPublishName.trim()}
+              className="text-xs font-bold gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {isPublishing ? "Publishing..." : "Publish to Public Catalog"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

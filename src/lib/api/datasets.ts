@@ -53,14 +53,69 @@ export const datasetsApi = {
   unlock: (id: number | string) =>
     apiClient.post<{ message: string; credits?: number }>(`/api/datasets/${id}/unlock`),
 
+  inspectFile: (formData: FormData) =>
+    apiClient.post<{
+      success: boolean;
+      filename: string;
+      sheet_names: string[];
+      selected_sheet?: string;
+      total_rows: number;
+      total_raw_rows: number;
+      columns: string[];
+      raw_columns: string[];
+      raw_preview: Record<string, any>[];
+      cleaned_preview: Record<string, any>[];
+    }>("/api/datasets/inspect-file", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  uploadPrivate: (formData: FormData) =>
+    apiClient.post<{
+      success: boolean;
+      dataset_id: number;
+      name: string;
+      row_count: number;
+      is_synced: number;
+      message: string;
+    }>("/api/datasets/upload-private", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
   demote: (id: number | string) =>
     apiClient.post<{ message: string }>(`/api/datasets/${id}/demote`),
 
-  publish: (id: number | string) =>
-    apiClient.post<{ message: string }>(`/api/datasets/${id}/publish`),
+  publish: (
+    id: number | string,
+    data?: FormData | { price_credits?: number; proposed_name?: string; proposed_category?: string }
+  ) => {
+    let payload: FormData | undefined;
+    if (data instanceof FormData) {
+      payload = data;
+    } else if (data) {
+      payload = new FormData();
+      if (data.price_credits !== undefined) payload.append("price_credits", String(data.price_credits));
+      if (data.proposed_name) payload.append("proposed_name", data.proposed_name);
+      if (data.proposed_category) payload.append("proposed_category", data.proposed_category);
+    }
+    return apiClient.post<{ success: boolean; message: string }>(
+      `/api/datasets/${id}/publish`,
+      payload,
+      payload ? { headers: { "Content-Type": "multipart/form-data" } } : undefined
+    );
+  },
 
   myPrivate: () =>
     apiClient.get<Dataset[]>("/api/datasets/my-private"),
+
+  syncExistingDataset: (id: number) => {
+    const formData = new FormData();
+    formData.append("dataset_id", String(id));
+    return apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
+      "/api/datasets/sync",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+  },
 
   syncToCloud: (formData: FormData) =>
     apiClient.post<{ success: boolean; dataset_id: number; message: string }>(
@@ -82,7 +137,7 @@ export const datasetsApi = {
     ),
 
   delete: (id: number | string) =>
-    apiClient.delete<{ message: string }>(`/api/admin/datasets/${id}`),
+    apiClient.delete<{ success?: boolean; message?: string }>(`/api/datasets/${id}`),
 
   exportUrl: (id: number | string, format: string, token: string) => {
     const base = String(id).startsWith("job_") ? getLocalApiBase() : getCloudApiBase();
