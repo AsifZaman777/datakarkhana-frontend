@@ -54,6 +54,7 @@ export function ScraperTerminal({
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [isCdpActive, setIsCdpActive] = useState(true);
 
   const displayLogs = wsLogs.length > 0 ? wsLogs : logs;
 
@@ -120,6 +121,9 @@ export function ScraperTerminal({
       .then((res) => {
         if (res.data?.available && res.data.image) {
           setLiveFrame(res.data.image);
+          if ((res.data as any).engine) {
+            setIsCdpActive((res.data as any).engine === "cdp");
+          }
         }
       })
       .catch(() => {});
@@ -200,9 +204,14 @@ export function ScraperTerminal({
               setCurrentAction("Google Maps page rendered");
             }
           } else if (msg.type === "frame" && msg.image) {
-            // Update live Google Maps frame immediately
-            setLiveFrame(`data:image/jpeg;base64,${msg.image}`);
+            // Update live frame dynamically (supports WebP and JPEG base64)
+            const mime = msg.mime || "image/webp";
+            const fullSrc = msg.image.startsWith("data:") ? msg.image : `data:${mime};base64,${msg.image}`;
+            setLiveFrame(fullSrc);
             setFrameCount((prev) => prev + 1);
+            if (msg.engine) {
+              setIsCdpActive(msg.engine === "cdp");
+            }
           } else if (msg.type === "progress") {
             if (typeof msg.count === "number") {
               setDiscoveredCount(msg.count);
@@ -363,20 +372,22 @@ export function ScraperTerminal({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={liveFrame}
-                  alt="Live Google Maps Automation Feed"
+                  alt="Live Scraper Automation Feed"
                   className="w-full h-auto object-contain select-none pointer-events-none"
+                  style={{ imageRendering: "-webkit-optimize-contrast" }}
                 />
 
                 {/* Live Driver Inspection Overlay Tag */}
                 <div className="absolute top-2 left-2 flex items-center gap-2">
                   <div className="px-2.5 py-1 bg-black/85 backdrop-blur-md rounded border border-cyan-500/40 text-[10px] font-mono text-cyan-300 flex items-center gap-1.5 shadow-xl">
                     <MapPin className="h-3 w-3 text-red-500 animate-bounce" />
-                    <span>GOOGLE MAPS DRIVER</span>
+                    <span>{isCdpActive ? "CDP TURBO ENGINE" : "AUTOMATION DRIVER"}</span>
                   </div>
                 </div>
 
-                <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 rounded border border-zinc-800 text-[10px] font-mono text-zinc-400">
-                  {streamStatus === "live" ? "REALTIME FRAME" : "FINAL CAPTURE"}
+                <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 rounded border border-zinc-800 text-[10px] font-mono text-zinc-400 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span>{streamStatus === "live" ? (isCdpActive ? "CDP STREAM (HIGH-RES WEBP)" : "REALTIME FRAME") : "FINAL CAPTURE"}</span>
                 </div>
               </div>
             ) : activeJobId ? (
