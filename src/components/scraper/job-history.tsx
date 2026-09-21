@@ -25,10 +25,12 @@ import {
   Search,
   Radio,
   ArrowUpDown,
+  Lock,
 } from "lucide-react";
 import { scraperApi } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/providers/auth-provider";
 import type { ScraperJob } from "@/lib/types";
 import { ScrapedDataModal } from "./scraped-data-modal";
 import { useLanguage } from "@/providers/language-provider";
@@ -51,6 +53,15 @@ interface JobHistoryProps {
 export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHistoryProps) {
   const router = useRouter();
   const { lang } = useLanguage();
+  const { user, isAdmin } = useAuth();
+
+  const canDownload =
+    isAdmin ||
+    (user?.effective_permissions
+      ? !!user.effective_permissions.allow_dataset_download
+      : (user?.allow_download !== undefined && user?.allow_download !== null
+          ? user.allow_download === 1
+          : ["pro", "enterprise"].includes((user?.plan_tier || "").toLowerCase())));
 
   // Modal State for Data Preview
   const [previewJobId, setPreviewJobId] = useState<number | null>(null);
@@ -102,6 +113,14 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
   };
 
   const handleDownloadExcel = (jobId: number) => {
+    if (!canDownload) {
+      toast.warning(
+        lang === "bn"
+          ? "ক্যাটালগ ডাটা ফাইল ডাউনলোড আপনার একাউন্ট বা সাবস্ক্রিপশন টিয়ারে বন্ধ রয়েছে।"
+          : "Dataset file downloads are disabled for your subscription tier or account policy."
+      );
+      return;
+    }
     const url = scraperApi.downloadJobUrl(jobId);
     window.open(url, "_blank");
   };
@@ -317,10 +336,19 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
                 size="sm"
                 disabled={!isDone || itemCount === 0}
                 onClick={() => handleDownloadExcel(job.id)}
-                className="h-7 px-2 text-[11px] gap-1 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-                title={lang === "bn" ? "এক্সেল স্প্রেডশিট ডাউনলোড করুন" : "Download Excel spreadsheet"}
+                className={`h-7 px-2 text-[11px] gap-1 ${
+                  canDownload
+                    ? "border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                    : "border-border/40 text-muted-foreground/60 hover:text-amber-400 hover:bg-amber-500/10"
+                }`}
+                title={
+                  canDownload
+                    ? (lang === "bn" ? "এক্সেল স্প্রেডশিট ডাউনলোড করুন" : "Download Excel spreadsheet")
+                    : (lang === "bn" ? "ডাউনলোড অনুমতি বন্ধ" : "Download locked by policy")
+                }
               >
-                <Download className="h-3.5 w-3.5" /> {lang === "bn" ? "ডাউনলোড" : "Download"}
+                {canDownload ? <Download className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5 text-amber-400/80" />}
+                {lang === "bn" ? "ডাউনলোড" : "Download"}
               </Button>
 
               {/* DELETE BUTTON */}

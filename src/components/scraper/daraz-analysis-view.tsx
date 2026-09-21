@@ -59,7 +59,13 @@ export function DarazAnalysisView({
   const itemsPerPage = 12;
 
   // Check if user has permission to download raw dataset
-  const canDownload = isAdmin || ["pro", "enterprise"].includes(user?.plan_tier?.toLowerCase() || "");
+  const canDownload =
+    isAdmin ||
+    (user?.effective_permissions
+      ? !!user.effective_permissions.allow_daraz_download
+      : (user?.allow_download !== undefined && user?.allow_download !== null
+          ? user.allow_download === 1
+          : ["pro", "enterprise"].includes((user?.plan_tier || "").toLowerCase())));
 
   // Fetch job records
   useEffect(() => {

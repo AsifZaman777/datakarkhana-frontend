@@ -45,7 +45,13 @@ export function DarazJobHistory({
   const [isDeleting, setIsDeleting] = useState(false);
   const [stoppingJobId, setStoppingJobId] = useState<number | null>(null);
 
-  const canDownload = isAdmin || ["pro", "enterprise"].includes(user?.plan_tier?.toLowerCase() || "");
+  const canDownload =
+    isAdmin ||
+    (user?.effective_permissions
+      ? !!user.effective_permissions.allow_daraz_download
+      : (user?.allow_download !== undefined && user?.allow_download !== null
+          ? user.allow_download === 1
+          : ["pro", "enterprise"].includes((user?.plan_tier || "").toLowerCase())));
 
   const handleStopJob = async (jobId: number) => {
     setStoppingJobId(jobId);

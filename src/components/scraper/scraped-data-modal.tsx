@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Send, Phone, MapPin, ArrowUpDown } from "lucide-react";
+import { Search, Download, Send, Phone, MapPin, ArrowUpDown, Lock } from "lucide-react";
 import { scraperApi, type ScrapedDataItem } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/providers/auth-provider";
 import { LoadingBackdrop } from "@/components/ui/loading-backdrop";
 import {
   ColumnDef,
@@ -29,11 +30,20 @@ interface ScrapedDataModalProps {
 
 export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps) {
   const router = useRouter();
+  const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ScrapedDataItem[]>([]);
   const [query, setQuery] = useState("");
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const canDownload =
+    isAdmin ||
+    (user?.effective_permissions
+      ? !!user.effective_permissions.allow_dataset_download
+      : (user?.allow_download !== undefined && user?.allow_download !== null
+          ? user.allow_download === 1
+          : ["pro", "enterprise"].includes((user?.plan_tier || "").toLowerCase())));
 
   useEffect(() => {
     if (!open || !jobId) return;
@@ -175,6 +185,10 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
 
   const handleDownloadExcel = () => {
     if (!jobId) return;
+    if (!canDownload) {
+      toast.warning("Dataset file downloads are disabled for your subscription tier or account policy.");
+      return;
+    }
     const url = scraperApi.downloadJobUrl(jobId);
     window.open(url, "_blank");
   };
@@ -264,9 +278,11 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
               size="sm"
               onClick={handleDownloadExcel}
               disabled={data.length === 0}
-              className="gap-1.5 text-xs"
+              className={`gap-1.5 text-xs ${!canDownload ? "opacity-60 cursor-not-allowed" : ""}`}
+              title={canDownload ? "Download Excel Spreadsheet" : "Download locked by policy"}
             >
-              <Download className="h-3.5 w-3.5" /> Download Excel
+              {canDownload ? <Download className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5 text-amber-400" />}
+              {canDownload ? "Download Excel" : "Download Locked"}
             </Button>
 
             <Button

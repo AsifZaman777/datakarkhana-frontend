@@ -13,6 +13,7 @@ import {
 import {
   ArrowLeft,
   Unlock,
+  Lock,
   Coins,
   CheckCircle2,
   FileSpreadsheet,
@@ -34,6 +35,7 @@ import {
   Sparkles,
   Table as TableIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +86,7 @@ export function DatasetDetailView({
   onPageSizeChange,
   onSearch,
 }: DatasetDetailViewProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const ct = t.catalog || {};
   const [searchQuery, setSearchQuery] = useState("");
   const [globalFilter, setGlobalFilter] = useState("");
@@ -98,6 +100,26 @@ export function DatasetDetailView({
   };
 
   const isAdmin = user?.role === "admin" || user?.role === "superadmin";
+
+  const isDarazDataset = useMemo(() => {
+    const n = (dataset.name || "").toLowerCase();
+    const c = (dataset.category || "").toLowerCase();
+    const pc = ((dataset as any).proposed_category || "").toLowerCase();
+    return n.includes("daraz") || c.includes("daraz") || pc.includes("daraz");
+  }, [dataset.name, dataset.category, (dataset as any).proposed_category]);
+
+  const canDownload = useMemo(() => {
+    if (isAdmin) return true;
+    if (!user) return false;
+    const perms = user.effective_permissions;
+    if (perms) {
+      return isDarazDataset ? !!perms.allow_daraz_download : !!perms.allow_dataset_download;
+    }
+    if (user.allow_download !== undefined && user.allow_download !== null) {
+      return user.allow_download === 1;
+    }
+    return ["pro", "enterprise"].includes((user.plan_tier || "").toLowerCase());
+  }, [isAdmin, user, isDarazDataset]);
 
   const [isRawView, setIsRawView] = useState(false);
 
@@ -321,40 +343,77 @@ export function DatasetDetailView({
                   <CheckCircle2 className="h-4 w-4" /> {ct.unlockedAccess || "Unlocked Access"}
                 </Badge>
 
-                <div className="flex items-center gap-2">
-                  <a
-                    href={datasetsApi.exportUrl(dataset.id, "excel", token)}
-                    download
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
-                    title="Download full dataset in Microsoft Excel format"
-                  >
-                    <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
-                  </a>
-                  <a
-                    href={datasetsApi.exportUrl(dataset.id, "csv", token)}
-                    download
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-cyan-500/40 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20"
-                    title="Download full dataset in CSV format"
-                  >
-                    <FileText className="h-3.5 w-3.5" /> CSV
-                  </a>
-                  <a
-                    href={datasetsApi.exportUrl(dataset.id, "json", token)}
-                    download
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-purple-500/40 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20"
-                    title="Download full dataset in JSON format"
-                  >
-                    <DatabaseIcon className="h-3.5 w-3.5" /> JSON
-                  </a>
-                  <a
-                    href={datasetsApi.exportUrl(dataset.id, "pdf", token)}
-                    download
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20"
-                    title="Download full dataset in PDF format"
-                  >
-                    <Download className="h-3.5 w-3.5" /> PDF
-                  </a>
-                </div>
+                {canDownload ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={datasetsApi.exportUrl(dataset.id, "excel", token)}
+                      download
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+                      title="Download full dataset in Microsoft Excel format"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+                    </a>
+                    <a
+                      href={datasetsApi.exportUrl(dataset.id, "csv", token)}
+                      download
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-cyan-500/40 text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors"
+                      title="Download full dataset in CSV format"
+                    >
+                      <FileText className="h-3.5 w-3.5" /> CSV
+                    </a>
+                    <a
+                      href={datasetsApi.exportUrl(dataset.id, "json", token)}
+                      download
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-purple-500/40 text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 transition-colors"
+                      title="Download full dataset in JSON format"
+                    >
+                      <DatabaseIcon className="h-3.5 w-3.5" /> JSON
+                    </a>
+                    <a
+                      href={datasetsApi.exportUrl(dataset.id, "pdf", token)}
+                      download
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors"
+                      title="Download full dataset in PDF format"
+                    >
+                      <Download className="h-3.5 w-3.5" /> PDF
+                    </a>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-xs border-amber-500/40 bg-amber-500/10 text-amber-400 gap-1 py-1">
+                      <Lock className="h-3.5 w-3.5" />
+                      <span>{lang === "bn" ? "ডাউনলোড অনুমতি নেই" : "Downloads Locked"}</span>
+                    </Badge>
+
+                    {(["excel", "csv", "json", "pdf"] as const).map((fmt) => {
+                      const label = fmt === "excel" ? "Excel" : fmt === "csv" ? "CSV" : fmt === "json" ? "JSON" : "PDF";
+                      const Icon = fmt === "excel" ? FileSpreadsheet : fmt === "csv" ? FileText : fmt === "json" ? DatabaseIcon : Download;
+                      return (
+                        <button
+                          key={fmt}
+                          type="button"
+                          onClick={() => {
+                            toast.warning(
+                              isDarazDataset
+                                ? (lang === "bn"
+                                    ? "দারাজ এক্সেল ফাইল ডাউনলোড সুবিধা আপনার টিয়ার পলিসিতে বন্ধ আছে। বিস্তারিত তথ্যের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।"
+                                    : "Downloading raw Daraz datasets is restricted for your subscription tier. Contact support or upgrade plan.")
+                                : (lang === "bn"
+                                    ? "ক্যাটালগ ফাইল ডাউনলোড আপনার একাউন্ট বা সাবস্ক্রিপশন টিয়ারে বন্ধ রয়েছে।"
+                                    : "Dataset file downloads are disabled for your subscription tier or account policy.")
+                            );
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border border-border/40 text-muted-foreground/60 bg-muted/20 hover:border-amber-500/40 hover:text-amber-400 hover:bg-amber-500/10 transition-all cursor-not-allowed select-none"
+                          title={isDarazDataset ? "Daraz file download locked by tier policy" : "Dataset file download locked by policy"}
+                        >
+                          <Lock className="h-3 w-3 text-amber-400/80" />
+                          <Icon className="h-3.5 w-3.5 opacity-50" />
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

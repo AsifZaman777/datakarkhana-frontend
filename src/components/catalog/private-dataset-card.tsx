@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/providers/language-provider";
 import { scraperApi } from "@/lib/api/scraper";
+import { toast } from "sonner";
 import type { ScraperJob, User } from "@/lib/types";
 
 interface PrivateDatasetCardProps {
@@ -35,7 +36,7 @@ export function PrivateDatasetCard({
   isSyncing = false,
   isDesyncing = false,
 }: PrivateDatasetCardProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const ct = t.catalog || {};
 
   // Cloud sync eligibility check:
@@ -45,6 +46,18 @@ export function PrivateDatasetCard({
     user?.allow_sync === 1 ||
     user?.plan_tier === "pro" ||
     user?.plan_tier === "enterprise";
+
+  const isDaraz =
+    (job.query || "").toLowerCase().includes("daraz") ||
+    (job as any).scraper_type === "daraz";
+
+  const canDownload =
+    isAdmin ||
+    (user?.effective_permissions
+      ? (isDaraz ? !!user.effective_permissions.allow_daraz_download : !!user.effective_permissions.allow_dataset_download)
+      : (user?.allow_download !== undefined && user?.allow_download !== null
+          ? user.allow_download === 1
+          : ["pro", "enterprise"].includes((user?.plan_tier || "").toLowerCase())));
 
   return (
     <Card className="glass-panel border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300 flex flex-col justify-between">
@@ -63,14 +76,35 @@ export function PrivateDatasetCard({
 
           <div className="flex items-center gap-1.5">
             {(job.status === "done" || job.status === "stopped") && (
-              <a
-                href={scraperApi.downloadJobUrl(job.id)}
-                download
-                className="h-6 w-6 inline-flex items-center justify-center rounded-md text-amber-400 hover:bg-amber-500/10 transition-colors"
-                title="Download Excel Spreadsheet"
-              >
-                <Download className="h-3.5 w-3.5" />
-              </a>
+              canDownload ? (
+                <a
+                  href={scraperApi.downloadJobUrl(job.id)}
+                  download
+                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-amber-400 hover:bg-amber-500/10 transition-colors"
+                  title="Download Excel Spreadsheet"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.warning(
+                      isDaraz
+                        ? (lang === "bn"
+                            ? "দারাজ এক্সেল ফাইল ডাউনলোড সুবিধা আপনার টিয়ার পলিসিতে বন্ধ আছে।"
+                            : "Daraz raw Excel download is restricted for your subscription tier.")
+                        : (lang === "bn"
+                            ? "ক্যাটালগ ফাইল ডাউনলোড আপনার একাউন্ট বা সাবস্ক্রিপশন টিয়ারে বন্ধ রয়েছে।"
+                            : "Dataset file downloads are disabled for your subscription tier or account policy.")
+                    );
+                  }}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-amber-400 hover:bg-amber-500/10 transition-colors cursor-not-allowed"
+                  title={isDaraz ? "Daraz download locked by tier policy" : "Download locked by policy"}
+                >
+                  <Lock className="h-3.5 w-3.5 text-amber-400/80" />
+                </button>
+              )
             )}
             <Button
               size="icon"
