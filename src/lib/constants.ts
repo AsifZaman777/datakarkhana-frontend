@@ -15,7 +15,15 @@ export const LOCAL_API_BASE = (
   "http://127.0.0.1:8000"
 ).replace(/\/$/, "");
 
+export function isLocalMode(): boolean {
+  const mode = (process.env.NEXT_PUBLIC_API_MODE || "").toLowerCase().trim();
+  return mode === "local" || mode === "dev" || mode === "development";
+}
+
 export function getCloudApiBase(): string {
+  if (isLocalMode()) {
+    return LOCAL_API_BASE;
+  }
   return CLOUD_API_BASE;
 }
 
@@ -35,8 +43,7 @@ export function getApiBase(): string {
     return process.env.NEXT_PUBLIC_API_BASE.replace(/\/$/, "");
   }
 
-  const mode = (process.env.NEXT_PUBLIC_API_MODE || "").toLowerCase().trim();
-  if (mode === "local" || mode === "dev" || mode === "development") {
+  if (isLocalMode()) {
     return LOCAL_API_BASE;
   }
 

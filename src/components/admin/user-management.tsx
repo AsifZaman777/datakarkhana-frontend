@@ -1,5 +1,30 @@
 import { useState, useEffect, useMemo } from "react";
-import { UserCheck, ShieldAlert, AlertTriangle, Trash2, Coins, Plus, Minus, Key, Building, Cloud, CloudOff, FolderOpen, SlidersHorizontal, HardDrive, Database, ArrowUpDown } from "lucide-react";
+import Link from "next/link";
+import {
+  UserCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Trash2,
+  Coins,
+  Plus,
+  Minus,
+  Key,
+  Building,
+  Cloud,
+  CloudOff,
+  FolderOpen,
+  SlidersHorizontal,
+  HardDrive,
+  Database,
+  ArrowUpDown,
+  Search,
+  Sparkles,
+  Zap,
+  ShoppingBag,
+  ShieldCheck,
+  Users,
+  Filter,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +89,58 @@ export function UserManagement({
   const [dailyLimit, setDailyLimit] = useState<number>(300);
   const [brevoStatus, setBrevoStatus] = useState<string>("approved");
   const [isSubmittingBrevo, setIsSubmittingBrevo] = useState(false);
+
+  // Search & Tier Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tierFilter, setTierFilter] = useState<"all" | "enterprise" | "pro" | "starter" | "admin">("all");
+
+  const tierCounts = useMemo(() => {
+    let enterprise = 0;
+    let pro = 0;
+    let starter = 0;
+    let admin = 0;
+    users.forEach((u) => {
+      if (u.role === "admin" || u.role === "superadmin") {
+        admin++;
+      } else {
+        const t = (u.plan_tier || "").toLowerCase();
+        if (t.includes("enterprise")) enterprise++;
+        else if (t.includes("pro")) pro++;
+        else starter++;
+      }
+    });
+    return { all: users.length, enterprise, pro, starter, admin };
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const q = searchQuery.trim().toLowerCase();
+      if (q) {
+        const matches =
+          (u.email || "").toLowerCase().includes(q) ||
+          (u.full_name || "").toLowerCase().includes(q) ||
+          (u.purchased_package || "").toLowerCase().includes(q) ||
+          (u.plan_tier || "").toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+
+      if (tierFilter === "all") return true;
+      if (tierFilter === "admin") return u.role === "admin" || u.role === "superadmin";
+
+      const t = (u.plan_tier || "").toLowerCase();
+      if (tierFilter === "enterprise") return t.includes("enterprise");
+      if (tierFilter === "pro") return t.includes("pro") && !t.includes("enterprise");
+      if (tierFilter === "starter") {
+        return (
+          u.role !== "admin" &&
+          u.role !== "superadmin" &&
+          !t.includes("enterprise") &&
+          !t.includes("pro")
+        );
+      }
+      return true;
+    });
+  }, [users, searchQuery, tierFilter]);
 
   // Cloud Sync toggle state
   const [isTogglingSync, setIsTogglingSync] = useState<number | null>(null);
@@ -425,28 +502,49 @@ export function UserManagement({
         ),
         cell: ({ row }) => {
           const u = row.original;
+          const tier = (u.plan_tier || "").toLowerCase();
+          const isEnterprise = tier.includes("enterprise");
+          const isPro = tier.includes("pro") && !isEnterprise;
+          const isAdmin = u.role === "admin" || u.role === "superadmin";
+
           return (
             <div className="flex flex-col items-center gap-1.5">
               <Badge
                 variant="outline"
                 className={`text-[9px] uppercase tracking-wider font-mono font-bold ${
-                  u.role === "admin" || u.role === "superadmin"
+                  isAdmin
                     ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
-                    : u.plan_tier === "enterprise"
-                    ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
-                    : u.plan_tier === "pro"
-                    ? "border-cyan-500/40 text-cyan-400 bg-cyan-500/10"
+                    : isEnterprise
+                    ? "border-purple-500/50 text-purple-400 bg-purple-500/15 shadow-[0_0_10px_rgba(168,85,247,0.25)]"
+                    : isPro
+                    ? "border-cyan-500/50 text-cyan-400 bg-cyan-500/15 shadow-[0_0_10px_rgba(6,182,212,0.25)]"
                     : "border-border/60 text-muted-foreground bg-card/40"
                 }`}
               >
-                {u.role === "admin" || u.role === "superadmin"
-                  ? "Admin"
-                  : u.plan_tier === "enterprise"
-                  ? "Enterprise"
-                  : u.plan_tier === "pro"
-                  ? "Pro Growth"
-                  : "Starter"}
+                {isAdmin ? (
+                  "Admin"
+                ) : isEnterprise ? (
+                  <span className="flex items-center gap-1">
+                    <Sparkles className="h-2.5 w-2.5 text-purple-400" /> Enterprise
+                  </span>
+                ) : isPro ? (
+                  <span className="flex items-center gap-1">
+                    <Zap className="h-2.5 w-2.5 text-cyan-400" /> Pro Growth
+                  </span>
+                ) : (
+                  "Starter"
+                )}
               </Badge>
+
+              {u.purchased_package && !isAdmin && (
+                <div
+                  className="flex items-center gap-1 text-[9px] font-mono text-muted-foreground truncate max-w-[130px]"
+                  title={`Purchased package: ${u.purchased_package}`}
+                >
+                  <ShoppingBag className="h-2.5 w-2.5 text-primary/70 shrink-0" />
+                  <span className="truncate">{u.purchased_package}</span>
+                </div>
+              )}
 
               <div className="flex items-center gap-1">
                 <Button
@@ -595,7 +693,7 @@ export function UserManagement({
   );
 
   const userTable = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns: userColumns,
     state: { sorting: userSorting },
     onSortingChange: setUserSorting,
@@ -819,6 +917,179 @@ export function UserManagement({
             </div>
           </div>
         )}
+
+        {/* Subscriber Tier KPI Cards & Superadmin Access Control Link */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div
+            onClick={() => setTierFilter("all")}
+            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+              tierFilter === "all"
+                ? "border-primary/60 bg-primary/10 shadow-sm"
+                : "border-border/40 bg-card/40 hover:bg-card/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                {lang === "bn" ? "মোট গ্রাহক" : "Total Customers"}
+              </span>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="text-xl font-extrabold font-mono text-foreground mt-1">
+              {tierCounts.all}
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTierFilter("enterprise")}
+            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+              tierFilter === "enterprise"
+                ? "border-purple-500/60 bg-purple-500/15 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+                : "border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-purple-400 uppercase font-semibold flex items-center gap-1">
+                <Sparkles className="h-3 w-3" />
+                {lang === "bn" ? "এন্টারপ্রাইজ গ্রাহক" : "Enterprise"}
+              </span>
+              <Badge variant="outline" className="text-[9px] border-purple-500/40 text-purple-400">
+                Active
+              </Badge>
+            </div>
+            <div className="text-xl font-extrabold font-mono text-purple-400 mt-1">
+              {tierCounts.enterprise}
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTierFilter("pro")}
+            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+              tierFilter === "pro"
+                ? "border-cyan-500/60 bg-cyan-500/15 shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+                : "border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-cyan-400 uppercase font-semibold flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                {lang === "bn" ? "প্রো গ্রোথ গ্রাহক" : "Pro Growth"}
+              </span>
+              <Badge variant="outline" className="text-[9px] border-cyan-500/40 text-cyan-400">
+                Active
+              </Badge>
+            </div>
+            <div className="text-xl font-extrabold font-mono text-cyan-400 mt-1">
+              {tierCounts.pro}
+            </div>
+          </div>
+
+          <div
+            onClick={() => setTierFilter("starter")}
+            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+              tierFilter === "starter"
+                ? "border-border/80 bg-muted/40 shadow-sm"
+                : "border-border/40 bg-card/40 hover:bg-card/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                {lang === "bn" ? "স্টার্টার / ফ্রি" : "Starter / Free"}
+              </span>
+              <Badge variant="outline" className="text-[9px] border-border/50 text-muted-foreground">
+                Base
+              </Badge>
+            </div>
+            <div className="text-xl font-extrabold font-mono text-muted-foreground mt-1">
+              {tierCounts.starter}
+            </div>
+          </div>
+        </div>
+
+        {/* Search & Filter Bar with Tier Access shortcut */}
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 pt-2">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-muted-foreground mr-1 flex items-center gap-1 font-medium">
+              <Filter className="h-3 w-3" />
+              {lang === "bn" ? "ফিল্টার:" : "Filter:"}
+            </span>
+            <Button
+              size="sm"
+              variant={tierFilter === "all" ? "default" : "outline"}
+              onClick={() => setTierFilter("all")}
+              className="h-7 text-xs px-2.5 rounded-full"
+            >
+              {lang === "bn" ? "সকল" : "All"} ({tierCounts.all})
+            </Button>
+            <Button
+              size="sm"
+              variant={tierFilter === "enterprise" ? "default" : "outline"}
+              onClick={() => setTierFilter("enterprise")}
+              className={`h-7 text-xs px-2.5 rounded-full gap-1 ${
+                tierFilter === "enterprise"
+                  ? "bg-purple-600 hover:bg-purple-700 text-white"
+                  : "text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
+              }`}
+            >
+              <Sparkles className="h-3 w-3" /> Enterprise ({tierCounts.enterprise})
+            </Button>
+            <Button
+              size="sm"
+              variant={tierFilter === "pro" ? "default" : "outline"}
+              onClick={() => setTierFilter("pro")}
+              className={`h-7 text-xs px-2.5 rounded-full gap-1 ${
+                tierFilter === "pro"
+                  ? "bg-cyan-600 hover:bg-cyan-700 text-white"
+                  : "text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10"
+              }`}
+            >
+              <Zap className="h-3 w-3" /> Pro ({tierCounts.pro})
+            </Button>
+            <Button
+              size="sm"
+              variant={tierFilter === "starter" ? "default" : "outline"}
+              onClick={() => setTierFilter("starter")}
+              className="h-7 text-xs px-2.5 rounded-full"
+            >
+              Starter ({tierCounts.starter})
+            </Button>
+            <Button
+              size="sm"
+              variant={tierFilter === "admin" ? "default" : "outline"}
+              onClick={() => setTierFilter("admin")}
+              className="h-7 text-xs px-2.5 rounded-full text-emerald-400 border-emerald-500/30"
+            >
+              Admins ({tierCounts.admin})
+            </Button>
+          </div>
+
+          {/* Search Input & Access Matrix Button */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder={lang === "bn" ? "ইমেইল, নাম বা প্যাকেজ খুঁজুন..." : "Search email, name, package..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 text-xs bg-background/60 border-border/50"
+              />
+            </div>
+
+            <Link href="/admin?tab=access">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 shrink-0 shadow-sm"
+                title="Superadmin: Configure Tier Permissions Matrix"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {lang === "bn" ? "টিয়ার পলিসি" : "Tier Policies"}
+                </span>
+              </Button>
+            </Link>
+          </div>
+        </div>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>

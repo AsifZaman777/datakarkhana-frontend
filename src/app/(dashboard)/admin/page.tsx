@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building, Key, MoreHorizontal, ChevronDown } from "lucide-react";
+import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building, Key, MoreHorizontal, ChevronDown, ShieldCheck } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { PaymentVerification } from "@/components/admin/payment-verification";
 import { GatewaySettings } from "@/components/admin/gateway-settings";
 import { BrevoApplicationsList } from "@/components/admin/brevo-applications";
 import { LicenseManagement } from "@/components/admin/license-management";
+import { TierAccessControl } from "@/components/admin/tier-access-control";
 import { adminApi } from "@/lib/api/admin";
 import { configApi } from "@/lib/api/config";
 import { useLanguage } from "@/providers/language-provider";
@@ -138,6 +139,9 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
           <TabsTrigger value="licenses" className="gap-2 text-xs font-semibold shrink-0">
             <Key className="h-4 w-4 text-primary" /> {lang === "bn" ? "ডেস্কটপ লাইসেন্স" : "Desktop Licenses"}
           </TabsTrigger>
+          <TabsTrigger value="access" className="gap-2 text-xs font-semibold shrink-0">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" /> {lang === "bn" ? "টিয়ার এক্সেস কন্ট্রোল" : "Tier Access Control"}
+          </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2 text-xs font-semibold shrink-0">
             <Upload className="h-4 w-4 text-cyan-400" />{" "}
             {lang === "bn" ? "ডাটা আপলোড" : (at.tabUpload || "Upload Dataset")}
@@ -227,6 +231,11 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
         {/* TAB 4: LICENSES */}
         <TabsContent value="licenses" className="pt-4">
           <LicenseManagement />
+        </TabsContent>
+
+        {/* TAB: TIER ACCESS CONTROL */}
+        <TabsContent value="access" className="pt-4">
+          <TierAccessControl onRefreshUsers={loadData} />
         </TabsContent>
 
         {/* TAB 5: BREVO VERIFICATIONS */}

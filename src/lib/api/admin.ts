@@ -1,4 +1,6 @@
+import axios from "axios";
 import apiClient from "./client";
+import { getLocalApiBase, TOKEN_KEY } from "@/lib/constants";
 import type {
   User,
   SecurityViolation,
@@ -10,6 +12,7 @@ import type {
   LicenseRecord,
   CloudStorageOverview,
   UserUploadedDataset,
+  TierPermission,
 } from "@/lib/types";
 
 export const adminApi = {
@@ -206,4 +209,64 @@ export const adminApi = {
       "/api/admin/package-settings",
       data
     ),
+
+  // ── Tier Access Control & Permissions ──
+  getTierPermissions: async () => {
+    try {
+      return await apiClient.get<TierPermission[]>("/api/admin/tier-permissions");
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        // Fallback to local engine directly if central cloud is running an older deployment
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+        return await axios.get<TierPermission[]>(`${getLocalApiBase()}/api/admin/tier-permissions`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+      }
+      throw err;
+    }
+  },
+
+  saveTierPermissions: async (tiers: TierPermission[], applyToExisting = false) => {
+    try {
+      return await apiClient.post<{ success: boolean; message: string }>(
+        "/api/admin/tier-permissions",
+        { tiers, apply_to_existing_users: applyToExisting }
+      );
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+        return await axios.post<{ success: boolean; message: string }>(
+          `${getLocalApiBase()}/api/admin/tier-permissions`,
+          { tiers, apply_to_existing_users: applyToExisting },
+          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        );
+      }
+      throw err;
+    }
+  },
+
+  setUserPermissionsOverride: async (
+    userId: number,
+    data: { allow_sync?: number; max_sync_files?: number; allow_download?: number }
+  ) => {
+    try {
+      return await apiClient.post<{
+        success: boolean;
+        message: string;
+        effective_permissions: any;
+      }>(`/api/admin/users/${userId}/permissions`, data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+        return await axios.post<{
+          success: boolean;
+          message: string;
+          effective_permissions: any;
+        }>(`${getLocalApiBase()}/api/admin/users/${userId}/permissions`, data, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+      }
+      throw err;
+    }
+  },
 };

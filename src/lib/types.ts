@@ -1,6 +1,33 @@
 // ─── Types & Interfaces for MarketingOstad ───
 
 // ── Auth ──
+export interface UserEffectivePermissions {
+  tier_id: string;
+  tier_name: string;
+  allow_sync: boolean;
+  max_sync_files: number;
+  allow_dataset_download: boolean;
+  allow_daraz_download: boolean;
+  can_use_scraper: boolean;
+  can_use_marketing: boolean;
+  is_sync_overridden: boolean;
+  is_download_overridden: boolean;
+  is_quota_overridden: boolean;
+}
+
+export interface TierPermission {
+  tier_id: string;
+  tier_name: string;
+  allow_sync: boolean;
+  max_sync_files: number;
+  allow_dataset_download: boolean;
+  allow_daraz_download: boolean;
+  can_use_scraper: boolean;
+  can_use_marketing: boolean;
+  user_count?: number;
+  updated_at?: string;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -15,8 +42,11 @@ export interface User {
   daily_email_limit?: number;
   allow_sync?: number;
   max_sync_files?: number;
+  allow_download?: number;
   synced_files_count?: number;
   plan_tier?: string;
+  purchased_package?: string;
+  effective_permissions?: UserEffectivePermissions;
   created_at?: string;
 }
 

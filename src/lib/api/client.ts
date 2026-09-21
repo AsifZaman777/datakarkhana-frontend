@@ -1,11 +1,14 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
-import { getCloudApiBase, getLocalApiBase, TOKEN_KEY } from "@/lib/constants";
+import { getCloudApiBase, getLocalApiBase, getApiBase, isLocalMode, TOKEN_KEY } from "@/lib/constants";
 
 /**
  * Resolves whether a route should target the local Python automation engine (127.0.0.1:8000)
  * or the central cloud control plane (Render / Supabase).
  */
 export function resolveTargetBaseUrl(url?: string): string {
+  if (isLocalMode()) {
+    return getLocalApiBase();
+  }
   if (!url) return getCloudApiBase();
   const cleanUrl = url.toLowerCase();
   // Local machine automation routes (Selenium scraping, WhatsApp Web, local scrape datasets)
@@ -22,7 +25,7 @@ export function resolveTargetBaseUrl(url?: string): string {
 }
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: getCloudApiBase(),
+  baseURL: getApiBase(),
   headers: {
     "Content-Type": "application/json",
   },
