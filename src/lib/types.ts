@@ -156,6 +156,7 @@ export interface Lead {
 export interface ScraperJob {
   id: number;
   query: string;
+  scraper_type?: "google_maps" | "daraz" | string;
   division?: string;
   district?: string;
   area?: string;
@@ -169,6 +170,27 @@ export interface ScraperJob {
 export interface ScraperJobStatus {
   job: ScraperJob;
   logs: string[];
+}
+
+export interface DarazProductItem {
+  "Product Name"?: string;
+  "Sale Price (BDT)"?: string;
+  "Original Price (BDT)"?: string;
+  "Discount"?: string;
+  "Shop Name"?: string;
+  "Shop Rating"?: string;
+  "Brand"?: string;
+  "Rating"?: string | number;
+  "Review Count"?: string | number;
+  "Stock Status"?: string;
+  "Max Order Qty"?: string | number;
+  "Product URL"?: string;
+  "Image URL"?: string;
+  "Shop URL"?: string;
+  "Category"?: string;
+  "Search Query"?: string;
+  "Page Number"?: number;
+  [key: string]: unknown;
 }
 
 // ── Marketing ──

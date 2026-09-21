@@ -26,6 +26,7 @@ import {
   PanelLeftOpen,
   Menu,
   BookOpen,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +93,7 @@ function SidebarInner({
     admin: true,
     customers: true,
     datasets: true,
+    "data-collection": true,
     marketing: true,
     payment: false,
     security: false,
@@ -132,7 +134,16 @@ function SidebarInner({
       color: "text-purple-400",
       items: [
         { label: st.catalog || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets Catalog"), href: "/catalog", icon: Database },
-        { label: st.scraperConsole || (lang === "bn" ? "লাইভ স্ক্র্যাপার কনসোল" : "Live Scraper Console"), href: "/scraper", icon: Search },
+      ],
+    },
+    {
+      key: "data-collection",
+      title: lang === "bn" ? "ডাটা সংগ্রহ ইঞ্জিন" : "Data Collection",
+      icon: Search,
+      color: "text-cyan-400",
+      items: [
+        { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
+        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-400" },
       ],
     },
     {
@@ -183,7 +194,24 @@ function SidebarInner({
       color: "text-primary",
       items: [
         { label: st.catalog || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets Catalog"), href: "/catalog", icon: Database },
-        { label: st.scraperConsole || (lang === "bn" ? "লাইভ স্ক্র্যাপার কনসোল" : "Live Scraper Console"), href: "/scraper", icon: Search },
+      ],
+    },
+    {
+      key: "data-collection",
+      title: lang === "bn" ? "ডাটা সংগ্রহ ইঞ্জিন" : "Data Collection",
+      icon: Search,
+      color: "text-cyan-400",
+      items: [
+        { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
+        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-400" },
+      ],
+    },
+    {
+      key: "marketing",
+      title: st.marketingCampaigns || (lang === "bn" ? "মার্কেটিং ও ক্যাম্পেইন" : "Marketing & Campaigns"),
+      icon: Send,
+      color: "text-pink-400",
+      items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send },
         { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
         { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-400" },
@@ -196,6 +224,7 @@ function SidebarInner({
   const getTourIdForHref = (href: string) => {
     if (href === "/catalog") return "sidebar-nav-catalog";
     if (href === "/scraper") return "sidebar-nav-scraper";
+    if (href === "/scraper/daraz") return "sidebar-nav-daraz";
     if (href === "/marketing") return "sidebar-nav-marketing";
     if (href === "/upgrade") return "sidebar-nav-upgrade";
     if (href === "/tutorial") return "sidebar-nav-tutorial";
