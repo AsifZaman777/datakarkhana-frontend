@@ -43,7 +43,7 @@ export default function UpgradePage() {
       </div>
 
       <div data-tour="upgrade-packages">
-        <PricingSection onSelectPackage={handleSelectPackage} />
+        <PricingSection onSelectPackage={handleSelectPackage} hideHeader />
       </div>
 
       <PaymentWizardModal open={modalOpen} onClose={() => setModalOpen(false)} />
