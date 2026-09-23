@@ -27,9 +27,14 @@ export function ConnectionStatusDots({
 
   const handleRefresh = async (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    e?.preventDefault();
+    if (isRefreshing || isChecking) return;
     setIsRefreshing(true);
-    await checkNow();
-    setTimeout(() => setIsRefreshing(false), 500);
+    try {
+      await checkNow();
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 600);
+    }
   };
 
   const allConnected = backendOnline && dbOnline;
