@@ -38,7 +38,7 @@ export function PackageSettings() {
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const res = await paymentsApi.packagesConfig();
+      const res = await paymentsApi.publicPackagesConfig();
       setPackages(res.data.packages || []);
       if (res.data.custom_package) {
         setCustomRate(res.data.custom_package.price_per_credit_bdt || 10);

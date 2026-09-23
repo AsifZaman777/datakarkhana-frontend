@@ -91,7 +91,7 @@ export function PricingSection({ onSelectPackage, hideHeader = false }: PricingS
 
   useEffect(() => {
     paymentsApi
-      .packagesConfig()
+      .publicPackagesConfig()
       .then((res) => {
         if (res.data?.packages && res.data.packages.length > 0) {
           setConfig(res.data);

@@ -204,11 +204,25 @@ export const adminApi = {
       responseType: "blob",
     }),
 
-  savePackageSettings: (data: { packages: any[]; custom_package?: any }) =>
-    apiClient.post<{ success: boolean; message: string }>(
-      "/api/admin/package-settings",
-      data
-    ),
+  savePackageSettings: async (data: { packages: any[]; custom_package?: any }) => {
+    try {
+      return await apiClient.post<{ success: boolean; message: string }>(
+        "/api/admin/package-settings",
+        data
+      );
+    } catch (err: any) {
+      if (err?.response?.status === 404 || !err.response) {
+        // Fallback to local engine directly if cloud is unreachable or running older deployment
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+        return await axios.post<{ success: boolean; message: string }>(
+          `${getLocalApiBase()}/api/admin/package-settings`,
+          data,
+          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        );
+      }
+      throw err;
+    }
+  },
 
   // ── Tier Access Control & Permissions ──
   getTierPermissions: async () => {
