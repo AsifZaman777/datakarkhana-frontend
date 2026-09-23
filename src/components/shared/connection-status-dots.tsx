@@ -44,10 +44,10 @@ export function ConnectionStatusDots({
         "inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-mono transition-all duration-300 cursor-pointer select-none",
         "border backdrop-blur-md shadow-sm hover:border-primary/50",
         allConnected
-          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
           : backendOnline
-          ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
-          : "bg-rose-500/10 border-rose-500/30 text-rose-300",
+          ? "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+          : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300",
         className
       )}
     >

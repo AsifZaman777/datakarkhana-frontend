@@ -140,15 +140,15 @@ function AuthContent() {
 
         {/* Offline Alert Banner (when local backend or server is not reachable) */}
         {!backendOnline && (
-          <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
-            <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-300">
+            <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <div className="font-semibold text-rose-200">
+              <div className="font-semibold text-rose-800 dark:text-rose-200">
                 {isDesktop
                   ? (lang === "bn" ? "লোকাল ব্যাকএন্ড অফলাইন (পোর্ট ৮০০০)" : "Local Backend Offline (Port 8000)")
                   : (lang === "bn" ? "ব্যাকএন্ড সার্ভার অফলাইন" : "Backend Server Offline")}
               </div>
-              <div className="text-[11px] text-rose-300/80 mt-0.5 leading-relaxed">
+              <div className="text-[11px] text-rose-800/90 dark:text-rose-300/80 mt-0.5 leading-relaxed">
                 {isDesktop
                   ? isRestarting
                     ? (lang === "bn"
@@ -167,7 +167,7 @@ function AuthContent() {
                 variant="outline"
                 onClick={handleRetryConnection}
                 disabled={isRestarting || isChecking}
-                className="mt-2.5 h-7 text-xs border-rose-500/40 text-rose-200 hover:bg-rose-500/20 gap-1.5 font-medium"
+                className="mt-2.5 h-7 text-xs border-rose-500/40 text-rose-700 dark:text-rose-200 hover:bg-rose-500/20 gap-1.5 font-medium"
               >
                 <RefreshCw className={cn("h-3 w-3", (isChecking || isRestarting) && "animate-spin")} />
                 <span>
@@ -191,13 +191,13 @@ function AuthContent() {
         />
 
         {/* Navigation Tabs for Auth Modes */}
-        <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 rounded-xl mb-6 border border-border/40 text-xs font-semibold">
+        <div className="grid grid-cols-3 gap-1 p-1 bg-muted rounded-xl mb-6 border border-border text-xs font-semibold">
           <button
             type="button"
             onClick={() => setView("login")}
             className={`py-2 px-2.5 rounded-lg transition-all text-center ${
               view === "login"
-                ? "bg-background text-foreground shadow-sm font-bold border border-border/50"
+                ? "bg-card text-foreground shadow-sm font-bold border border-border"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -208,7 +208,7 @@ function AuthContent() {
             onClick={() => setView("register")}
             className={`py-2 px-2.5 rounded-lg transition-all text-center ${
               view === "register"
-                ? "bg-background text-foreground shadow-sm font-bold border border-border/50"
+                ? "bg-card text-foreground shadow-sm font-bold border border-border"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

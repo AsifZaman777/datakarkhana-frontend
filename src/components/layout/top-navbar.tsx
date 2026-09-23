@@ -65,7 +65,7 @@ export function TopNavbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href={homeHref} className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:opacity-80 transition-opacity shrink-0">
           <BarChart3 className="h-6 w-6 text-primary" />
@@ -81,7 +81,7 @@ export function TopNavbar() {
 
         {/* Website Landing Nav Links — Hidden on Desktop Application */}
         {!isDesktop && (
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 shrink min-w-0">
             {/* Always visible on medium/laptop screens */}
             {primaryNavItems.map((item) => {
               const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href.split("#")[0]) && item.href !== "/";
@@ -91,7 +91,7 @@ export function TopNavbar() {
                   href={item.href}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors shrink-0
                     ${isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     }`}
                 >
@@ -102,7 +102,7 @@ export function TopNavbar() {
             })}
 
             {/* On extra-wide screens: show all links directly */}
-            <div className="hidden xl:flex items-center gap-1">
+            <div className="hidden 2xl:flex items-center gap-1">
               {moreNavItems.map((item) => {
                 const isActive = pathname.startsWith(item.href.split("#")[0]) && item.href !== "/";
                 return (
@@ -111,7 +111,7 @@ export function TopNavbar() {
                     href={item.href}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors shrink-0
                       ${isActive
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-primary/10 text-primary font-semibold"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                       }`}
                   >
@@ -121,8 +121,8 @@ export function TopNavbar() {
               })}
             </div>
 
-            {/* On laptop / compact screens (md to xl): Three-Dot / More Dropdown */}
-            <div className="xl:hidden">
+            {/* On laptop / compact screens (lg to 2xl): Three-Dot / More Dropdown */}
+            <div className="2xl:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className="flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer outline-none border-none bg-transparent"

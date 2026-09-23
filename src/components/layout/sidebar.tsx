@@ -110,19 +110,19 @@ function SidebarInner({
       key: "admin",
       title: st.adminHeader || (lang === "bn" ? "অ্যাডমিনিস্ট্রেশন" : "Administration"),
       icon: Settings,
-      color: "text-cyan-400",
+      color: "text-cyan-600 dark:text-cyan-400",
       items: [
         { label: st.adminDashboard || (lang === "bn" ? "এডমিন ড্যাশবোর্ড" : "Admin Dashboard"), href: "/admin", icon: LayoutDashboard },
-        { label: st.packageSettings || (lang === "bn" ? "প্যাকেজ সেটিংস" : "Package Settings"), href: "/admin/packages", icon: Coins, iconColor: "text-amber-500" },
-        { label: st.requests || (lang === "bn" ? "ডাটা রিকুয়েস্টসমূহ" : "Dataset Requests"), href: "/admin/requests", icon: Inbox, iconColor: "text-amber-500" },
-        { label: st.gateway || (lang === "bn" ? "গেটওয়ে ও কিউআর সেটিংস" : "Gateway & QR Settings"), href: "/admin/gateway", icon: Settings, iconColor: "text-cyan-500" },
+        { label: st.packageSettings || (lang === "bn" ? "প্যাকেজ সেটিংস" : "Package Settings"), href: "/admin/packages", icon: Coins, iconColor: "text-amber-600 dark:text-amber-400" },
+        { label: st.requests || (lang === "bn" ? "ডাটা রিকুয়েস্টসমূহ" : "Dataset Requests"), href: "/admin/requests", icon: Inbox, iconColor: "text-amber-600 dark:text-amber-400" },
+        { label: st.gateway || (lang === "bn" ? "গেটওয়ে ও কিউআর সেটিংস" : "Gateway & QR Settings"), href: "/admin/gateway", icon: Settings, iconColor: "text-cyan-600 dark:text-cyan-400" },
       ],
     },
     {
       key: "customers",
       title: st.customerManagement || (lang === "bn" ? "গ্রাহক ব্যবস্থাপনা" : "Customer Management"),
       icon: Users,
-      color: "text-emerald-400",
+      color: "text-emerald-600 dark:text-emerald-400",
       items: [
         { label: st.users || (lang === "bn" ? "গ্রাহক ও ক্রেডিট" : "Customers & Credits"), href: "/users", icon: User },
       ],
@@ -131,7 +131,7 @@ function SidebarInner({
       key: "datasets",
       title: st.datasetManagement || (lang === "bn" ? "ডাটাবেস ব্যবস্থাপনা" : "Dataset Management"),
       icon: Database,
-      color: "text-purple-400",
+      color: "text-purple-600 dark:text-purple-400",
       items: [
         { label: st.catalog || (lang === "bn" ? "ডাটা ক্যাটালগ" : "Datasets Catalog"), href: "/catalog", icon: Database },
       ],
@@ -140,36 +140,36 @@ function SidebarInner({
       key: "data-collection",
       title: lang === "bn" ? "ডাটা সংগ্রহ ইঞ্জিন" : "Data Collection",
       icon: Search,
-      color: "text-cyan-400",
+      color: "text-cyan-600 dark:text-cyan-400",
       items: [
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
-        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-400" },
+        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
       ],
     },
     {
       key: "marketing",
       title: st.marketingCampaigns || (lang === "bn" ? "মার্কেটিং ও ক্যাম্পেইন" : "Marketing & Campaigns"),
       icon: Send,
-      color: "text-pink-400",
+      color: "text-pink-600 dark:text-pink-400",
       items: [
-        { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send, iconColor: "text-pink-400" },
+        { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send, iconColor: "text-pink-600 dark:text-pink-400" },
       ],
     },
     {
       key: "payment",
       title: st.paymentModule || (lang === "bn" ? "পেমেন্ট মডিউল" : "Payment Module"),
       icon: CreditCard,
-      color: "text-amber-400",
+      color: "text-amber-600 dark:text-amber-400",
       items: [
-        { label: st.payments || (lang === "bn" ? "পেমেন্ট ভেরিফিকেশন" : "Payment Verification"), href: "/admin/payments", icon: Coins, iconColor: "text-amber-500" },
-        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
+        { label: st.payments || (lang === "bn" ? "পেমেন্ট ভেরিফিকেশন" : "Payment Verification"), href: "/admin/payments", icon: Coins, iconColor: "text-amber-600 dark:text-amber-400" },
+        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-600 dark:text-amber-400" },
       ],
     },
     {
       key: "security",
       title: st.securityManagement || (lang === "bn" ? "নিরাপত্তা ব্যবস্থাপনা" : "Security Management"),
       icon: Lock,
-      color: "text-rose-400",
+      color: "text-rose-600 dark:text-rose-400",
       items: [
         { label: st.security || (lang === "bn" ? "সিকিউরিটি মডিউল" : "Security Module"), href: "/security", icon: Shield, isDanger: true },
       ],
@@ -178,9 +178,9 @@ function SidebarInner({
       key: "tutorial",
       title: lang === "bn" ? "সহায়িকা ও টিউটোরিয়াল" : "Guides & Tutorials",
       icon: BookOpen,
-      color: "text-cyan-400",
+      color: "text-cyan-600 dark:text-cyan-400",
       items: [
-        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-400" },
+        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-600 dark:text-cyan-400" },
       ],
     },
   ];
@@ -200,21 +200,21 @@ function SidebarInner({
       key: "data-collection",
       title: lang === "bn" ? "ডাটা সংগ্রহ ইঞ্জিন" : "Data Collection",
       icon: Search,
-      color: "text-cyan-400",
+      color: "text-cyan-600 dark:text-cyan-400",
       items: [
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
-        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-400" },
+        { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
       ],
     },
     {
       key: "marketing",
       title: st.marketingCampaigns || (lang === "bn" ? "মার্কেটিং ও ক্যাম্পেইন" : "Marketing & Campaigns"),
       icon: Send,
-      color: "text-pink-400",
+      color: "text-pink-600 dark:text-pink-400",
       items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send },
-        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-500" },
-        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-400" },
+        { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-600 dark:text-amber-400" },
+        { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-600 dark:text-cyan-400" },
       ],
     },
   ];
@@ -282,7 +282,7 @@ function SidebarInner({
     <TooltipProvider delay={0}>
       <div
         className={cn(
-          "flex flex-col h-screen bg-card/60 backdrop-blur-xl border-r border-border/40 transition-[width] duration-300 overflow-hidden",
+          "flex flex-col h-screen bg-card/95 dark:bg-card/60 backdrop-blur-xl border-r border-border transition-[width] duration-300 overflow-hidden shadow-xs",
           collapsed ? "w-16" : "w-64"
         )}
       >
@@ -290,7 +290,7 @@ function SidebarInner({
         <div
           data-tour="sidebar-brand"
           className={cn(
-            "flex items-center shrink-0 border-b border-border/40",
+            "flex items-center shrink-0 border-b border-border",
             collapsed ? "justify-center p-3 h-14" : "justify-between px-4 h-14"
           )}
         >
@@ -385,7 +385,7 @@ function SidebarInner({
         {/* ── Footer ── */}
         <div
           className={cn(
-            "shrink-0 border-t border-border/40 bg-card/80",
+            "shrink-0 border-t border-border bg-card/95 dark:bg-card/80",
             collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3 space-y-2"
           )}
         >

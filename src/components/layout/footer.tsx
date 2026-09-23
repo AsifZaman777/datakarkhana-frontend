@@ -25,8 +25,8 @@ export function Footer({ onOpenLegalModal }: FooterProps) {
             <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
               {t.footer.desc}
             </p>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-mono">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               {t.footer.systemActive}
             </div>
           </div>

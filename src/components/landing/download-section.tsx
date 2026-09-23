@@ -59,13 +59,13 @@ export function DownloadSection() {
         </div>
 
         {/* Download Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {/* Windows Card */}
           <div
-            className={`relative rounded-2xl border p-8 flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${
+            className={`relative rounded-2xl border p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${
               detectedOs === "windows"
-                ? "border-primary/60 bg-card/80 shadow-2xl shadow-primary/15 ring-1 ring-primary/40"
-                : "border-border/60 bg-card/40 hover:border-border hover:bg-card/60 shadow-lg"
+                ? "border-primary/60 bg-card shadow-xl shadow-primary/10 ring-1 ring-primary/30"
+                : "border-border bg-card hover:border-primary/50 shadow-sm hover:shadow-md"
             }`}
           >
             {detectedOs === "windows" && (
@@ -75,76 +75,68 @@ export function DownloadSection() {
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Header with Icon */}
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
-                  <Monitor className="h-7 w-7" />
+              <div className="flex items-center gap-3.5">
+                <div className="h-12 w-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-inner">
+                  <Monitor className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">{dt.winCardTitle || "Windows PC"}</h3>
-                  <p className="text-xs text-muted-foreground">{dt.winCardSub || "Windows 10 / 11 (64-bit)"}</p>
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">{dt.winCardTitle || "Windows PC"}</h3>
+                  <p className="text-xs text-muted-foreground font-medium">{dt.winCardSub || "Windows 10 / 11 (64-bit)"}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 py-2 border-y border-border/40 text-xs text-muted-foreground">
+              <div className="space-y-2.5 py-2 border-y border-border/40 text-xs text-muted-foreground font-medium">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.winF1 || "Includes Desktop App Icon & Start Menu shortcut"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.winF1 || "Includes Desktop App Icon & Start Menu shortcut"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.winF2 || "Built-in standard uninstaller (Windows Settings ➔ Apps)"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.winF2 || "Built-in standard uninstaller (Windows Settings ➔ Apps)"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.winF3 || "Zero Command Prompt / CMD terminal popups"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.winF3 || "Zero Command Prompt / CMD terminal popups"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.winF4 || "100% standalone binary installer (.exe)"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.winF4 || "100% standalone binary installer (.exe)"}</span>
                 </div>
               </div>
 
               {/* Specs pill */}
-              <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/40">
+              <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/60 p-2 rounded-lg border border-border/60">
                 <span className="flex items-center gap-1">
                   <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.winSize || "Size: ~185 MB"}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Cpu className="h-3.5 w-3.5 text-primary" /> {dt.winFormat || "Format: .exe (NSIS)"}
+                  <Cpu className="h-3.5 w-3.5 text-primary" /> {dt.winArch || "x64 Architecture"}
                 </span>
               </div>
             </div>
 
-            {/* Action */}
-            <div className="pt-6 mt-6">
+            <div className="pt-5 mt-auto">
               <a href={windowsDownloadUrl} download className="block">
-                <Button
-                  size="lg"
-                  className={`w-full gap-2.5 font-bold h-12 text-sm shadow-md transition-all ${
-                    detectedOs === "windows"
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25"
-                      : "bg-muted hover:bg-accent text-foreground"
-                  }`}
-                >
-                  <Download className="h-4 w-4" />
+                <Button size="lg" className="w-full gap-2 font-bold py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25">
+                  <Download className="h-5 w-5" />
                   {dt.winBtn || "Download for Windows (.exe)"}
                 </Button>
               </a>
-              <p className="text-[11px] text-center text-muted-foreground mt-2">
-                {dt.winNote || "Double-click installer to set up desktop icon automatically"}
+              <p className="text-[11px] text-center text-muted-foreground/80 mt-1.5 font-mono">
+                {dt.winVer || "Version 2.0.2 • Windows 10 & 11"}
               </p>
             </div>
           </div>
 
-          {/* Mac Card */}
+          {/* macOS Card */}
           <div
-            className={`relative rounded-2xl border p-8 flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${
+            className={`relative rounded-2xl border p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 backdrop-blur-xl ${
               detectedOs === "mac"
-                ? "border-primary/60 bg-card/80 shadow-2xl shadow-primary/15 ring-1 ring-primary/40"
-                : "border-border/60 bg-card/40 hover:border-border hover:bg-card/60 shadow-lg"
+                ? "border-primary/60 bg-card shadow-xl shadow-primary/10 ring-1 ring-primary/30"
+                : "border-border bg-card hover:border-primary/50 shadow-sm hover:shadow-md"
             }`}
           >
             {detectedOs === "mac" && (
@@ -154,39 +146,39 @@ export function DownloadSection() {
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Header with Icon */}
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-zinc-500/10 border border-zinc-500/30 flex items-center justify-center text-zinc-200 shadow-inner">
-                  <Apple className="h-7 w-7" />
+              <div className="flex items-center gap-3.5">
+                <div className="h-12 w-12 rounded-xl bg-zinc-500/10 border border-zinc-500/30 flex items-center justify-center text-zinc-800 dark:text-zinc-200 shadow-inner">
+                  <Apple className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">{dt.macCardTitle || "Apple macOS"}</h3>
-                  <p className="text-xs text-muted-foreground">{dt.macCardSub || "macOS 11.0+ (Apple Silicon & Intel)"}</p>
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">{dt.macCardTitle || "Apple macOS"}</h3>
+                  <p className="text-xs text-muted-foreground font-medium">{dt.macCardSub || "macOS 11.0+ (Apple Silicon & Intel)"}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 py-2 border-y border-border/40 text-xs text-muted-foreground">
+              <div className="space-y-2.5 py-2 border-y border-border/40 text-xs text-muted-foreground font-medium">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.macF1 || "Native .app bundle with custom 3D Cyber Icon"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.macF1 || "Native .app bundle with custom 3D Cyber Icon"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.macF2 || "Drag & Drop installation into Applications folder"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.macF2 || "Drag & Drop installation into Applications folder"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.macF3 || "Zero Terminal windows open during app execution"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.macF3 || "Zero Terminal windows open during app execution"}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>{dt.macF4 || "Simple uninstall by dragging to macOS Trash"}</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-foreground/90">{dt.macF4 || "Simple uninstall by dragging to macOS Trash"}</span>
                 </div>
               </div>
 
               {/* Specs pill */}
-              <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/40">
+              <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/60 p-2 rounded-lg border border-border/60">
                 <span className="flex items-center gap-1">
                   <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.macSize || "Size: ~196 MB"}
                 </span>
@@ -198,21 +190,21 @@ export function DownloadSection() {
             </div>
 
             {/* Action */}
-            <div className="pt-6 mt-6">
+            <div className="pt-5 mt-auto">
               <a href={macDownloadUrl} download className="block">
                 <Button
                   size="lg"
-                  className={`w-full gap-2.5 font-bold h-12 text-sm shadow-md transition-all ${
+                  className={`w-full gap-2 font-bold py-2.5 shadow-md transition-all ${
                     detectedOs === "mac"
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/25"
                       : "bg-muted hover:bg-accent text-foreground"
                   }`}
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-5 w-5" />
                   {dt.macBtn || "Download for Mac (.dmg)"}
                 </Button>
               </a>
-              <p className="text-[11px] text-center text-muted-foreground mt-2">
+              <p className="text-[11px] text-center text-muted-foreground/80 mt-1.5 font-mono">
                 {dt.macNote || "Mount DMG and drag to Applications for 1-click launch"}
               </p>
             </div>
@@ -222,7 +214,7 @@ export function DownloadSection() {
         {/* Security & Privacy Banner */}
         <div className="mt-12 rounded-xl bg-card/40 border border-border/50 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>

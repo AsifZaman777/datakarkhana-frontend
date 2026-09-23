@@ -17,6 +17,73 @@ interface PricingSectionProps {
   hideHeader?: boolean;
 }
 
+const DEFAULT_PACKAGES: PaymentPackage[] = [
+  {
+    id: "starter",
+    name: "Starter Lead Pack",
+    credits: 50,
+    price_bdt: 350,
+    price_per_credit_bdt: 7,
+    popular: false,
+    badge: "Starter",
+    description: "Ideal for small outreach campaigns & testing.",
+    features: [
+      "50 Verified Lead Credits",
+      "Full Phone & Email Access",
+      "Unlimited Public Dataset Access",
+      "Generate 10 Private Datasets",
+      "WhatsApp Campaigns (max 250 leads/day)",
+      "Single-Click CSV & Excel Export",
+      "Local Selenium Scraper Access",
+      "Standard Customer Support",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro Growth Pack",
+    credits: 100,
+    price_bdt: 550,
+    price_per_credit_bdt: 5.5,
+    popular: true,
+    badge: "Most Popular",
+    save_badge: "🔥 Save 1.5 Taka/Credit",
+    description: "Best value! Power your WhatsApp & Email campaigns.",
+    features: [
+      "200 Verified Lead Credits",
+      "Full Phone & Email Access",
+      "Global Google Maps Scraping",
+      "Priority Dataset Requests",
+      "Unlimited Public Dataset Access",
+      "Generate 5x Private Datasets",
+      "WhatsApp Campaigns (max 350 leads/day)",
+      "Email Campaigns (max 250 leads/day)",
+      "24/7 Priority Support",
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise Mega Pack",
+    credits: 500,
+    price_bdt: 2500,
+    price_per_credit_bdt: 5,
+    popular: false,
+    badge: "Agency Choice",
+    save_badge: "🔥 Save 2.0 Taka/Credit",
+    description: "Maximum credits for high-volume agency scraping.",
+    features: [
+      "500 Verified Lead Credits",
+      "Full Phone & Email Access",
+      "Global Google Maps Scraping",
+      "Instant Public Catalog Unlocks",
+      "Generate 10x Private Datasets",
+      "Unlimited WhatsApp Campaigns",
+      "Unlimited Email Campaigns (~10k/month)",
+      "Dedicated Account Manager",
+      "Custom Location & Niche Requests",
+    ],
+  },
+];
+
 export function PricingSection({ onSelectPackage, hideHeader = false }: PricingSectionProps) {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
@@ -25,11 +92,16 @@ export function PricingSection({ onSelectPackage, hideHeader = false }: PricingS
   useEffect(() => {
     paymentsApi
       .packagesConfig()
-      .then((res) => setConfig(res.data))
+      .then((res) => {
+        if (res.data?.packages && res.data.packages.length > 0) {
+          setConfig(res.data);
+        }
+      })
       .catch(() => {});
   }, []);
 
-  const packages = config?.packages || [];
+  const rawPackages = config?.packages && config.packages.length > 0 ? config.packages : DEFAULT_PACKAGES;
+  const packages = rawPackages;
 
   return (
     <section id="pricing" className="py-12 sm:py-16 lg:py-20 border-t border-border/40 relative overflow-visible">
@@ -37,7 +109,7 @@ export function PricingSection({ onSelectPackage, hideHeader = false }: PricingS
         {/* Header */}
         {!hideHeader && (
           <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12 space-y-2.5">
-            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold uppercase tracking-wider">
+            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider">
               {t.pricing.badge}
             </span>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground">
@@ -68,48 +140,51 @@ export function PricingSection({ onSelectPackage, hideHeader = false }: PricingS
                 )}
 
                 <Card
-                  className={`h-full flex flex-col justify-between rounded-2xl py-0 ${
+                  className={`h-full flex flex-col rounded-2xl p-5 sm:p-6 transition-all duration-300 ${
                     isPopular
-                      ? "glass-panel border-2 border-amber-500/80 shadow-2xl shadow-amber-500/15 bg-gradient-to-b from-amber-500/[0.08] via-card to-card"
-                      : "glass-panel border border-border/40 hover:border-border/80 hover:shadow-lg bg-card/60 backdrop-blur-xl"
+                      ? "glass-panel border-2 border-amber-500 shadow-xl shadow-amber-500/15 bg-gradient-to-b from-amber-500/[0.08] via-card to-card"
+                      : "glass-panel border border-border hover:border-primary/50 hover:shadow-lg bg-card"
                   }`}
                 >
+                  {/* Card Header & Price */}
+                  <div className="space-y-2 pb-4 border-b border-border/50">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-foreground">{pkg.name}</h3>
+                      {pkg.save_badge && (
+                        <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-[11px] py-0.5 px-2 shrink-0">
+                          {pkg.save_badge}
+                        </Badge>
+                      )}
+                    </div>
 
-                <CardHeader className="space-y-2.5 p-5 sm:p-6 lg:p-7">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg sm:text-xl font-bold">{pkg.name}</CardTitle>
-                    {pkg.save_badge && (
-                      <Badge variant="outline" className="border-amber-500/30 text-amber-500 text-[11px] py-0.5 px-2">
-                        {pkg.save_badge}
-                      </Badge>
-                    )}
+                    <div className="flex items-baseline gap-1.5 pt-0.5">
+                      <span className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground tracking-tight">
+                        ৳{pkg.price_bdt}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono font-medium">
+                        BDT / {pkg.credits} CR
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                      {pkg.description}
+                    </p>
                   </div>
 
-                  <div className="flex items-baseline gap-1.5 pt-1">
-                    <span className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground tracking-tight">
-                      ৳{pkg.price_bdt}
-                    </span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      BDT / {pkg.credits} CR
-                    </span>
+                  {/* Features List */}
+                  <div className="py-4 flex-1">
+                    <ul className="space-y-2.5 text-xs text-muted-foreground font-medium">
+                      {pkg.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                          <span className="leading-snug text-foreground/90">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <CardDescription className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                    {pkg.description}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="p-5 sm:p-6 lg:p-7 pt-0 flex-1 flex flex-col justify-between space-y-6">
-                  <ul className="space-y-2.5 text-xs text-muted-foreground/90">
-                    {pkg.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5">
-                        <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="pt-2">
+                  {/* CTA Button */}
+                  <div className="pt-2 mt-auto">
                     <Button
                       onClick={() => {
                         if (onSelectPackage) {
@@ -138,8 +213,7 @@ export function PricingSection({ onSelectPackage, hideHeader = false }: PricingS
                       )}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </Card>
             </div>
           );
           })}
