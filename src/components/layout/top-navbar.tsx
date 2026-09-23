@@ -154,7 +154,7 @@ export function TopNavbar() {
 
         {/* Actions & Mobile Trigger */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <ConnectionStatusDots />
+          {(user || isDesktop) && <ConnectionStatusDots />}
           <LanguageToggle />
           <ThemeToggle />
 
