@@ -8,8 +8,8 @@ export const DEFAULT_PACKAGES: PaymentPackage[] = [
   {
     id: "starter",
     name: "Starter Lead Pack",
-    credits: 99,
-    price_bdt: 350,
+    credits: 350,
+    price_bdt: 99,
     price_per_credit_bdt: 7,
     popular: false,
     badge: "Starter",
@@ -26,8 +26,8 @@ export const DEFAULT_PACKAGES: PaymentPackage[] = [
   {
     id: "pro",
     name: "Pro Growth Pack",
-    credits: 199,
-    price_bdt: 650,
+    credits: 650,
+    price_bdt: 199,
     price_per_credit_bdt: 5.5,
     popular: true,
     badge: "Most Popular",
