@@ -13,9 +13,9 @@ interface CreditCalculatorProps {
 }
 
 export function CreditCalculator({
-  customRate = 7.5,
+  customRate = 0.32,
   minCredits = 5,
-  maxCredits = 500,
+  maxCredits = 1000,
 }: CreditCalculatorProps) {
   const { t, lang } = useLanguage();
   const [credits, setCredits] = useState(50);

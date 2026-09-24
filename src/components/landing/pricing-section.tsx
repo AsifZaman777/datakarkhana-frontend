@@ -11,97 +11,35 @@ import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { paymentsApi } from "@/lib/api/payments";
 import type { PaymentConfig, PaymentPackage } from "@/lib/types";
+import { DEFAULT_PAYMENT_CONFIG, DEFAULT_PACKAGES } from "@/lib/default-packages";
 
 interface PricingSectionProps {
   onSelectPackage?: (pkg: PaymentPackage) => void;
   hideHeader?: boolean;
 }
 
-const DEFAULT_PACKAGES: PaymentPackage[] = [
-  {
-    id: "starter",
-    name: "Starter Lead Pack",
-    credits: 50,
-    price_bdt: 350,
-    price_per_credit_bdt: 7,
-    popular: false,
-    badge: "Starter",
-    description: "Ideal for small outreach campaigns & testing.",
-    features: [
-      "50 Verified Lead Credits",
-      "Full Phone & Email Access",
-      "Unlimited Public Dataset Access",
-      "Generate 10 Private Datasets",
-      "WhatsApp Campaigns (max 250 leads/day)",
-      "Single-Click CSV & Excel Export",
-      "Local Selenium Scraper Access",
-      "Standard Customer Support",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro Growth Pack",
-    credits: 100,
-    price_bdt: 550,
-    price_per_credit_bdt: 5.5,
-    popular: true,
-    badge: "Most Popular",
-    save_badge: "🔥 Save 1.5 Taka/Credit",
-    description: "Best value! Power your WhatsApp & Email campaigns.",
-    features: [
-      "200 Verified Lead Credits",
-      "Full Phone & Email Access",
-      "Global Google Maps Scraping",
-      "Priority Dataset Requests",
-      "Unlimited Public Dataset Access",
-      "Generate 5x Private Datasets",
-      "WhatsApp Campaigns (max 350 leads/day)",
-      "Email Campaigns (max 250 leads/day)",
-      "24/7 Priority Support",
-    ],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise Mega Pack",
-    credits: 500,
-    price_bdt: 2500,
-    price_per_credit_bdt: 5,
-    popular: false,
-    badge: "Agency Choice",
-    save_badge: "🔥 Save 2.0 Taka/Credit",
-    description: "Maximum credits for high-volume agency scraping.",
-    features: [
-      "500 Verified Lead Credits",
-      "Full Phone & Email Access",
-      "Global Google Maps Scraping",
-      "Instant Public Catalog Unlocks",
-      "Generate 10x Private Datasets",
-      "Unlimited WhatsApp Campaigns",
-      "Unlimited Email Campaigns (~10k/month)",
-      "Dedicated Account Manager",
-      "Custom Location & Niche Requests",
-    ],
-  },
-];
-
 export function PricingSection({ onSelectPackage, hideHeader = false }: PricingSectionProps) {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
-  const [config, setConfig] = useState<PaymentConfig | null>(null);
+  const [config, setConfig] = useState<PaymentConfig>(DEFAULT_PAYMENT_CONFIG);
 
   useEffect(() => {
     paymentsApi
       .publicPackagesConfig()
       .then((res) => {
         if (res.data?.packages && res.data.packages.length > 0) {
-          setConfig(res.data);
+          setConfig((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(res.data)) {
+              return prev;
+            }
+            return res.data;
+          });
         }
       })
       .catch(() => {});
   }, []);
 
-  const rawPackages = config?.packages && config.packages.length > 0 ? config.packages : DEFAULT_PACKAGES;
-  const packages = rawPackages;
+  const packages = config.packages && config.packages.length > 0 ? config.packages : DEFAULT_PACKAGES;
 
   return (
     <section id="pricing" className="py-12 sm:py-16 lg:py-20 border-t border-border/40 relative overflow-visible">
