@@ -23,6 +23,7 @@ import {
   Sparkles,
   Clock,
   Ban,
+  Cpu,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
+import { useLocalModels } from "@/providers/local-models-provider";
+import { modelsApi } from "@/lib/api/models";
 import {
   scanForSpamKeywords,
   getSpamScore,
@@ -112,7 +115,12 @@ export function BanProtectionWizard({
   companyName = "",
 }: BanProtectionWizardProps) {
   const { lang } = useLanguage();
+  const { openModelHub, installedModels, activeModel } = useLocalModels();
   const [currentStep, setCurrentStep] = useState(0);
+
+  // ── Local AI Action States ──
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [isAuditingAi, setIsAuditingAi] = useState(false);
 
   // ── Step 1: Message Variants ──
   const [variants, setVariants] = useState<string[]>([baseTemplate]);
@@ -147,6 +155,70 @@ export function BanProtectionWizard({
   const [tocAccepted, setTocAccepted] = useState(false);
 
   // ── Handlers ──
+
+  const handleAiGenerateVariants = async () => {
+    const baseText = variants[0] || baseTemplate;
+    if (!baseText.trim()) {
+      toast.error(lang === "bn" ? "প্রথমে একটি মূল মেসেজ লিখুন" : "Please enter a base message first");
+      return;
+    }
+
+    try {
+      setIsGeneratingAi(true);
+      const res = await modelsApi.generateVariants(baseText, 3, lang, activeModel?.filename);
+      if (res.variants && res.variants.length > 0) {
+        setVariants(res.variants);
+        toast.success(
+          lang === "bn"
+            ? `✨ ${res.model_used} দিয়ে ৩টি ভেরিয়েন্ট সফলভাবে তৈরি করা হয়েছে (${res.latency_ms}ms)!`
+            : `✨ Generated 3 variations via ${res.model_used} (${res.latency_ms}ms)!`
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "AI generation failed");
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  const handleAiAuditAndFix = async () => {
+    try {
+      setIsAuditingAi(true);
+      let fixedCount = 0;
+      const updated = await Promise.all(
+        variants.map(async (v) => {
+          const score = getSpamScore(v);
+          if (score > 0) {
+            const res = await modelsApi.auditSpam(v, lang, activeModel?.filename);
+            if (res.suggested_rewrite && res.suggested_rewrite !== v) {
+              fixedCount++;
+              return res.suggested_rewrite;
+            }
+          }
+          return v;
+        })
+      );
+
+      if (fixedCount > 0) {
+        setVariants(updated);
+        toast.success(
+          lang === "bn"
+            ? `🤖 ${fixedCount}টি ভেরিয়েন্ট থেকে স্প্যাম শব্দ সরিয়ে প্রাকৃতিক করা হয়েছে!`
+            : `🤖 Cleaned promotional spam keywords across ${fixedCount} variant(s)!`
+        );
+      } else {
+        toast.info(
+          lang === "bn"
+            ? "সবগুলো মেসেজ ইতোমধ্যে নিরাপদ অবস্থায় আছে।"
+            : "All message variants are already safe."
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "AI Spam audit failed");
+    } finally {
+      setIsAuditingAi(false);
+    }
+  };
 
   const addVariant = useCallback(() => {
     if (variants.length >= 6) {
@@ -284,7 +356,7 @@ export function BanProtectionWizard({
         }}
       >
         {/* Header */}
-        <DialogHeader className="px-6 py-3.5 border-b border-border/30">
+        <DialogHeader className="px-6 py-3.5 border-b border-border/30 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-rose-500/20 via-amber-500/10 to-emerald-500/20 border border-rose-500/30 flex items-center justify-center shrink-0">
               <Shield className="h-4 w-4 text-rose-400" />
@@ -302,6 +374,21 @@ export function BanProtectionWizard({
               </DialogDescription>
             </div>
           </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={openModelHub}
+            className="h-7 text-xs font-semibold border-purple-500/30 text-purple-300 hover:bg-purple-500/10 gap-1.5 shrink-0 hidden sm:flex"
+            title={lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Model Hub"}
+          >
+            <Cpu className="h-3 w-3 text-purple-400" />
+            <span>
+              {activeModel ? activeModel.name.split(" ")[0] : (lang === "bn" ? "এআই মডেল" : "Local AI")}
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </Button>
         </DialogHeader>
 
         {/* Step Bar */}
@@ -373,16 +460,34 @@ export function BanProtectionWizard({
                       : "Sending identical messages to everyone increases ban risk. Create 3-4 variants — Selenium picks randomly per contact."}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={addVariant}
-                  className="gap-1.5 text-xs font-medium border-primary/40 text-primary hover:bg-primary/10 h-7 px-2.5 shrink-0"
-                >
-                  <Plus className="h-3 w-3" />
-                  {lang === "bn" ? "ভেরিয়েন্ট যুক্ত করুন" : "Add Variant"}
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAiGenerateVariants}
+                    disabled={isGeneratingAi}
+                    className="gap-1.5 text-xs font-semibold border-purple-500/40 text-purple-300 hover:bg-purple-500/10 h-7 px-2.5"
+                  >
+                    {isGeneratingAi ? (
+                      <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 text-purple-400" />
+                    )}
+                    <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Generate"}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={addVariant}
+                    className="gap-1.5 text-xs font-medium border-primary/40 text-primary hover:bg-primary/10 h-7 px-2.5 shrink-0"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {lang === "bn" ? "ভেরিয়েন্ট যুক্ত করুন" : "Add Variant"}
+                  </Button>
+                </div>
               </div>
 
               {/* Recommendation Badge */}
@@ -470,18 +575,36 @@ export function BanProtectionWizard({
           {/* ═══ STEP 2: Spam Keyword Scan ═══ */}
           {currentStep === 1 && (
             <div className="space-y-3 animate-in fade-in duration-300">
-              <div>
-                <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Search className="h-4 w-4 text-amber-500" />
-                  {lang === "bn"
-                    ? "স্প্যাম কীওয়ার্ড স্ক্যান রিপোর্ট"
-                    : "Spam Keyword Scan Report"}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  {lang === "bn"
-                    ? "আপনার প্রতিটি মেসেজ ভেরিয়েন্ট WhatsApp-এর অ্যান্টি-স্প্যাম ফিল্টারের বিরুদ্ধে স্ক্যান করা হয়েছে। উচ্চ ঝুঁকির কীওয়ার্ডগুলো সরাতে হবে।"
-                    : "Each message variant has been scanned against WhatsApp's anti-spam filters. High-severity keywords must be removed to proceed."}
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Search className="h-4 w-4 text-amber-500" />
+                    {lang === "bn"
+                      ? "স্প্যাম কীওয়ার্ড স্ক্যান রিপোর্ট"
+                      : "Spam Keyword Scan Report"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    {lang === "bn"
+                      ? "আপনার প্রতিটি মেসেজ ভেরিয়েন্ট WhatsApp-এর অ্যান্টি-স্প্যাম ফিল্টারের বিরুদ্ধে স্ক্যান করা হয়েছে। উচ্চ ঝুঁকির কীওয়ার্ডগুলো সরাতে হবে।"
+                      : "Each message variant has been scanned against WhatsApp's anti-spam filters. High-severity keywords must be removed to proceed."}
+                  </p>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAiAuditAndFix}
+                  disabled={isAuditingAi}
+                  className="gap-1.5 text-xs font-semibold border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 h-7 px-2.5 shrink-0"
+                >
+                  {isAuditingAi ? (
+                    <RefreshCw className="h-3 w-3 animate-spin text-cyan-400" />
+                  ) : (
+                    <Zap className="h-3 w-3 text-cyan-400" />
+                  )}
+                  <span>{lang === "bn" ? "🤖 এআই অটো-ফিক্স" : "🤖 AI Auto-Fix"}</span>
+                </Button>
               </div>
 
               {/* Overall summary */}

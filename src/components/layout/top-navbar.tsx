@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Database, Laptop, MoreHorizontal, ChevronDown, Menu, LogIn, LayoutDashboard } from "lucide-react";
+import { BarChart3, Database, Laptop, MoreHorizontal, ChevronDown, Menu, LogIn, LayoutDashboard, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LanguageToggle } from "@/components/layout/language-toggle";
@@ -23,6 +23,7 @@ import {
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useIsDesktop } from "@/lib/desktop";
+import { useLocalModels } from "@/providers/local-models-provider";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { APP_NAME } from "@/lib/constants";
 
@@ -38,6 +39,7 @@ export function TopNavbar() {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
   const isDesktop = useIsDesktop();
+  const { openModelHub, installedModels } = useLocalModels();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const primaryNavItems: NavItem[] = [
@@ -155,6 +157,23 @@ export function TopNavbar() {
         {/* Actions & Mobile Trigger */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {(user || isDesktop) && <ConnectionStatusDots />}
+
+          {/* Local AI Model Hub Trigger */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={openModelHub}
+            className="h-8 gap-1.5 text-xs font-semibold border-purple-500/30 text-purple-300 hover:bg-purple-500/10 hidden sm:flex"
+            title={lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Model Hub"}
+          >
+            <Cpu className="h-3.5 w-3.5 text-purple-400" />
+            <span>{lang === "bn" ? "এআই মডেল" : "AI Models"}</span>
+            {installedModels.length > 0 && (
+              <span className="h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
+            )}
+          </Button>
+
           <LanguageToggle />
           <ThemeToggle />
 

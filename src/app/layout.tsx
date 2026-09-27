@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { LanguageProvider } from "@/providers/language-provider";
+import { LocalModelsProvider } from "@/providers/local-models-provider";
+import { ModelManagerModal } from "@/components/models/model-manager-modal";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,8 +45,11 @@ export default function RootLayout({
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
-              {children}
-              <Toaster position="bottom-right" richColors closeButton />
+              <LocalModelsProvider>
+                {children}
+                <ModelManagerModal />
+                <Toaster position="bottom-right" richColors closeButton />
+              </LocalModelsProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
