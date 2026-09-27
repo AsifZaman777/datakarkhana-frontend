@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Cpu, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/sidebar";
 import { useAuth } from "@/providers/auth-provider";
 import { PaymentWizardModal } from "@/components/payment/payment-wizard-modal";
@@ -12,7 +13,7 @@ import { LicenseBadge } from "@/components/LicenseBadge";
 import { LicenseModal } from "@/components/LicenseModal";
 import { licenseApi } from "@/lib/api/license";
 import { TourProvider } from "@/providers/tour-provider";
-
+import { useLocalModels } from "@/providers/local-models-provider";
 import { useLanguage } from "@/providers/language-provider";
 
 export default function DashboardLayout({
@@ -24,6 +25,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isLoading, isAdmin } = useAuth();
   const { lang } = useLanguage();
+  const { openModelHub, installedModels, activeDownload } = useLocalModels();
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
 
@@ -78,7 +80,26 @@ export default function DashboardLayout({
                 {lang === "bn" ? "লোকাল অটোমেশন ইঞ্জিন সচল" : "Local Automation Engine"}
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openModelHub}
+                className="h-7 text-xs gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 transition-colors"
+                title={lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Models Hub"}
+              >
+                <Cpu className="h-3.5 w-3.5 text-purple-400" />
+                <span className="hidden sm:inline">{lang === "bn" ? "এআই মডেল" : "AI Models"}</span>
+                {activeDownload?.status === "downloading" ? (
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                ) : installedModels.length > 0 ? (
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20" />
+                ) : (
+                  <Sparkles className="h-3 w-3 text-purple-400/70" />
+                )}
+              </Button>
+
               <LicenseBadge onOpenModal={() => setLicenseModalOpen(true)} />
             </div>
           </div>

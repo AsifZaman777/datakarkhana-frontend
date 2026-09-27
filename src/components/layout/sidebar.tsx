@@ -27,6 +27,8 @@ import {
   Menu,
   BookOpen,
   ShoppingCart,
+  Cpu,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +51,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
+import { useLocalModels } from "@/providers/local-models-provider";
 import { APP_NAME } from "@/lib/constants";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { TourButton } from "@/components/tour/tour-button";
@@ -86,6 +89,7 @@ function SidebarInner({
   const pathname = usePathname();
   const { user, isAdmin, logout } = useAuth();
   const { t, lang, toggleLang } = useLanguage();
+  const { openModelHub, installedModels, activeModel, activeDownload } = useLocalModels();
   const st = t.sidebar || {};
   const isSuperadmin = user?.role === "superadmin";
 
@@ -379,6 +383,78 @@ function SidebarInner({
                 );
               })}
             </div>
+          )}
+        </div>
+
+        {/* ── Local AI Models Hub Action ── */}
+        <div className={cn("shrink-0 border-t border-border/40 bg-purple-500/5", collapsed ? "p-2 flex justify-center" : "px-3 py-2")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    openModelHub();
+                    onClose?.();
+                  }}
+                  className="h-8 w-8 relative border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+                >
+                  <Cpu className="h-4 w-4 text-purple-400" />
+                  {installedModels.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-background" />
+                  )}
+                  {activeDownload?.status === "downloading" && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Models Hub"}
+                {activeModel && ` (${activeModel.name})`}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                openModelHub();
+                onClose?.();
+              }}
+              className={cn(
+                "w-full flex items-center justify-between p-2 rounded-xl text-left transition-all duration-200",
+                "border border-purple-500/25 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/5 to-transparent",
+                "hover:border-purple-500/50 hover:bg-purple-500/15 group shadow-xs cursor-pointer"
+              )}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-7 w-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform border border-purple-500/30">
+                  <Cpu className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-xs text-foreground flex items-center gap-1.5 truncate">
+                    <span>{lang === "bn" ? "লোকাল এআই মডেল" : "Local AI Models"}</span>
+                    {activeDownload?.status === "downloading" && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {activeModel
+                      ? activeModel.name
+                      : installedModels.length > 0
+                      ? `${installedModels.length} ${lang === "bn" ? "মডেল প্রস্তুত" : "models ready"}`
+                      : (lang === "bn" ? "মডেল ডাউনলোড করুন" : "Download & Manage")}
+                  </div>
+                </div>
+              </div>
+              {installedModels.length > 0 ? (
+                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px] px-1.5 py-0 shrink-0 font-mono">
+                  {installedModels.length}
+                </Badge>
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 text-purple-400/70 group-hover:text-purple-400 shrink-0 transition-colors" />
+              )}
+            </button>
           )}
         </div>
 
