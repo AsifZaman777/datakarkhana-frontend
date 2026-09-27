@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
-import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { scraperApi } from "@/lib/api/scraper";
 import type { Dataset, RecipientContact, ScraperJob } from "@/lib/types";
 import { useLanguage } from "@/providers/language-provider";
+import { BanProtectionWizard, type BanProtectionConfig } from "@/components/marketing/ban-protection-wizard";
 
 interface WhatsAppPanelProps {
   recipientGroups: Dataset[];
@@ -60,6 +61,9 @@ export function WhatsAppPanel({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [stopConfirmOpen, setStopConfirmOpen] = useState(false);
+
+  // Ban Protection Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => {
     scraperApi
@@ -306,12 +310,20 @@ export function WhatsAppPanel({
     }
   };
 
+  // Open Ban Protection Wizard instead of sending directly
   const handleSend = async (e: FormEvent) => {
     e.preventDefault();
     if (!recipientGroup) {
-      toast.warning("Please choose a target recipient group.");
+      toast.warning(lang === "bn" ? "একটি টার্গেট লিড গ্রুপ নির্বাচন করুন।" : "Please choose a target recipient group.");
       return;
     }
+    // Open the wizard instead of sending directly
+    setWizardOpen(true);
+  };
+
+  // Called after wizard completes all 4 steps
+  const handleWizardComplete = async (config: BanProtectionConfig) => {
+    setWizardOpen(false);
 
     const selectedList = groupContacts
       .filter((c) => selectedContactIds.has(c.id))
@@ -326,6 +338,12 @@ export function WhatsAppPanel({
           selectedList.length > 0 && selectedList.length < groupContacts.length
             ? selectedList
             : null,
+        // Ban protection config
+        message_variants: config.messageVariants.length > 1 ? config.messageVariants : undefined,
+        delay_min: config.delayMin,
+        delay_max: config.delayMax,
+        break_after_messages: config.breakAfterMessages,
+        break_duration: config.breakDuration,
       });
 
       const cid = String(res.data.campaign_id || `wa_camp_${Date.now()}`);
@@ -340,13 +358,13 @@ export function WhatsAppPanel({
         sent: 0,
         total: selectedList.length > 0 ? selectedList.length : (groupContacts.length || 1),
         pct: 0,
-        est_human: "Initializing WhatsApp dispatch session...",
-        latest_log: "Worker thread started...",
+        est_human: lang === "bn" ? "হোয়াটসঅ্যাপ ডিসপ্যাচ সেশন প্রস্তুত হচ্ছে..." : "Initializing WhatsApp dispatch session...",
+        latest_log: lang === "bn" ? "ব্যান প্রটেকশন সক্রিয় — ওয়ার্কার থ্রেড শুরু হয়েছে..." : "Ban protection active — Worker thread started...",
         status: "running",
       });
-      toast.success("WhatsApp campaign launched!");
+      toast.success(lang === "bn" ? "🛡️ সুরক্ষিত হোয়াটসঅ্যাপ ক্যাম্পেইন চালু হয়েছে!" : "🛡️ Protected WhatsApp campaign launched!");
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Dispatch failed.");
+      toast.error(err.response?.data?.detail || (lang === "bn" ? "ক্যাম্পেইন শুরু ব্যর্থ হয়েছে।" : "Dispatch failed."));
     } finally {
       setIsSubmitting(false);
     }
@@ -657,16 +675,25 @@ Return ONLY updated template.`;
             data-tour="marketing-send-btn"
             type="submit"
             disabled={isSubmitting || isCampaignRunning}
-            className="w-full font-bold gap-2 py-5 bg-emerald-500 text-black hover:bg-emerald-600 disabled:opacity-60"
+            className="w-full font-bold gap-2 py-5 bg-gradient-to-r from-emerald-500 via-emerald-500 to-teal-500 text-black hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 shadow-lg shadow-emerald-500/20"
           >
-            <Play className="h-4 w-4" />
+            <Shield className="h-4 w-4" />
             {isSubmitting
               ? (m.launchingWaBtn || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন শুরু হচ্ছে..." : "Launching WhatsApp Campaign..."))
               : isCampaignRunning
               ? (lang === "bn" ? "ক্যাম্পেইন ব্যাকগ্রাউন্ডে চলছে (সুরক্ষিত)..." : "Campaign Dispatching Live in Background (Multi-Page Protected)...")
-              : (m.launchWaBtn || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন শুরু করুন" : "Launch WhatsApp Campaign"))}
+              : (lang === "bn" ? "🛡️ ব্যান প্রটেকশন উইজার্ড খুলুন ও ক্যাম্পেইন শুরু করুন" : "🛡️ Open Ban Protection Wizard & Launch Campaign")}
           </Button>
         </form>
+
+      {/* Ban Protection Wizard Dialog */}
+      <BanProtectionWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={handleWizardComplete}
+        baseTemplate={getResolvedMessage()}
+        companyName={companyName}
+      />
       </CardContent>
 
       <ConfirmModal

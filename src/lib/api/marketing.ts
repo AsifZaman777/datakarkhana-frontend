@@ -22,7 +22,14 @@ export const marketingApi = {
     resume?: boolean;
     start_row?: number | null;
     selected_contacts?: { phone: string; name: string }[] | null;
+    // Ban protection config
+    message_variants?: string[];
+    delay_min?: number;
+    delay_max?: number;
+    break_after_messages?: number;
+    break_duration?: number;
   }) => apiClient.post<{ campaign_id: number }>("/api/marketing/send-whatsapp", data),
+
 
   campaignStatus: (campaignId: number | string) =>
     apiClient.get<CampaignProgress>(`/api/marketing/whatsapp-campaign/${campaignId}`),
