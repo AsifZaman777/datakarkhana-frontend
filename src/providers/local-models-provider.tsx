@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
   modelsApi,
   type ModelSpec,
@@ -39,9 +39,6 @@ export function LocalModelsProvider({ children }: { children: React.ReactNode })
   const [isModelHubOpen, setIsModelHubOpen] = useState(false);
   const [activeDownload, setActiveDownload] = useState<DownloadProgress | null>(null);
 
-  const activeDownloadRef = useRef<DownloadProgress | null>(null);
-  activeDownloadRef.current = activeDownload;
-
   const refreshModels = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -74,14 +71,19 @@ export function LocalModelsProvider({ children }: { children: React.ReactNode })
 
   // Active download polling loop
   useEffect(() => {
-    if (!activeDownload || activeDownload.status === "completed" || activeDownload.status === "failed" || activeDownload.status === "cancelled") {
+    if (
+      !activeDownload ||
+      activeDownload.status === "completed" ||
+      activeDownload.status === "failed" ||
+      activeDownload.status === "cancelled"
+    ) {
       return;
     }
 
+    const taskId = activeDownload.task_id;
+
     const interval = setInterval(async () => {
       try {
-        const taskId = activeDownloadRef.current?.task_id;
-        if (!taskId) return;
         const progress = await modelsApi.getProgress(taskId);
         setActiveDownload(progress);
 
@@ -105,7 +107,7 @@ export function LocalModelsProvider({ children }: { children: React.ReactNode })
     }, 1200);
 
     return () => clearInterval(interval);
-  }, [activeDownload, lang, refreshModels]);
+  }, [activeDownload?.task_id, activeDownload?.status, lang, refreshModels]);
 
   const startDownload = async (modelId?: string, customUrl?: string, customName?: string) => {
     try {
