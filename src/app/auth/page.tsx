@@ -19,12 +19,14 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
+import { useDesktopVersion } from "@/lib/desktop";
 
 function AuthContent() {
   const { t, lang } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading, isAdmin } = useAuth();
+  const appVersion = useDesktopVersion();
   const [view, setView] = useState<"login" | "register" | "otp">("login");
   const [otpEmail, setOtpEmail] = useState("");
   const [initialOtp, setInitialOtp] = useState("");
@@ -133,7 +135,7 @@ function AuthContent() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </span>
-            <span>{isDesktop ? "DataKarkhana Desktop" : "DataKarkhana Portal"}</span>
+            <span>{isDesktop ? `DataKarkhana Desktop v${appVersion}` : "DataKarkhana Portal"}</span>
           </div>
           <ConnectionStatusDots />
         </div>

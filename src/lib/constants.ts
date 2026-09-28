@@ -1,7 +1,7 @@
 // ─── App-wide Constants ───
 
 export const APP_NAME = "Datakarkhana";
-export const APP_VERSION = "2.0";
+export const APP_VERSION = "2.1.2";
 
 export const CLOUD_API_BASE = (
   process.env.NEXT_PUBLIC_CLOUD_API_URL ||

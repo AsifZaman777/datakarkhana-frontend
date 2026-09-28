@@ -52,6 +52,7 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { useLocalModels } from "@/providers/local-models-provider";
+import { useDesktopVersion } from "@/lib/desktop";
 import { APP_NAME } from "@/lib/constants";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { TourButton } from "@/components/tour/tour-button";
@@ -90,6 +91,7 @@ function SidebarInner({
   const { user, isAdmin, logout } = useAuth();
   const { t, lang, toggleLang } = useLanguage();
   const { openModelHub, installedModels, activeModel, activeDownload } = useLocalModels();
+  const appVersion = useDesktopVersion();
   const st = t.sidebar || {};
   const isSuperadmin = user?.role === "superadmin";
 
@@ -315,6 +317,9 @@ function SidebarInner({
               >
                 <BarChart3 className="h-5 w-5 text-primary shrink-0" />
                 <span className="truncate">{APP_NAME}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
+                  v{appVersion}
+                </span>
               </Link>
               <div className="flex items-center gap-1 shrink-0">
                 {isSuperadmin && (

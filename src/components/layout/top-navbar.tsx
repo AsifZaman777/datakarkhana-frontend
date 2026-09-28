@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
-import { useIsDesktop } from "@/lib/desktop";
+import { useIsDesktop, useDesktopVersion } from "@/lib/desktop";
 import { ConnectionStatusDots } from "@/components/shared/connection-status-dots";
 import { APP_NAME } from "@/lib/constants";
 
@@ -38,6 +38,7 @@ export function TopNavbar() {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
   const isDesktop = useIsDesktop();
+  const appVersion = useDesktopVersion();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const primaryNavItems: NavItem[] = [
@@ -73,7 +74,7 @@ export function TopNavbar() {
             <span>{APP_NAME}</span>
             {isDesktop && (
               <span className="text-[10px] font-mono tracking-wider font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
-                DESKTOP
+                DESKTOP v{appVersion}
               </span>
             )}
           </span>
