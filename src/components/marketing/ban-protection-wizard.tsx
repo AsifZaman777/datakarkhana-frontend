@@ -120,6 +120,7 @@ export function BanProtectionWizard({
 
   // ── Local AI Action States ──
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [generatingVariantIdx, setGeneratingVariantIdx] = useState<number | null>(null);
   const [isAuditingAi, setIsAuditingAi] = useState(false);
 
   // ── Step 1: Message Variants ──
@@ -178,6 +179,53 @@ export function BanProtectionWizard({
       toast.error(err.response?.data?.detail || "AI generation failed");
     } finally {
       setIsGeneratingAi(false);
+    }
+  };
+
+  const handleGenerateSingleVariant = async (idx: number) => {
+    const seed =
+      variants.find((v, i) => i !== idx && v.trim().length > 10) ||
+      variants[0]?.trim() ||
+      baseTemplate?.trim() ||
+      variants[idx]?.trim();
+
+    if (!seed) {
+      toast.error(
+        lang === "bn"
+          ? "ভেরিয়েন্ট তৈরি করতে অনুগ্রহ করে প্রথমে মেসেজ লিখুন"
+          : "Please enter a base message template first"
+      );
+      return;
+    }
+
+    try {
+      setGeneratingVariantIdx(idx);
+      const res = await modelsApi.generateVariants(seed, 3, lang, activeModel?.filename);
+      if (res.variants && res.variants.length > 0) {
+        const existingLower = new Set(
+          variants.map((v) => v.trim().toLowerCase()).filter(Boolean)
+        );
+        const candidate =
+          res.variants.find((v) => !existingLower.has(v.trim().toLowerCase())) ||
+          res.variants[idx % res.variants.length] ||
+          res.variants[0];
+
+        setVariants((prev) => {
+          const next = [...prev];
+          next[idx] = candidate;
+          return next;
+        });
+
+        toast.success(
+          lang === "bn"
+            ? `✨ ভেরিয়েন্ট #${idx + 1} সফলভাবে এআই দিয়ে তৈরি করা হয়েছে (${res.latency_ms}ms)!`
+            : `✨ Variant #${idx + 1} generated via ${res.model_used} (${res.latency_ms}ms)!`
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "AI variant generation failed");
+    } finally {
+      setGeneratingVariantIdx(null);
     }
   };
 
@@ -505,18 +553,36 @@ export function BanProtectionWizard({
                 {variants.map((text, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-border/30 bg-card/40 p-3 space-y-2 hover:border-border/50 transition-all flex flex-col"
+                    className="rounded-xl border border-border/30 bg-card/40 p-3 space-y-2 hover:border-border/50 transition-all flex flex-col relative group"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-1">
                       <Badge
                         variant="outline"
-                        className="text-[10px] font-medium border-primary/30 text-primary px-1.5 py-0.5"
+                        className="text-[10px] font-medium border-primary/30 text-primary px-1.5 py-0.5 shrink-0"
                       >
                         {lang === "bn"
                           ? `ভেরিয়েন্ট #${idx + 1}`
                           : `Variant #${idx + 1}`}
                       </Badge>
-                      <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-1">
+                        {/* AI Button directly on that chatbox */}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleGenerateSingleVariant(idx)}
+                          disabled={generatingVariantIdx === idx || isGeneratingAi}
+                          className="h-6 px-2 text-[11px] gap-1 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 transition-colors shadow-xs"
+                          title={lang === "bn" ? "এই ভেরিয়েন্টের টেক্সট এআই দিয়ে তৈরি করুন" : "Generate variant text with AI"}
+                        >
+                          {generatingVariantIdx === idx ? (
+                            <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
+                          ) : (
+                            <Sparkles className="h-3 w-3 text-purple-400" />
+                          )}
+                          <span>{lang === "bn" ? "এআই তৈরি" : "AI Generate"}</span>
+                        </Button>
+
                         <Button
                           type="button"
                           size="icon"
@@ -539,17 +605,42 @@ export function BanProtectionWizard({
                         </Button>
                       </div>
                     </div>
-                    <textarea
-                      value={text}
-                      onChange={(e) => updateVariant(idx, e.target.value)}
-                      rows={4}
-                      placeholder={
-                        lang === "bn"
-                          ? "এখানে মেসেজ টেমপ্লেট লিখুন... ({name} দিয়ে নাম পার্সোনালাইজ করুন)"
-                          : "Write your message template here... (use {name} for personalization)"
-                      }
-                      className="w-full rounded-lg border border-input bg-black/25 px-2.5 py-2 text-xs font-sans text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 resize-y leading-relaxed flex-1 min-h-[90px]"
-                    />
+
+                    <div className="relative flex-1 flex flex-col min-h-[95px]">
+                      <textarea
+                        value={text}
+                        onChange={(e) => updateVariant(idx, e.target.value)}
+                        rows={4}
+                        placeholder={
+                          lang === "bn"
+                            ? "এখানে মেসেজ লিখুন অথবা উপরের 'এআই তৈরি' বাটনে ক্লিক করুন..."
+                            : "Write message template here or click 'AI Generate' above..."
+                        }
+                        className="w-full rounded-lg border border-input bg-black/25 px-2.5 py-2 text-xs font-sans text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 resize-y leading-relaxed flex-1 min-h-[95px]"
+                      />
+                      {!text.trim() && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-3">
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateSingleVariant(idx)}
+                            disabled={generatingVariantIdx === idx || isGeneratingAi}
+                            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-200 text-xs font-medium transition-all shadow-sm"
+                          >
+                            {generatingVariantIdx === idx ? (
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin text-purple-400" />
+                            ) : (
+                              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                            )}
+                            <span>
+                              {lang === "bn"
+                                ? "✨ এআই দিয়ে ভেরিয়েন্ট তৈরি করুন"
+                                : "✨ Generate AI Variant Text"}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
                       <span>
                         {text.length}{" "}

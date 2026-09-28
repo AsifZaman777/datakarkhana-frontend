@@ -678,7 +678,13 @@ export function ModelManagerModal() {
                       <Input
                         value={testPrompt}
                         onChange={(e) => setTestPrompt(e.target.value)}
-                        placeholder="Type a test prompt..."
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !isTesting && testPrompt.trim()) {
+                            e.preventDefault();
+                            handleRunTest();
+                          }
+                        }}
+                        placeholder="Type any test prompt..."
                         className="text-xs font-sans h-8 bg-black/20"
                       />
                       <Button
@@ -691,6 +697,32 @@ export function ModelManagerModal() {
                         {isTesting ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                         {lang === "bn" ? "টেস্ট করুন" : "Test"}
                       </Button>
+                    </div>
+
+                    {/* Quick Prompt Suggestions */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span>{lang === "bn" ? "নমুনা প্রম্পট:" : "Try:"}</span>
+                      <button
+                        type="button"
+                        onClick={() => setTestPrompt("Generate 2 friendly greetings for a WhatsApp business message in Bengali.")}
+                        className="px-2 py-0.5 rounded-md bg-secondary/40 hover:bg-secondary/80 text-foreground transition-colors border border-border/20 cursor-pointer"
+                      >
+                        {lang === "bn" ? "বাংলা গ্রিটিংস" : "Bengali Greetings"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTestPrompt("Write 3 tips for avoiding WhatsApp bans")}
+                        className="px-2 py-0.5 rounded-md bg-secondary/40 hover:bg-secondary/80 text-foreground transition-colors border border-border/20 cursor-pointer"
+                      >
+                        {lang === "bn" ? "ব্যান সুরক্ষা টিপস" : "Ban Protection Tips"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTestPrompt("Write an exclusive 25% discount WhatsApp promotion for fashion boutique")}
+                        className="px-2 py-0.5 rounded-md bg-secondary/40 hover:bg-secondary/80 text-foreground transition-colors border border-border/20 cursor-pointer"
+                      >
+                        {lang === "bn" ? "ডিসকাউন্ট প্রমো" : "Discount Promo"}
+                      </button>
                     </div>
 
                     {testOutput && (

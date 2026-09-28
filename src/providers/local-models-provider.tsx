@@ -11,6 +11,8 @@ import {
 import { toast } from "sonner";
 import { useLanguage } from "./language-provider";
 
+import { DEFAULT_RECOMMENDED_MODELS } from "@/lib/default-models";
+
 interface LocalModelsContextType {
   installedModels: InstalledModel[];
   recommendedModels: ModelSpec[];
@@ -33,7 +35,7 @@ const LocalModelsContext = createContext<LocalModelsContextType | undefined>(und
 export function LocalModelsProvider({ children }: { children: React.ReactNode }) {
   const { lang } = useLanguage();
   const [installedModels, setInstalledModels] = useState<InstalledModel[]>([]);
-  const [recommendedModels, setRecommendedModels] = useState<ModelSpec[]>([]);
+  const [recommendedModels, setRecommendedModels] = useState<ModelSpec[]>(DEFAULT_RECOMMENDED_MODELS);
   const [systemInfo, setSystemInfo] = useState<SystemHardwareInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isModelHubOpen, setIsModelHubOpen] = useState(false);
@@ -48,12 +50,30 @@ export function LocalModelsProvider({ children }: { children: React.ReactNode })
         modelsApi.getSystemInfo(),
       ]);
 
+      const currentInstalled = installed.status === "fulfilled" ? installed.value : [];
       if (installed.status === "fulfilled") {
         setInstalledModels(installed.value);
       }
-      if (recommended.status === "fulfilled") {
+
+      if (recommended.status === "fulfilled" && Array.isArray(recommended.value) && recommended.value.length > 0) {
         setRecommendedModels(recommended.value);
+      } else {
+        // Fallback to offline default curated models with live installed flags
+        const installedFilenames = new Set(currentInstalled.map((m) => m.filename));
+        setRecommendedModels((prev) => {
+          const base = prev.length > 0 ? prev : DEFAULT_RECOMMENDED_MODELS;
+          return base.map((m) => {
+            const isInstalled = installedFilenames.has(m.filename);
+            const activeMatch = currentInstalled.find((x) => x.filename === m.filename);
+            return {
+              ...m,
+              is_installed: isInstalled,
+              is_active: activeMatch ? activeMatch.is_active : false,
+            };
+          });
+        });
       }
+
       if (sys.status === "fulfilled") {
         setSystemInfo(sys.value);
       }

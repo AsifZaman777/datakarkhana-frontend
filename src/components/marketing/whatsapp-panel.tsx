@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
-import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle, Shield } from "lucide-react";
+import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle, Shield, MessageSquarePlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ import { toast } from "sonner";
 import { scraperApi } from "@/lib/api/scraper";
 import type { Dataset, RecipientContact, ScraperJob } from "@/lib/types";
 import { useLanguage } from "@/providers/language-provider";
+import { useLocalModels } from "@/providers/local-models-provider";
+import { modelsApi } from "@/lib/api/models";
 import { BanProtectionWizard, type BanProtectionConfig } from "@/components/marketing/ban-protection-wizard";
 
 interface WhatsAppPanelProps {
@@ -47,8 +49,10 @@ export function WhatsAppPanel({
   initialGroup,
 }: WhatsAppPanelProps) {
   const { t, lang } = useLanguage();
+  const { activeModel } = useLocalModels();
   const m = t.marketing || {};
   const [waStatus, setWaStatus] = useState<string>("Checking...");
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [recipientGroup, setRecipientGroup] = useState<string>("");
   const [scrapedJobs, setScrapedJobs] = useState<ScraperJob[]>([]);
   const [templateText, setTemplateText] = useState<string>(WHATSAPP_TEMPLATES[0].text);
@@ -393,6 +397,35 @@ Return ONLY updated template.`;
     });
   };
 
+  const handleAiGenerateVariant = async () => {
+    const baseText = getResolvedMessage() || templateText;
+    if (!baseText.trim()) {
+      toast.error(
+        lang === "bn"
+          ? "প্রথমে মেসেজ বা অফারের তথ্য লিখুন"
+          : "Please enter message details or template first"
+      );
+      return;
+    }
+
+    try {
+      setIsGeneratingAi(true);
+      const res = await modelsApi.generateVariants(baseText, 1, lang, activeModel?.filename);
+      if (res.variants && res.variants.length > 0) {
+        setTemplateText(res.variants[0]);
+        toast.success(
+          lang === "bn"
+            ? `✨ ${res.model_used} দিয়ে মেসেজ ভেরিয়েন্ট সফলভাবে তৈরি হয়েছে (${res.latency_ms}ms)!`
+            : `✨ Message variant generated via ${res.model_used} (${res.latency_ms}ms)!`
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "AI variant generation failed");
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
   const getSelectedGroupName = (val: string) => {
     if (!val) return "";
     if (val.startsWith("dataset_")) {
@@ -545,8 +578,24 @@ Return ONLY updated template.`;
               </Select>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">{m.aiEnhanceLabel || (lang === "bn" ? "এআই দিয়ে উন্নত করুন:" : "Enhance via AI:")}</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAiGenerateVariant}
+                disabled={isGeneratingAi}
+                className="h-7 text-xs gap-1.5 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-xs"
+                title={lang === "bn" ? "লোকাল এআই দিয়ে এই মেসেজের ভেরিয়েন্ট তৈরি করুন" : "Generate a fresh message variant using Local AI"}
+              >
+                {isGeneratingAi ? (
+                  <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
+                ) : (
+                  <Sparkles className="h-3 w-3 text-purple-400" />
+                )}
+                <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Variant"}</span>
+              </Button>
               <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("ChatGPT")} className="h-7 text-xs gap-1 border-emerald-500/40 text-emerald-400">
                 <Sparkles className="h-3 w-3" /> ChatGPT Prompt
               </Button>
@@ -558,9 +607,41 @@ Return ONLY updated template.`;
 
           {/* Message Editor */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold">
-              {m.messageEditorLabel || (lang === "bn" ? "মেসেজ টেমপ্লেট এডিটর" : "Message Template Editor")}
-            </Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label className="text-xs font-semibold">
+                {m.messageEditorLabel || (lang === "bn" ? "মেসেজ টেমপ্লেট এডিটর" : "Message Template Editor")}
+              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAiGenerateVariant}
+                  disabled={isGeneratingAi}
+                  className="h-7 text-xs gap-1.5 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-xs"
+                  title={lang === "bn" ? "এআই দিয়ে মেসেজ ভেরিয়েন্ট তৈরি করুন" : "Generate message variant with AI"}
+                >
+                  {isGeneratingAi ? (
+                    <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
+                  ) : (
+                    <Sparkles className="h-3 w-3 text-purple-400" />
+                  )}
+                  <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Variant"}</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setWizardOpen(true)}
+                  className="h-7 text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                  title={lang === "bn" ? "মাল্টিপল মেসেজ ভেরিয়েন্ট ও ব্যান সুরক্ষা উইজার্ড খুলুন" : "Open Multi-Variant & Ban Protection Wizard"}
+                >
+                  <MessageSquarePlus className="h-3.5 w-3.5" />
+                  <span>{lang === "bn" ? "ভেরিয়েন্ট উইজার্ড" : "Variant Wizard"}</span>
+                </Button>
+              </div>
+            </div>
             <textarea
               value={templateText}
               onChange={(e) => setTemplateText(e.target.value)}
