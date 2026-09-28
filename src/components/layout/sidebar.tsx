@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   Database,
@@ -68,6 +68,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   iconColor?: string;
   isDanger?: boolean;
+  badge?: string;
 };
 
 type NavGroup = {
@@ -88,6 +89,7 @@ function SidebarInner({
   onOpenPaymentModal?: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isAdmin, logout } = useAuth();
   const { t, lang, toggleLang } = useLanguage();
   const { openModelHub, installedModels, activeModel, activeDownload } = useLocalModels();
@@ -159,6 +161,7 @@ function SidebarInner({
       color: "text-pink-600 dark:text-pink-400",
       items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send, iconColor: "text-pink-600 dark:text-pink-400" },
+        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-400", badge: "AI" },
       ],
     },
     {
@@ -219,6 +222,7 @@ function SidebarInner({
       color: "text-pink-600 dark:text-pink-400",
       items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send },
+        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-400", badge: "AI" },
         { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-600 dark:text-amber-400" },
         { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-600 dark:text-cyan-400" },
       ],
@@ -239,7 +243,17 @@ function SidebarInner({
 
   // ── Single nav link ──
   const renderLink = (item: NavItem) => {
-    const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+    const [baseHref, hrefQuery] = item.href.split("?");
+    let isActive = false;
+    if (hrefQuery) {
+      const q = new URLSearchParams(hrefQuery);
+      const tab = q.get("tab");
+      isActive = pathname === baseHref && searchParams.get("tab") === tab;
+    } else {
+      const currentTab = searchParams.get("tab");
+      isActive = pathname === item.href && (!currentTab || currentTab === "dashboard");
+    }
+
     const Icon = item.icon;
     const tourId = getTourIdForHref(item.href);
     return (
@@ -249,7 +263,7 @@ function SidebarInner({
         onClick={onClose}
         data-tour={tourId}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all group",
           isActive
             ? "bg-primary/10 text-primary font-semibold"
             : item.isDanger
@@ -259,13 +273,18 @@ function SidebarInner({
       >
         <Icon
           className={cn(
-            "h-4 w-4 shrink-0",
+            "h-4 w-4 shrink-0 transition-transform group-hover:scale-110",
             item.iconColor,
             isActive && !item.iconColor && "text-primary"
           )}
         />
         {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-        {isActive && !collapsed && (
+        {!collapsed && item.badge && (
+          <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            {item.badge}
+          </span>
+        )}
+        {isActive && !collapsed && !item.badge && (
           <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
         )}
       </Link>

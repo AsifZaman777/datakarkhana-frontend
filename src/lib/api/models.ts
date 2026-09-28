@@ -83,6 +83,20 @@ export interface AuditSpamResponse {
   latency_ms: number;
 }
 
+export interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface UniversalGeneratePayload {
+  prompt?: string;
+  messages?: ChatMessage[];
+  system_prompt?: string;
+  model_filename?: string;
+  max_tokens?: number;
+  temperature?: number;
+}
+
 export const modelsApi = {
   getSystemInfo: async (): Promise<SystemHardwareInfo> => {
     const res = await apiClient.get<SystemHardwareInfo>("/api/models/system-info");
@@ -165,17 +179,25 @@ export const modelsApi = {
   },
 
   generate: async (
-    prompt: string,
+    promptOrPayload: string | UniversalGeneratePayload,
     modelFilename?: string,
     maxTokens: number = 512,
     temperature: number = 0.7
   ): Promise<{ text: string; model_used: string; latency_ms: number }> => {
-    const res = await apiClient.post("/api/models/generate", {
-      prompt,
-      model_filename: modelFilename,
-      max_tokens: maxTokens,
-      temperature,
-    });
+    const payload =
+      typeof promptOrPayload === "string"
+        ? {
+            prompt: promptOrPayload,
+            model_filename: modelFilename,
+            max_tokens: maxTokens,
+            temperature,
+          }
+        : promptOrPayload;
+
+    const res = await apiClient.post<{ text: string; model_used: string; latency_ms: number }>(
+      "/api/models/generate",
+      payload
+    );
     return res.data;
   },
 };

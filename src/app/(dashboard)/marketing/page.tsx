@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Send, Mail, BarChart3, History, FileText } from "lucide-react";
+import { Send, Mail, BarChart3, History, FileText, Sparkles } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { DashboardStats } from "@/components/marketing/dashboard-stats";
 import { WhatsAppPanel } from "@/components/marketing/whatsapp-panel";
 import { EmailBuilder } from "@/components/marketing/email-builder";
 import { CampaignHistory } from "@/components/marketing/campaign-history";
 import { LogViewer } from "@/components/marketing/log-viewer";
 import { ContactSelectorModal } from "@/components/marketing/contact-selector-modal";
+import { AiChatPanel } from "@/components/marketing/ai-chat-panel";
 import { marketingApi } from "@/lib/api/marketing";
 import { datasetsApi } from "@/lib/api/datasets";
 import type { DashboardStats as StatsType, Dataset, RecipientContact } from "@/lib/types";
 import { useLanguage } from "@/providers/language-provider";
-
+import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 
 export default function MarketingPage() {
@@ -26,6 +28,18 @@ export default function MarketingPage() {
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [stats, setStats] = useState<StatsType | null>(null);
   const [recipientGroups, setRecipientGroups] = useState<Dataset[]>([]);
+
+  // Cross-panel AI template transfer state
+  const [appliedWaTemplate, setAppliedWaTemplate] = useState<string | undefined>(undefined);
+  const [appliedEmailTemplate, setAppliedEmailTemplate] = useState<string | undefined>(undefined);
+  const [initialChatPrompt, setInitialChatPrompt] = useState<string | undefined>(undefined);
+
+  // Sync activeTab whenever URL query changes (e.g. from sidebar clicks)
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   // Contact selector modal state
   const [selectorOpen, setSelectorOpen] = useState(false);
@@ -100,6 +114,13 @@ export default function MarketingPage() {
             <Mail className="h-4 w-4 text-purple-400" /> 
             {m.tabEmail || (lang === "bn" ? "ইমেইল ক্যাম্পেইন" : "Email Campaign")}
           </TabsTrigger>
+          <TabsTrigger value="ai-chat" className="gap-2 text-xs font-semibold shrink-0">
+            <Sparkles className="h-4 w-4 text-purple-400" /> 
+            <span>{lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Copilot"}</span>
+            <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 h-4 border-purple-500/30 text-purple-300 bg-purple-500/10 font-bold">
+              AI
+            </Badge>
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-2 text-xs font-semibold shrink-0">
             <History className="h-4 w-4 text-amber-500" /> 
             {m.tabHistory || (lang === "bn" ? "ক্যাম্পেইন হিস্ট্রি" : "Campaign History")}
@@ -127,6 +148,11 @@ export default function MarketingPage() {
             selectedContactIds={selectedContactIds}
             onSelectGroup={loadContactsForGroup}
             initialGroup={groupParam || undefined}
+            appliedTemplate={appliedWaTemplate}
+            onOpenAiChat={(prompt) => {
+              if (prompt) setInitialChatPrompt(prompt);
+              setActiveTab("ai-chat");
+            }}
           />
         </TabsContent>
 
@@ -143,12 +169,37 @@ export default function MarketingPage() {
           />
         </TabsContent>
 
-        {/* TAB 4: HISTORY */}
+        {/* TAB 4: AI MARKETING CHAT */}
+        <TabsContent value="ai-chat" className="space-y-6 pt-4">
+          <AiChatPanel
+            initialPrompt={initialChatPrompt}
+            onApplyToWhatsApp={(text) => {
+              setAppliedWaTemplate(text);
+              setActiveTab("whatsapp");
+              toast.success(
+                lang === "bn"
+                  ? "টেমপ্লেটটি হোয়াটসঅ্যাপ কম্পোজারে সেট করা হয়েছে!"
+                  : "Template transferred to WhatsApp composer!"
+              );
+            }}
+            onApplyToEmail={(text) => {
+              setAppliedEmailTemplate(text);
+              setActiveTab("email");
+              toast.success(
+                lang === "bn"
+                  ? "টেমপ্লেটটি ইমেইল বিল্ডারে সেট করা হয়েছে!"
+                  : "Template transferred to Email builder!"
+              );
+            }}
+          />
+        </TabsContent>
+
+        {/* TAB 5: HISTORY */}
         <TabsContent value="history" className="space-y-6 pt-4">
           <CampaignHistory campaigns={stats?.campaigns || []} onRefresh={loadStats} />
         </TabsContent>
 
-        {/* TAB 5: LOGS */}
+        {/* TAB 6: LOGS */}
         <TabsContent value="logs" className="space-y-6 pt-4">
           <LogViewer />
         </TabsContent>

@@ -36,6 +36,8 @@ interface WhatsAppPanelProps {
   selectedContactIds: Set<number>;
   onSelectGroup?: (groupName: string) => void;
   initialGroup?: string;
+  appliedTemplate?: string;
+  onOpenAiChat?: (prompt?: string) => void;
 }
 
 export function WhatsAppPanel({
@@ -47,6 +49,8 @@ export function WhatsAppPanel({
   selectedContactIds,
   onSelectGroup,
   initialGroup,
+  appliedTemplate,
+  onOpenAiChat,
 }: WhatsAppPanelProps) {
   const { t, lang } = useLanguage();
   const { activeModel } = useLocalModels();
@@ -55,7 +59,7 @@ export function WhatsAppPanel({
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [recipientGroup, setRecipientGroup] = useState<string>("");
   const [scrapedJobs, setScrapedJobs] = useState<ScraperJob[]>([]);
-  const [templateText, setTemplateText] = useState<string>(WHATSAPP_TEMPLATES[0].text);
+  const [templateText, setTemplateText] = useState<string>(appliedTemplate || WHATSAPP_TEMPLATES[0].text);
   const [companyName, setCompanyName] = useState("MarketingOstad");
   const [heading, setHeading] = useState("30% OFF Special B2B Deal");
   const [promoCode, setPromoCode] = useState("MO30OFF");
@@ -65,6 +69,13 @@ export function WhatsAppPanel({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [stopConfirmOpen, setStopConfirmOpen] = useState(false);
+
+  // Sync externally applied template from AI Chat
+  useEffect(() => {
+    if (appliedTemplate) {
+      setTemplateText(appliedTemplate);
+    }
+  }, [appliedTemplate]);
 
   // Ban Protection Wizard state
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -580,6 +591,19 @@ Return ONLY updated template.`;
 
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">{m.aiEnhanceLabel || (lang === "bn" ? "এআই দিয়ে উন্নত করুন:" : "Enhance via AI:")}</span>
+              {onOpenAiChat && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onOpenAiChat(`Can you review and optimize this WhatsApp template for ${companyName} to increase conversions and ensure 100% anti-ban compliance?\n\nDraft:\n${templateText}`)}
+                  className="h-7 text-xs gap-1.5 border-purple-500/50 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 font-semibold shadow-xs"
+                  title={lang === "bn" ? "এআই চ্যাটে এই টেমপ্লেটটি নিয়ে বিস্তারিত আলোচনা করুন" : "Freely discuss and improve this template in the AI Chat Panel"}
+                >
+                  <Sparkles className="h-3 w-3 text-purple-400" />
+                  <span>{lang === "bn" ? "💬 এআই চ্যাটে আলোচনা করুন" : "💬 Discuss in AI Chat"}</span>
+                </Button>
+              )}
               <Button
                 type="button"
                 size="sm"

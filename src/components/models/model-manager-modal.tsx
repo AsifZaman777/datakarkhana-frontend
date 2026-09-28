@@ -21,7 +21,9 @@ import {
   Info,
   Layers,
   ArrowRight,
+  Bot,
 } from "lucide-react";
+import { AiChatPanel } from "@/components/marketing/ai-chat-panel";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +60,7 @@ export function ModelManagerModal() {
     setActiveModel,
   } = useLocalModels();
 
-  const [activeTab, setActiveTab] = useState<"catalog" | "custom" | "installed">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "custom" | "installed" | "chat">("catalog");
 
   // Custom Hugging Face Inspector State
   const [hfInput, setHfInput] = useState("");
@@ -244,6 +246,13 @@ export function ModelManagerModal() {
                     {installedModels.length}
                   </Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="text-xs px-3.5 gap-1.5">
+                <Bot className="h-3.5 w-3.5 text-purple-400" />
+                <span>{lang === "bn" ? "এআই চ্যাট ও প্লেগ্রাউন্ড" : "AI Chat & Playground"}</span>
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 border-purple-500/30 text-purple-300 font-bold bg-purple-500/10">
+                  AI
+                </Badge>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -668,11 +677,23 @@ export function ModelManagerModal() {
                         <Play className="h-3.5 w-3.5 text-emerald-400" />
                         {lang === "bn" ? "মডেল টেস্টিং প্লেগ্রাউন্ড (Live Test)" : "Model Playground (Live Test)"}
                       </h4>
-                      {testLatency && (
-                        <span className="text-[11px] font-mono text-cyan-400 font-semibold">
-                          ⚡ {testLatency}ms
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {testLatency && (
+                          <span className="text-[11px] font-mono text-cyan-400 font-semibold">
+                            ⚡ {testLatency}ms
+                          </span>
+                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setActiveTab("chat")}
+                          className="h-6 px-2 text-[10px] gap-1 border-purple-500/40 text-purple-300 hover:bg-purple-500/15"
+                        >
+                          <Bot className="h-3 w-3" />
+                          <span>{lang === "bn" ? "পূর্ণাঙ্গ এআই চ্যাট খুলুন" : "Open Full AI Chat"}</span>
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Input
@@ -733,6 +754,13 @@ export function ModelManagerModal() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ════ TAB 4: AI CHAT & PLAYGROUND ════ */}
+          {activeTab === "chat" && (
+            <div className="h-full py-1">
+              <AiChatPanel compact />
             </div>
           )}
         </div>
