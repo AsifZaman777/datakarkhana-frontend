@@ -597,7 +597,7 @@ export function UserManagement({
                 size="sm"
                 variant="ghost"
                 onClick={() => handleOpenUserDatasets(u)}
-                className="h-5 text-[10px] text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 px-1.5 gap-1"
+                className="h-5 text-[10px] text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-500/10 px-1.5 gap-1"
                 title="Inspect cloud datasets uploaded by this user"
               >
                 <FolderOpen className="h-3 w-3" />
@@ -1203,7 +1203,7 @@ export function UserManagement({
             </div>
 
             {/* Live Balance Preview Box */}
-            <div className="p-3 rounded-lg border border-border/40 bg-black/40 text-xs space-y-1 font-mono">
+            <div className="p-3 rounded-lg border border-border/40 bg-muted/50 dark:bg-black/40 text-xs space-y-1 font-mono">
               <div className="flex justify-between text-muted-foreground">
                 <span>
                   {lang === "bn" ? "বর্তমান ব্যালেন্স:" : "Current Balance:"}

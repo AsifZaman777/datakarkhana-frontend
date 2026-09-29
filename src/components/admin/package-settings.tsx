@@ -704,7 +704,7 @@ export function PackageSettings() {
                           }}
                           placeholder={`"500 Verified Lead Credits",\n"Full Phone & Email Access",\n"Global Google map Scraping",`}
                           rows={8}
-                          className="text-xs font-mono resize-y p-2.5 leading-relaxed bg-black/30 border-amber-500/20 focus:border-amber-500/60"
+                          className="text-xs font-mono resize-y p-2.5 leading-relaxed bg-card dark:bg-black/30 border border-amber-500/30 focus:border-amber-500/60"
                         />
                         <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-1 text-emerald-400 font-medium">
@@ -861,7 +861,7 @@ export function PackageSettings() {
                 onChange={(e) => setModalRawText(e.target.value)}
                 placeholder={`"500 Verified Lead Credits",\n"Full Phone & Email Access",\n"Global Google map Scraping",\n"Instant Public Catalog Unlocks",\n...`}
                 rows={7}
-                className="font-mono text-xs mt-1.5 bg-black/40 border-border/50 leading-relaxed"
+                className="font-mono text-xs mt-1.5 bg-card dark:bg-black/40 border-border/50 leading-relaxed"
               />
             </div>
 

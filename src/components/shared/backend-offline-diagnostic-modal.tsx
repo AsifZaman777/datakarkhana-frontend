@@ -140,7 +140,7 @@ export function BackendOfflineDiagnosticModal({
               </DialogTitle>
               <DialogDescription className="text-[11px] text-muted-foreground mt-0.5">
                 Cannot connect to the Python automation engine on{" "}
-                <code className="bg-muted/50 rounded px-1 py-0.5 text-rose-300 font-mono">
+                <code className="bg-muted/50 rounded px-1 py-0.5 text-rose-600 dark:text-rose-300 font-mono">
                   127.0.0.1:8000
                 </code>
                 . Follow the steps below to restore it.
@@ -212,7 +212,7 @@ export function BackendOfflineDiagnosticModal({
           <ul className="space-y-1 text-[11px] text-muted-foreground list-disc list-inside">
             <li>Backend server hasn&apos;t started yet — wait ~15 seconds after launch</li>
             <li>Another app is already bound to port 8000 — Step 1 fixes this</li>
-            <li>Python or pip dependencies not installed (run <code className="font-mono text-amber-300">pip install -r requirements.txt</code>)</li>
+            <li>Python or pip dependencies not installed (run <code className="font-mono text-amber-700 dark:text-amber-300 font-semibold">pip install -r requirements.txt</code>)</li>
             <li>Firewall or antivirus blocking localhost connections</li>
             <li>Virtual environment not activated before starting uvicorn</li>
           </ul>

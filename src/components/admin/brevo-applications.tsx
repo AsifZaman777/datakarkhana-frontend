@@ -136,7 +136,7 @@ export function BrevoApplicationsList() {
               {lang === "bn" ? "ব্রেভো (Brevo) বিজনেস ভেরিফিকেশন ও এপিআই অনুমোদন" : "Brevo Business Verification & API Approvals"}
             </h3>
           </div>
-          <Badge variant="outline" className="border-purple-500/40 text-purple-300 font-mono text-xs">
+          <Badge variant="outline" className="border-purple-500/40 text-purple-700 dark:text-purple-300 font-mono text-xs">
             {lang === "bn" ? `আবেদন: ${applications.length}টি` : `Submissions: ${applications.length}`}
           </Badge>
         </div>
@@ -204,7 +204,7 @@ export function BrevoApplicationsList() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
                 <div>
                   <span className="text-muted-foreground block text-[10px]">{lang === "bn" ? "ডোমেইন:" : "Domain:"}</span>
-                  <span className="text-purple-300 font-bold">{app.domain_name}</span>
+                  <span className="text-purple-700 dark:text-purple-300 font-bold">{app.domain_name}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-[10px]">{lang === "bn" ? "ফোন:" : "Phone:"}</span>
@@ -365,12 +365,12 @@ export function BrevoApplicationsList() {
             </div>
 
             {targetStatus === "pending_email_verification" && (
-              <div className="p-3.5 rounded-xl bg-purple-950/40 border border-purple-500/40 space-y-2 text-xs">
+              <div className="p-3.5 rounded-xl bg-purple-500/10 dark:bg-purple-950/40 border border-purple-500/40 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-purple-300">
+                  <span className="font-bold text-purple-700 dark:text-purple-300">
                     {lang === "bn" ? "গ্রাহকের ইমেইল:" : "Customer Email:"}
                   </span>
-                  <span className="font-mono text-white font-semibold">{approveTarget?.user_email}</span>
+                  <span className="font-mono text-foreground dark:text-white font-semibold">{approveTarget?.user_email}</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   {lang === "bn"
@@ -391,7 +391,7 @@ export function BrevoApplicationsList() {
                       window.open("https://app.brevo.com/account/register", "_blank");
                     }
                   }}
-                  className="w-full text-xs font-bold border-purple-500/40 text-purple-300 hover:bg-purple-500/20 gap-2 h-9 mt-1"
+                  className="w-full text-xs font-bold border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 gap-2 h-9 mt-1"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   {lang === "bn" ? "ইমেইল কপি ও ব্রেভো সাইনআপ খুলুন" : "Copy Email & Open Brevo Signup"}

@@ -24,6 +24,7 @@ import {
   Clock,
   Ban,
   Cpu,
+  Wand2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -395,12 +396,12 @@ export function BanProtectionWizard({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent
-        className="w-[90vw] max-w-[960px] sm:max-w-[960px] h-[82vh] max-h-[84vh] overflow-hidden p-0 gap-0 bg-background/95 backdrop-blur-xl border-border/50 flex flex-col shadow-2xl"
+        className="w-[95vw] max-w-5xl sm:max-w-5xl h-[88vh] max-h-[92vh] overflow-hidden p-0 gap-0 bg-background/95 backdrop-blur-xl border-border/50 flex flex-col shadow-2xl"
         style={{
-          width: "90vw",
-          maxWidth: "960px",
-          height: "82vh",
-          maxHeight: "84vh",
+          width: "95vw",
+          maxWidth: "1080px",
+          height: "88vh",
+          maxHeight: "92vh",
         }}
       >
         {/* Header */}
@@ -412,8 +413,8 @@ export function BanProtectionWizard({
             <div>
               <DialogTitle className="text-sm sm:text-base font-semibold text-foreground tracking-tight">
                 {lang === "bn"
-                  ? "🛡️ ব্যান প্রটেকশন উইজার্ড"
-                  : "🛡️ Ban Protection Wizard"}
+                  ? "ব্যান প্রটেকশন উইজার্ড"
+                  : "Ban Protection Wizard"}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-normal">
                 {lang === "bn"
@@ -428,7 +429,7 @@ export function BanProtectionWizard({
             variant="outline"
             size="sm"
             onClick={openModelHub}
-            className="h-7 text-xs font-semibold border-purple-500/30 text-purple-300 hover:bg-purple-500/10 gap-1.5 shrink-0 hidden sm:flex"
+            className="h-7 text-xs font-semibold border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 hover:text-purple-800 dark:hover:text-purple-200 gap-1.5 shrink-0 hidden sm:flex"
             title={lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Model Hub"}
           >
             <Cpu className="h-3 w-3 text-purple-400" />
@@ -515,14 +516,14 @@ export function BanProtectionWizard({
                     variant="outline"
                     onClick={handleAiGenerateVariants}
                     disabled={isGeneratingAi}
-                    className="gap-1.5 text-xs font-semibold border-purple-500/40 text-purple-300 hover:bg-purple-500/10 h-7 px-2.5"
+                    className="gap-1.5 text-xs font-semibold border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 h-7 px-2.5"
                   >
                     {isGeneratingAi ? (
                       <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
                     ) : (
                       <Sparkles className="h-3 w-3 text-purple-400" />
                     )}
-                    <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Generate"}</span>
+                    <span>{lang === "bn" ? "এআই ভেরিয়েন্ট" : "AI Generate"}</span>
                   </Button>
 
                   <Button
@@ -540,8 +541,8 @@ export function BanProtectionWizard({
 
               {/* Recommendation Badge */}
               {variants.length < 3 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs leading-normal">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs leading-normal">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                   {lang === "bn"
                     ? `আপনার ${variants.length}টি ভেরিয়েন্ট আছে। ব্যান সুরক্ষার জন্য কমপক্ষে ৩টি সুপারিশ করা হয়।`
                     : `You have ${variants.length} variant(s). At least 3 recommended for ban protection.`}
@@ -572,7 +573,7 @@ export function BanProtectionWizard({
                           variant="outline"
                           onClick={() => handleGenerateSingleVariant(idx)}
                           disabled={generatingVariantIdx === idx || isGeneratingAi}
-                          className="h-6 px-2 text-[11px] gap-1 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 transition-colors shadow-xs"
+                          className="h-6 px-2 text-[11px] gap-1 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 hover:text-purple-800 dark:hover:text-purple-200 transition-colors shadow-xs"
                           title={lang === "bn" ? "এই ভেরিয়েন্টের টেক্সট এআই দিয়ে তৈরি করুন" : "Generate variant text with AI"}
                         >
                           {generatingVariantIdx === idx ? (
@@ -606,17 +607,17 @@ export function BanProtectionWizard({
                       </div>
                     </div>
 
-                    <div className="relative flex-1 flex flex-col min-h-[95px]">
+                    <div className="relative flex-1 flex flex-col min-h-[220px]">
                       <textarea
                         value={text}
                         onChange={(e) => updateVariant(idx, e.target.value)}
-                        rows={4}
+                        rows={9}
                         placeholder={
                           lang === "bn"
                             ? "এখানে মেসেজ লিখুন অথবা উপরের 'এআই তৈরি' বাটনে ক্লিক করুন..."
                             : "Write message template here or click 'AI Generate' above..."
                         }
-                        className="w-full rounded-lg border border-input bg-black/25 px-2.5 py-2 text-xs font-sans text-foreground placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 resize-y leading-relaxed flex-1 min-h-[95px]"
+                        className="w-full rounded-lg border border-input bg-card/60 dark:bg-black/30 px-3 py-2.5 text-xs font-sans text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 resize-y leading-relaxed flex-1 min-h-[220px]"
                       />
                       {!text.trim() && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-3">
@@ -624,7 +625,7 @@ export function BanProtectionWizard({
                             type="button"
                             onClick={() => handleGenerateSingleVariant(idx)}
                             disabled={generatingVariantIdx === idx || isGeneratingAi}
-                            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-200 text-xs font-medium transition-all shadow-sm"
+                            className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-700 dark:text-purple-200 text-xs font-semibold transition-all shadow-sm cursor-pointer"
                           >
                             {generatingVariantIdx === idx ? (
                               <RefreshCw className="h-3.5 w-3.5 animate-spin text-purple-400" />
@@ -633,8 +634,8 @@ export function BanProtectionWizard({
                             )}
                             <span>
                               {lang === "bn"
-                                ? "✨ এআই দিয়ে ভেরিয়েন্ট তৈরি করুন"
-                                : "✨ Generate AI Variant Text"}
+                                ? "এআই দিয়ে ভেরিয়েন্ট তৈরি করুন"
+                                : "Generate AI Variant Text"}
                             </span>
                           </button>
                         </div>
@@ -687,14 +688,14 @@ export function BanProtectionWizard({
                   variant="outline"
                   onClick={handleAiAuditAndFix}
                   disabled={isAuditingAi}
-                  className="gap-1.5 text-xs font-semibold border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/10 h-7 px-2.5 shrink-0"
+                  className="gap-1.5 text-xs font-semibold border-cyan-500/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10 h-7 px-2.5 shrink-0"
                 >
                   {isAuditingAi ? (
                     <RefreshCw className="h-3 w-3 animate-spin text-cyan-400" />
                   ) : (
-                    <Zap className="h-3 w-3 text-cyan-400" />
+                    <Wand2 className="h-3 w-3 text-cyan-500 dark:text-cyan-400" />
                   )}
-                  <span>{lang === "bn" ? "🤖 এআই অটো-ফিক্স" : "🤖 AI Auto-Fix"}</span>
+                  <span>{lang === "bn" ? "এআই অটো-ফিক্স" : "AI Auto-Fix"}</span>
                 </Button>
               </div>
 
@@ -834,10 +835,10 @@ export function BanProtectionWizard({
               {spamResults.some((r) =>
                 r.matches.some((m) => m.severity === "high")
               ) && (
-                <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs leading-relaxed">
-                  <Ban className="h-3.5 w-3.5 shrink-0 mt-0.5 text-rose-400" />
+                <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs leading-relaxed">
+                  <Ban className="h-3.5 w-3.5 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
                   <div>
-                    <strong className="text-xs font-semibold text-rose-200">
+                    <strong className="text-xs font-semibold text-rose-800 dark:text-rose-200">
                       {lang === "bn"
                         ? "ব্লকার: উচ্চ ঝুঁকির কীওয়ার্ড পাওয়া গেছে!"
                         : "Blocker: High-risk keywords detected!"}
@@ -1091,7 +1092,7 @@ export function BanProtectionWizard({
                           DataKarkhana has provided this multi-layer ban protection wizard to help minimize risk, but <strong className="text-foreground">no system can guarantee 100% ban prevention</strong>.
                         </li>
                         <li>
-                          <strong className="text-foreground font-semibold">No Liability:</strong> DataKarkhana, its developers, owners, and affiliates shall <strong className="text-rose-300">NOT be held responsible or liable</strong> for any WhatsApp account ban, restriction, data loss, or any other consequence resulting from the use of this campaign tool.
+                          <strong className="text-foreground font-semibold">No Liability:</strong> DataKarkhana, its developers, owners, and affiliates shall <strong className="text-rose-600 dark:text-rose-400 font-bold">NOT be held responsible or liable</strong> for any WhatsApp account ban, restriction, data loss, or any other consequence resulting from the use of this campaign tool.
                         </li>
                         <li>
                           <strong className="text-foreground font-semibold">Configurable Safety:</strong> You have been provided with configurable message variants, spam keyword scanning, delay controls, and break settings.
@@ -1127,7 +1128,7 @@ export function BanProtectionWizard({
                           DataKarkhana ঝুঁকি কমাতে এই মাল্টি-লেয়ার ব্যান প্রটেকশন উইজার্ড সরবরাহ করেছে, কিন্তু <strong className="text-foreground">কোনো সিস্টেম ১০০% ব্যান প্রতিরোধের গ্যারান্টি দিতে পারে না</strong>।
                         </li>
                         <li>
-                          <strong className="text-foreground font-semibold">দায়মুক্তি:</strong> DataKarkhana, এর ডেভেলপার, মালিক এবং সংশ্লিষ্ট পক্ষ এই ক্যাম্পেইন টুল ব্যবহারের ফলে <strong className="text-rose-300">কোনো হোয়াটসঅ্যাপ অ্যাকাউন্ট ব্যান, সীমাবদ্ধতা, ডেটা ক্ষতি বা অন্য কোনো পরিণতির জন্য দায়ী থাকবে না</strong>।
+                          <strong className="text-foreground font-semibold">দায়মুক্তি:</strong> DataKarkhana, এর ডেভেলপার, মালিক এবং সংশ্লিষ্ট পক্ষ এই ক্যাম্পেইন টুল ব্যবহারের ফলে <strong className="text-rose-600 dark:text-rose-400 font-bold">কোনো হোয়াটসঅ্যাপ অ্যাকাউন্ট ব্যান, সীমাবদ্ধতা, ডেটা ক্ষতি বা অন্য কোনো পরিণতির জন্য দায়ী থাকবে না</strong>।
                         </li>
                         <li>
                           <strong className="text-foreground font-semibold">কনফিগারযোগ্য নিরাপত্তা:</strong> আপনাকে কনফিগারযোগ্য মেসেজ ভেরিয়েন্ট, স্প্যাম কীওয়ার্ড স্ক্যানিং, বিলম্ব নিয়ন্ত্রণ এবং ব্রেক সেটিংস প্রদান করা হয়েছে।

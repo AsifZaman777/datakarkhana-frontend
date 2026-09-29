@@ -335,8 +335,8 @@ export function DarazScraperForm({
               </div>
             </div>
 
-            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20 text-amber-400">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+            <div className="text-[11px] flex items-center gap-1.5 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20 text-amber-700 dark:text-amber-400">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
               <span>
                 {lang === "bn"
                   ? "ফলাফল স্বয়ংক্রিয়ভাবে আপনার প্রাইভেট ক্যাটালগে সেভ হবে। আপনি যে কোনো সময় স্ক্র্যাপিং থামাতে পারেন।"

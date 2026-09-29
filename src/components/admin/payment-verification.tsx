@@ -507,8 +507,8 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                   </Badge>
                 </div>
 
-                <div className="flex items-center justify-between bg-black/60 border border-emerald-500/40 rounded-lg p-3">
-                  <code className="text-base font-mono font-extrabold text-emerald-300 tracking-wider">
+                <div className="flex items-center justify-between bg-emerald-500/10 dark:bg-black/60 border border-emerald-500/40 rounded-lg p-3">
+                  <code className="text-base font-mono font-extrabold text-emerald-700 dark:text-emerald-300 tracking-wider">
                     {licenseResult.production_key}
                   </code>
                   <Button
@@ -533,19 +533,19 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
               <div className="rounded-lg border border-border/50 bg-background/50 p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold flex items-center gap-1.5">
-                    <MessageSquare className="h-3.5 w-3.5 text-emerald-400" />
+                    <MessageSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     {lang === "bn" ? "গ্রাহক বার্তা টেমপ্লেট:" : "Customer Message Template:"}
                   </span>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => copyWhatsAppMessage(licenseResult)}
-                    className="h-7 text-xs border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
+                    className="h-7 text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
                   >
                     <Copy className="h-3 w-3" /> {lang === "bn" ? "হোয়াটসঅ্যাপ বার্তা কপি করুন" : "Copy WhatsApp Message"}
                   </Button>
                 </div>
-                <div className="text-[11px] text-muted-foreground bg-black/40 p-2.5 rounded border border-border/40 font-mono whitespace-pre-line">
+                <div className="text-[11px] text-muted-foreground bg-muted/40 dark:bg-black/40 p-2.5 rounded border border-border/40 font-mono whitespace-pre-line">
                   {`Customer: ${licenseResult.customer_name} (${licenseResult.customer_email || "N/A"})\nKey: ${licenseResult.production_key}\nExpires: ${new Date(licenseResult.expires_at).toLocaleDateString()}`}
                 </div>
               </div>

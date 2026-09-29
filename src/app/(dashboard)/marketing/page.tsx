@@ -117,7 +117,7 @@ export default function MarketingPage() {
           <TabsTrigger value="ai-chat" className="gap-2 text-xs font-semibold shrink-0">
             <Sparkles className="h-4 w-4 text-purple-400" /> 
             <span>{lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Copilot"}</span>
-            <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 h-4 border-purple-500/30 text-purple-300 bg-purple-500/10 font-bold">
+            <Badge variant="outline" className="ml-1 text-[9px] px-1 py-0 h-4 border-purple-500/30 text-purple-700 dark:text-purple-300 bg-purple-500/10 font-bold">
               AI
             </Badge>
           </TabsTrigger>

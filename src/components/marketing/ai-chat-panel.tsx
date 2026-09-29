@@ -317,11 +317,11 @@ export function AiChatPanel({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-sm sm:text-base text-foreground truncate">
-                  {lang === "bn" ? "🤖 এআই মার্কেটিং ও কপিরাইটিং চ্যাট" : "🤖 AI Marketing & Copywriting Copilot"}
+                  {lang === "bn" ? "এআই মার্কেটিং ও কপিরাইটিং চ্যাট" : "AI Marketing & Copywriting Copilot"}
                 </h3>
                 <Badge
                   variant="outline"
-                  className="hidden sm:inline-flex text-[10px] font-semibold border-purple-500/30 text-purple-300 bg-purple-500/10 py-0"
+                  className="hidden sm:inline-flex text-[10px] font-semibold border-purple-500/30 text-purple-700 dark:text-purple-300 bg-purple-500/10 py-0"
                 >
                   Offline & Private
                 </Badge>
@@ -341,9 +341,9 @@ export function AiChatPanel({
               variant="outline"
               size="sm"
               onClick={openModelHub}
-              className="h-7 text-xs border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/15 text-purple-300 gap-1.5"
+              className="h-7 text-xs border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/15 text-purple-700 dark:text-purple-300 gap-1.5"
             >
-              <Cpu className="h-3.5 w-3.5 text-purple-400" />
+              <Cpu className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               <span className="max-w-[120px] truncate hidden md:inline">
                 {activeModel?.name || "Local Engine"}
               </span>
@@ -472,7 +472,7 @@ export function AiChatPanel({
                     "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-semibold shadow-xs",
                     isUser
                       ? "bg-primary text-primary-foreground"
-                      : "bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-purple-300"
+                      : "bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-purple-700 dark:text-purple-300"
                   )}
                 >
                   {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
@@ -658,7 +658,7 @@ export function AiChatPanel({
                   : "Type any prompt, paste a marketing draft to improve, or ask for strategy..."
               }
               rows={2}
-              className="resize-none text-xs sm:text-sm bg-black/20 focus-visible:ring-purple-500/30 border-border/40 rounded-xl"
+              className="resize-none text-xs sm:text-sm bg-card dark:bg-black/20 focus-visible:ring-purple-500/30 border-border/40 rounded-xl"
             />
 
             <Button

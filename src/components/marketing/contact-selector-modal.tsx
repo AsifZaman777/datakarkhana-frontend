@@ -189,7 +189,7 @@ export function ContactSelectorModal({
         cell: ({ row }) => {
           const email = row.original.email;
           return (
-            <div className="text-xs font-mono text-purple-300">
+            <div className="text-xs font-mono text-purple-700 dark:text-purple-300">
               {email ? (
                 <span className="flex items-center gap-1 truncate max-w-[200px]">
                   <Mail className="h-3 w-3 text-purple-400 shrink-0" />
@@ -359,7 +359,7 @@ export function ContactSelectorModal({
                 size="sm"
                 variant="outline"
                 onClick={handleSelectAllFiltered}
-                className="text-xs h-8 gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                className="text-xs h-8 gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" /> {lang === "bn" ? "সব নির্বাচন" : "Select All"} ({filtered.length})
               </Button>
@@ -375,12 +375,12 @@ export function ContactSelectorModal({
           </div>
 
           {/* Dynamic Selection Dashboard Banner */}
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-background to-cyan-950/20 border border-cyan-500/30 flex flex-wrap gap-4 justify-between items-center text-xs">
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-cyan-500/10 via-card to-cyan-500/5 dark:from-cyan-950/40 dark:via-background dark:to-cyan-950/20 border border-cyan-500/30 flex flex-wrap gap-4 justify-between items-center text-xs">
             <div className="flex items-center gap-3">
               <div className="font-mono text-sm font-semibold">
-                <span className="text-cyan-400 text-base">{selectedCount}</span> / {totalCount} {lang === "bn" ? "টি সক্রিয় লিড টার্গেট" : "Leads Target Active"}
+                <span className="text-cyan-600 dark:text-cyan-400 text-base">{selectedCount}</span> / {totalCount} {lang === "bn" ? "টি সক্রিয় লিড টার্গেট" : "Leads Target Active"}
               </div>
-              <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-mono">
+              <Badge className="bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/40 font-mono">
                 {percentage}% {lang === "bn" ? "টার্গেট নির্বাচিত" : "Target Selected"}
               </Badge>
             </div>

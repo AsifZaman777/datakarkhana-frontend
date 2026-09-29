@@ -148,8 +148,8 @@ export function ModelManagerModal() {
               </div>
               <div>
                 <DialogTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-                  <span>{lang === "bn" ? "🤖 লোকাল এআই মডেল হাব" : "🤖 Local AI Model Hub"}</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold border-purple-500/30 text-purple-300">
+                  <span>{lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Model Hub"}</span>
+                  <Badge variant="outline" className="text-[10px] font-semibold border-purple-500/30 text-purple-700 dark:text-purple-300">
                     Offline • 100% Private
                   </Badge>
                 </DialogTitle>
@@ -250,7 +250,7 @@ export function ModelManagerModal() {
               <TabsTrigger value="chat" className="text-xs px-3.5 gap-1.5">
                 <Bot className="h-3.5 w-3.5 text-purple-400" />
                 <span>{lang === "bn" ? "এআই চ্যাট ও প্লেগ্রাউন্ড" : "AI Chat & Playground"}</span>
-                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 border-purple-500/30 text-purple-300 font-bold bg-purple-500/10">
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 h-4 border-purple-500/30 text-purple-700 dark:text-purple-300 font-bold bg-purple-500/10">
                   AI
                 </Badge>
               </TabsTrigger>
@@ -309,7 +309,7 @@ export function ModelManagerModal() {
                                 {model.name}
                               </h4>
                               {model.recommended && (
-                                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] font-semibold px-1.5 py-0">
+                                <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px] font-semibold px-1.5 py-0">
                                   Top Pick
                                 </Badge>
                               )}
@@ -327,7 +327,7 @@ export function ModelManagerModal() {
                         </div>
 
                         {/* Specs Grid */}
-                        <div className="grid grid-cols-4 gap-1.5 py-1.5 px-2.5 rounded-lg bg-black/20 border border-border/20 text-center">
+                        <div className="grid grid-cols-4 gap-1.5 py-1.5 px-2.5 rounded-lg bg-muted/40 dark:bg-black/20 border border-border/40 text-center">
                           <div>
                             <div className="text-[10px] text-muted-foreground font-medium">Disk Size</div>
                             <div className="text-xs font-bold text-foreground font-mono">{model.file_size_formatted}</div>
@@ -355,8 +355,8 @@ export function ModelManagerModal() {
 
                         {/* Hardware alert if low RAM */}
                         {!hasEnoughRam && !isInstalled && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-amber-300 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
-                            <AlertTriangle className="h-3 w-3 shrink-0 text-amber-400" />
+                          <div className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                            <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" />
                             <span>
                               {lang === "bn"
                                 ? "আপনার এভেইলেবল র‍্যাম কিছুটা কম, তবে মডেলটি চালু হতে পারে।"
@@ -483,12 +483,12 @@ export function ModelManagerModal() {
                         Author: {inspectedModel.author} • Filename: {inspectedModel.filename}
                       </p>
                     </div>
-                    <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+                    <Badge className="bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30 text-[10px]">
                       Verified GGUF
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-2 px-3 rounded-lg bg-black/25 border border-border/20 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 py-2 px-3 rounded-lg bg-muted/40 dark:bg-black/25 border border-border/40 text-xs">
                     <div>
                       <span className="text-muted-foreground text-[10px] block">Download Size</span>
                       <strong className="text-foreground font-mono">{inspectedModel.file_size_formatted}</strong>
@@ -688,7 +688,7 @@ export function ModelManagerModal() {
                           size="sm"
                           variant="outline"
                           onClick={() => setActiveTab("chat")}
-                          className="h-6 px-2 text-[10px] gap-1 border-purple-500/40 text-purple-300 hover:bg-purple-500/15"
+                          className="h-6 px-2 text-[10px] gap-1 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/15"
                         >
                           <Bot className="h-3 w-3" />
                           <span>{lang === "bn" ? "পূর্ণাঙ্গ এআই চ্যাট খুলুন" : "Open Full AI Chat"}</span>
@@ -706,7 +706,7 @@ export function ModelManagerModal() {
                           }
                         }}
                         placeholder="Type any test prompt..."
-                        className="text-xs font-sans h-8 bg-black/20"
+                        className="text-xs font-sans h-8 bg-card dark:bg-black/20"
                       />
                       <Button
                         type="button"
@@ -747,7 +747,7 @@ export function ModelManagerModal() {
                     </div>
 
                     {testOutput && (
-                      <div className="rounded-lg bg-black/30 border border-border/20 p-3 text-xs text-foreground font-sans leading-relaxed whitespace-pre-wrap animate-in fade-in">
+                      <div className="rounded-lg bg-muted/40 dark:bg-black/30 border border-border/40 p-3 text-xs text-foreground font-sans leading-relaxed whitespace-pre-wrap animate-in fade-in">
                         {testOutput}
                       </div>
                     )}

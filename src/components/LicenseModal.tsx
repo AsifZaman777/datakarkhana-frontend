@@ -209,9 +209,9 @@ export function LicenseModal({
             {isActive ? (
               <Badge
                 variant="outline"
-                className="border-emerald-500/40 text-emerald-400 bg-emerald-500/10 text-[10px] gap-1"
+                className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-[10px] gap-1"
               >
-                <ShieldCheck className="h-3 w-3" />{" "}
+                <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />{" "}
                 {lang === "bn"
                   ? `সক্রিয় (${status?.days_remaining} দিন বাকি)`
                   : `Active (${status?.days_remaining} days remaining)`}
@@ -257,15 +257,15 @@ export function LicenseModal({
               <span className="text-muted-foreground">
                 {lang === "bn" ? "ক্রেডিট ব্যালেন্স:" : "Credit Balance:"}
               </span>
-              <span className="font-mono font-bold text-amber-400">
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
                 {user.credits} CR
               </span>
             </div>
           )}
 
           {!isActive && (
-            <div className="pt-2 text-[11px] text-amber-400/90 flex items-start gap-1.5 border-t border-border/30">
-              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <div className="pt-2 text-[11px] text-amber-700 dark:text-amber-400 flex items-start gap-1.5 border-t border-border/30">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
               <span>
                 {lang === "bn"
                   ? "আপনি বিনামূল্যে ডাটাবেস ব্রাউজ ও ক্যাটালগ দেখতে পারবেন। শুধুমাত্র লোকাল স্ক্র্যাপার চালানোর জন্য সক্রিয় লাইসেন্স প্রয়োজন।"

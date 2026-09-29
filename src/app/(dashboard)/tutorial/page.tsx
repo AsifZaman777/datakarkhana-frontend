@@ -258,15 +258,15 @@ export default function TutorialPage() {
 
                   {/* Pro Tip Box */}
                   {data.tip && (
-                    <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-3 shadow-inner">
-                      <div className="p-1 rounded-md bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                    <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-3 shadow-inner">
+                      <div className="p-1 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5">
                         <Lightbulb className="h-4 w-4" />
                       </div>
                       <div className="space-y-0.5">
-                        <span className="font-bold uppercase tracking-wider text-[10px] text-amber-400">
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-amber-800 dark:text-amber-400">
                           {tut.quickTip || (lang === "bn" ? "জরুরি টিপস" : "PRO TIP")}
                         </span>
-                        <p className="text-amber-200/90 text-xs leading-relaxed">
+                        <p className="text-amber-900/90 dark:text-amber-200/90 text-xs leading-relaxed font-medium">
                           {data.tip}
                         </p>
                       </div>

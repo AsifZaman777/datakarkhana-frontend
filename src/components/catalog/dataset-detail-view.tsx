@@ -460,8 +460,8 @@ export function DatasetDetailView({
 
       {/* Cloud Storage Notice Alert */}
       {detail.notice && (
-        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 shrink-0 text-amber-400" />
+        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>{detail.notice}</span>
         </div>
       )}

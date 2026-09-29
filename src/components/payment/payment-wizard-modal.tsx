@@ -177,7 +177,7 @@ export function PaymentWizardModal({ open, onClose }: PaymentWizardModalProps) {
                     step === i + 1
                       ? "border-amber-500 bg-amber-500/10 text-amber-500 font-bold"
                       : step > i + 1
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"
                       : "border-border/40 text-muted-foreground opacity-70"
                   }`}
                 >

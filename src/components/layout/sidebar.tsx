@@ -161,7 +161,7 @@ function SidebarInner({
       color: "text-pink-600 dark:text-pink-400",
       items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send, iconColor: "text-pink-600 dark:text-pink-400" },
-        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-400", badge: "AI" },
+        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-600 dark:text-purple-400", badge: "AI" },
       ],
     },
     {
@@ -222,7 +222,7 @@ function SidebarInner({
       color: "text-pink-600 dark:text-pink-400",
       items: [
         { label: st.marketing || (lang === "bn" ? "মার্কেটিং পোর্টাল" : "Marketing Portal"), href: "/marketing", icon: Send },
-        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-400", badge: "AI" },
+        { label: lang === "bn" ? "এআই মার্কেটিং চ্যাট" : "AI Marketing Chat", href: "/marketing?tab=ai-chat", icon: Sparkles, iconColor: "text-purple-600 dark:text-purple-400", badge: "AI" },
         { label: st.upgrade || (lang === "bn" ? "প্যাকেজ আপগ্রেড" : "Upgrade Package"), href: "/upgrade", icon: Zap, iconColor: "text-amber-600 dark:text-amber-400" },
         { label: st.tutorial || (lang === "bn" ? "টিউটোরিয়াল ও নির্দেশিকা" : "Tutorial & Guide"), href: "/tutorial", icon: BookOpen, iconColor: "text-cyan-600 dark:text-cyan-400" },
       ],
@@ -280,7 +280,7 @@ function SidebarInner({
         />
         {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
         {!collapsed && item.badge && (
-          <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+          <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
             {item.badge}
           </span>
         )}
@@ -422,7 +422,7 @@ function SidebarInner({
                     openModelHub();
                     onClose?.();
                   }}
-                  className="h-8 w-8 relative border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200"
+                  className="h-8 w-8 relative border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 hover:text-purple-800 dark:hover:text-purple-200"
                 >
                   <Cpu className="h-4 w-4 text-purple-400" />
                   {installedModels.length > 0 && (
@@ -472,7 +472,7 @@ function SidebarInner({
                 </div>
               </div>
               {installedModels.length > 0 ? (
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px] px-1.5 py-0 shrink-0 font-mono">
+                <Badge className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[10px] px-1.5 py-0 shrink-0 font-mono">
                   {installedModels.length}
                 </Badge>
               ) : (

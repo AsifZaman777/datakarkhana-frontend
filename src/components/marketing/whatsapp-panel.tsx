@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
-import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle, Shield, MessageSquarePlus } from "lucide-react";
+import { Send, UserCheck, RefreshCw, Sparkles, Play, Square, Clock, Activity, CheckCircle2, AlertTriangle, Shield, MessageSquare, MessageSquarePlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -597,11 +597,11 @@ Return ONLY updated template.`;
                   size="sm"
                   variant="outline"
                   onClick={() => onOpenAiChat(`Can you review and optimize this WhatsApp template for ${companyName} to increase conversions and ensure 100% anti-ban compliance?\n\nDraft:\n${templateText}`)}
-                  className="h-7 text-xs gap-1.5 border-purple-500/50 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 font-semibold shadow-xs"
+                  className="h-7 text-xs gap-1.5 border-purple-500/50 bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 font-semibold shadow-xs"
                   title={lang === "bn" ? "এআই চ্যাটে এই টেমপ্লেটটি নিয়ে বিস্তারিত আলোচনা করুন" : "Freely discuss and improve this template in the AI Chat Panel"}
                 >
-                  <Sparkles className="h-3 w-3 text-purple-400" />
-                  <span>{lang === "bn" ? "💬 এআই চ্যাটে আলোচনা করুন" : "💬 Discuss in AI Chat"}</span>
+                  <MessageSquare className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+                  <span>{lang === "bn" ? "এআই চ্যাটে আলোচনা" : "Discuss in AI Chat"}</span>
                 </Button>
               )}
               <Button
@@ -610,21 +610,21 @@ Return ONLY updated template.`;
                 variant="outline"
                 onClick={handleAiGenerateVariant}
                 disabled={isGeneratingAi}
-                className="h-7 text-xs gap-1.5 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-xs"
+                className="h-7 text-xs gap-1.5 border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 shadow-xs"
                 title={lang === "bn" ? "লোকাল এআই দিয়ে এই মেসেজের ভেরিয়েন্ট তৈরি করুন" : "Generate a fresh message variant using Local AI"}
               >
                 {isGeneratingAi ? (
                   <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
                 ) : (
-                  <Sparkles className="h-3 w-3 text-purple-400" />
+                  <Sparkles className="h-3 w-3 text-purple-500 dark:text-purple-400" />
                 )}
-                <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Variant"}</span>
+                <span>{lang === "bn" ? "এআই ভেরিয়েন্ট" : "AI Variant"}</span>
               </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("ChatGPT")} className="h-7 text-xs gap-1 border-emerald-500/40 text-emerald-400">
-                <Sparkles className="h-3 w-3" /> ChatGPT Prompt
+              <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("ChatGPT")} className="h-7 text-xs gap-1 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
+                <Sparkles className="h-3 w-3 text-emerald-500 dark:text-emerald-400" /> ChatGPT Prompt
               </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("Gemini")} className="h-7 text-xs gap-1 border-cyan-500/40 text-cyan-400">
-                <Sparkles className="h-3 w-3" /> Gemini Prompt
+              <Button type="button" size="sm" variant="outline" onClick={() => handleAiExport("Gemini")} className="h-7 text-xs gap-1 border-cyan-500/40 text-cyan-700 dark:text-cyan-400">
+                <Sparkles className="h-3 w-3 text-cyan-500 dark:text-cyan-400" /> Gemini Prompt
               </Button>
             </div>
           </div>
@@ -640,25 +640,8 @@ Return ONLY updated template.`;
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={handleAiGenerateVariant}
-                  disabled={isGeneratingAi}
-                  className="h-7 text-xs gap-1.5 border-purple-500/40 text-purple-300 hover:bg-purple-500/10 shadow-xs"
-                  title={lang === "bn" ? "এআই দিয়ে মেসেজ ভেরিয়েন্ট তৈরি করুন" : "Generate message variant with AI"}
-                >
-                  {isGeneratingAi ? (
-                    <RefreshCw className="h-3 w-3 animate-spin text-purple-400" />
-                  ) : (
-                    <Sparkles className="h-3 w-3 text-purple-400" />
-                  )}
-                  <span>{lang === "bn" ? "✨ এআই ভেরিয়েন্ট" : "✨ AI Variant"}</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
                   onClick={() => setWizardOpen(true)}
-                  className="h-7 text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                  className="h-7 text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-medium"
                   title={lang === "bn" ? "মাল্টিপল মেসেজ ভেরিয়েন্ট ও ব্যান সুরক্ষা উইজার্ড খুলুন" : "Open Multi-Variant & Ban Protection Wizard"}
                 >
                   <MessageSquarePlus className="h-3.5 w-3.5" />
@@ -669,17 +652,18 @@ Return ONLY updated template.`;
             <textarea
               value={templateText}
               onChange={(e) => setTemplateText(e.target.value)}
-              rows={5}
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs font-mono text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              rows={9}
+              className="w-full rounded-md border border-input bg-card/60 dark:bg-black/20 px-3 py-2.5 text-xs font-mono text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 min-h-[180px] leading-relaxed resize-y"
             />
           </div>
 
           {/* Live Preview */}
-          <div className="p-4 rounded-xl bg-black/90 border border-border/40 space-y-2">
-            <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+          <div className="p-4 rounded-xl bg-zinc-950 dark:bg-black/90 border border-zinc-800/80 space-y-2 shadow-inner">
+            <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
               {m.livePreviewLabel || (lang === "bn" ? "প্রাপক মেসেজের লাইভ প্রিভিউ:" : "Live Recipient Message Preview:")}
             </div>
-            <pre className="text-xs font-mono text-foreground whitespace-pre-wrap leading-relaxed">
+            <pre className="text-xs font-mono text-zinc-100 whitespace-pre-wrap leading-relaxed select-text">
               {getResolvedMessage()}
             </pre>
           </div>
@@ -688,7 +672,7 @@ Return ONLY updated template.`;
           {liveCampaignDetails && (
             <div className="p-4 rounded-xl bg-gradient-to-br from-rose-950/40 via-background/90 to-card border border-rose-500/40 shadow-xl space-y-3 font-mono text-xs animate-in fade-in duration-300">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-rose-300">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
                   {isCampaignRunning ? (
                     <span className="relative flex h-2.5 w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
@@ -711,8 +695,8 @@ Return ONLY updated template.`;
 
                 <div className="flex items-center gap-3">
                   {isCampaignRunning && liveCampaignDetails?.est_human && (
-                    <div className="px-2.5 py-1 rounded-md bg-cyan-950/50 border border-cyan-500/30 text-[11px] text-cyan-300 flex items-center gap-1.5">
-                      <Clock className="h-3 w-3 text-cyan-400 shrink-0" />
+                    <div className="px-2.5 py-1 rounded-md bg-cyan-500/10 dark:bg-cyan-950/50 border border-cyan-500/30 text-[11px] text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5 font-medium">
+                      <Clock className="h-3 w-3 text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <span>{lang === "bn" ? "আনুমানিক সময়:" : "EST:"} {liveCampaignDetails.est_human}</span>
                     </div>
                   )}
@@ -787,7 +771,7 @@ Return ONLY updated template.`;
               ? (m.launchingWaBtn || (lang === "bn" ? "হোয়াটসঅ্যাপ ক্যাম্পেইন শুরু হচ্ছে..." : "Launching WhatsApp Campaign..."))
               : isCampaignRunning
               ? (lang === "bn" ? "ক্যাম্পেইন ব্যাকগ্রাউন্ডে চলছে (সুরক্ষিত)..." : "Campaign Dispatching Live in Background (Multi-Page Protected)...")
-              : (lang === "bn" ? "🛡️ ব্যান প্রটেকশন উইজার্ড খুলুন ও ক্যাম্পেইন শুরু করুন" : "🛡️ Open Ban Protection Wizard & Launch Campaign")}
+              : (lang === "bn" ? "ব্যান প্রটেকশন উইজার্ড খুলুন ও ক্যাম্পেইন শুরু করুন" : "Open Ban Protection Wizard & Launch Campaign")}
           </Button>
         </form>
 

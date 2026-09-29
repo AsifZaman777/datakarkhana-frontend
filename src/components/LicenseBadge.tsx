@@ -90,10 +90,10 @@ export function LicenseBadge({ onOpenModal }: LicenseBadgeProps) {
   return (
     <button
       onClick={onOpenModal}
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors cursor-pointer"
       title={lang === "bn" ? `লাইসেন্স সক্রিয়: মেয়াদ ${status.expires_at ? new Date(status.expires_at).toLocaleDateString() : ""} পর্যন্ত। বিস্তারিত দেখতে ক্লিক করুন।` : `License Active: Valid until ${status.expires_at ? new Date(status.expires_at).toLocaleDateString() : ""}. Click to view details.`}
     >
-      <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
       <span>PRO • {status.days_remaining}{lang === "bn" ? " দিন বাকি" : "d left"}</span>
     </button>
   );

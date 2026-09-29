@@ -86,7 +86,7 @@ export default function DashboardLayout({
                 variant="outline"
                 size="sm"
                 onClick={openModelHub}
-                className="h-7 text-xs gap-1.5 border-purple-500/30 text-purple-300 hover:bg-purple-500/10 hover:text-purple-200 transition-colors"
+                className="h-7 text-xs gap-1.5 border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 hover:text-purple-800 dark:hover:text-purple-200 transition-colors"
                 title={lang === "bn" ? "লোকাল এআই মডেল হাব" : "Local AI Models Hub"}
               >
                 <Cpu className="h-3.5 w-3.5 text-purple-400" />

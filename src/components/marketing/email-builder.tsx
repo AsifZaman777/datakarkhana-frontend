@@ -397,9 +397,9 @@ Return ONLY updated HTML code.`;
               </Badge>
             ) : isEmailVerificationPending ? (
               <div className="space-y-4 pt-2">
-                <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-500/40 text-left text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-purple-300 font-bold">
-                    <Mail className="h-4 w-4 text-purple-400" /> Customer Action Required: Confirm Email Link from Brevo
+                <div className="p-4 rounded-xl bg-purple-500/10 dark:bg-purple-950/30 border border-purple-500/40 text-left text-xs space-y-2">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold">
+                    <Mail className="h-4 w-4 text-purple-600 dark:text-purple-400" /> Customer Action Required: Confirm Email Link from Brevo
                   </div>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
                     Brevo has sent a confirmation email directly to your inbox. Open your email, click <strong>Confirm my email</strong>, then return here to unlock your campaign panel.
@@ -420,7 +420,7 @@ Return ONLY updated HTML code.`;
                     variant="outline"
                     onClick={handleResendEmailLink}
                     disabled={isResending}
-                    className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 font-bold text-xs h-11 px-4"
+                    className="border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 font-bold text-xs h-11 px-4"
                   >
                     Resend Email Link
                   </Button>
@@ -428,7 +428,7 @@ Return ONLY updated HTML code.`;
 
                 {/* Option to paste Brevo Activation Link directly */}
                 <div className="pt-3 border-t border-border/30 text-left space-y-2">
-                  <Label className="text-[11px] font-semibold text-purple-300">
+                  <Label className="text-[11px] font-semibold text-purple-700 dark:text-purple-300">
                     Option A: Paste Brevo Activation Link from your Email Inbox:
                   </Label>
                   <div className="flex items-center gap-2">
@@ -760,7 +760,7 @@ Return ONLY updated HTML code.`;
 
             {isCampaignRunning && (
               <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex flex-wrap items-center justify-between gap-4 font-mono text-xs my-2">
-                <div className="flex items-center gap-2 text-rose-300">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-medium">
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
                   <span>{lang === "bn" ? "ইমেইল ক্যাম্পেইন" : "Email Campaign"} <strong className="text-foreground">{activeCampaignId}</strong> {lang === "bn" ? "সরাসরি পাঠানো হচ্ছে" : "is Dispatching Live"}</span>
                 </div>

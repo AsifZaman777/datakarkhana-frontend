@@ -222,14 +222,14 @@ export function ScrapedDataModal({ jobId, open, onClose }: ScrapedDataModalProps
           </div>
 
           <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground shrink-0 w-full sm:w-auto justify-end">
-            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 gap-1">
-              <Phone className="h-3 w-3" /> {withPhoneCount} / {data.length} Leads with Phone
+            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 gap-1">
+              <Phone className="h-3 w-3 text-emerald-600 dark:text-emerald-400" /> {withPhoneCount} / {data.length} Leads with Phone
             </Badge>
           </div>
         </div>
 
         {/* Data Table */}
-        <div className="flex-1 overflow-y-auto border border-border/40 rounded-lg bg-black/40">
+        <div className="flex-1 overflow-y-auto border border-border/40 rounded-lg bg-card/70 dark:bg-black/40">
           {loading ? (
             <LoadingBackdrop variant="inline" label="Loading scraped dataset records..." color="cyan" size="sm" />
           ) : totalFilteredRows > 0 ? (
