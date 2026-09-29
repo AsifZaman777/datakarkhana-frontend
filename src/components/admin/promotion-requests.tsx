@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, X, Globe, Database, ArrowUpDown } from "lucide-react";
+import { Check, X, Globe, Database, ArrowUpDown, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,17 @@ interface PromotionRequestsProps {
 export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProps) {
   const { lang } = useLanguage();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "প্রমোশন রিকোয়েস্ট তালিকা রিফ্রেশ করা হয়েছে" : "Promotion requests refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const handleApprove = async (id: number) => {
     try {
@@ -211,7 +222,7 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 className="text-sm font-bold text-foreground">
               {lang === "bn"
@@ -224,12 +235,24 @@ export function PromotionRequests({ requests, onRefresh }: PromotionRequestsProp
                 : "Approved datasets become public in PostgreSQL. Rejected datasets are removed from PostgreSQL and stay local on the customer PC."}
             </p>
           </div>
-          <Badge variant="outline" className="border-cyan-500/40 text-cyan-400 bg-cyan-500/10 gap-1 text-[11px] font-mono">
-            <Database className="h-3 w-3" />{" "}
-            {lang === "bn"
-              ? `ক্লাউড কিউ: ${requests.length}টি`
-              : `PostgreSQL Cloud Queue: ${requests.length}`}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-8 text-xs gap-1.5"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+            </Button>
+            <Badge variant="outline" className="border-cyan-500/40 text-cyan-400 bg-cyan-500/10 gap-1 text-[11px] font-mono">
+              <Database className="h-3 w-3" />{" "}
+              {lang === "bn"
+                ? `ক্লাউড কিউ: ${requests.length}টি`
+                : `PostgreSQL Cloud Queue: ${requests.length}`}
+            </Badge>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">

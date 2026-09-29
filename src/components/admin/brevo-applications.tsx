@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink, Mail } from "lucide-react";
+import { Building, ShieldCheck, CheckCircle2, XCircle, Clock, ExternalLink, Mail, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,18 @@ export function BrevoApplicationsList() {
     marketingApi
       .listBrevoApplications()
       .then((res) => setApplications(res.data))
+      .catch(() => toast.error("Failed to load Brevo applications."))
+      .finally(() => setLoading(false));
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    marketingApi
+      .listBrevoApplications()
+      .then((res) => {
+        setApplications(res.data);
+        toast.success(lang === "bn" ? "ব্রেভো আবেদন তালিকা রিফ্রেশ করা হয়েছে" : "Brevo applications refreshed");
+      })
       .catch(() => toast.error("Failed to load Brevo applications."))
       .finally(() => setLoading(false));
   };
@@ -129,16 +141,28 @@ export function BrevoApplicationsList() {
   return (
     <Card className="glass-panel p-6 border-purple-500/30">
       <CardContent className="p-0 space-y-6">
-        <div className="flex items-center justify-between border-b border-border/40 pb-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border/40 pb-3">
           <div className="flex items-center gap-2">
             <Building className="h-5 w-5 text-purple-400" />
             <h3 className="text-sm font-bold text-foreground">
               {lang === "bn" ? "ব্রেভো (Brevo) বিজনেস ভেরিফিকেশন ও এপিআই অনুমোদন" : "Brevo Business Verification & API Approvals"}
             </h3>
           </div>
-          <Badge variant="outline" className="border-purple-500/40 text-purple-700 dark:text-purple-300 font-mono text-xs">
-            {lang === "bn" ? `আবেদন: ${applications.length}টি` : `Submissions: ${applications.length}`}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={loading}
+              className="h-8 text-xs gap-1.5"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+            </Button>
+            <Badge variant="outline" className="border-purple-500/40 text-purple-700 dark:text-purple-300 font-mono text-xs">
+              {lang === "bn" ? `আবেদন: ${applications.length}টি` : `Submissions: ${applications.length}`}
+            </Badge>
+          </div>
         </div>
 
         {/* Loading state */}

@@ -26,6 +26,7 @@ import {
   Radio,
   ArrowUpDown,
   Lock,
+  RefreshCw,
 } from "lucide-react";
 import { scraperApi } from "@/lib/api/scraper";
 import { useRouter } from "next/navigation";
@@ -72,6 +73,17 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
 
   // Stopping state
   const [stoppingJobId, setStoppingJobId] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "স্ক্র্যাপার তালিকা রিফ্রেশ করা হয়েছে" : "Scraper jobs refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   // Sorting state for TanStack Table
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -390,7 +402,14 @@ export function JobHistory({ jobs, onRefresh, activeJobId, onViewLogs }: JobHist
               {lang === "bn" ? "স্ক্র্যাপিং হিস্ট্রি ও নিজস্ব ডেটাসেটসমূহ" : "Scraping Job History & Private Datasets"} ({jobs.length})
             </h2>
           </div>
-          <Button variant="ghost" size="sm" onClick={onRefresh} className="text-xs text-muted-foreground">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-8 text-xs gap-1.5"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             {lang === "bn" ? "তালিকা রিফ্রেশ" : "Refresh List"}
           </Button>
         </div>

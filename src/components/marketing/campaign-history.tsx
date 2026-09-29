@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, Fragment } from "react";
-import { ChevronDown, ChevronUp, StopCircle, Clock, CheckCircle2, XCircle, Trash2, ArrowUpDown } from "lucide-react";
+import { ChevronDown, ChevronUp, StopCircle, Clock, CheckCircle2, XCircle, Trash2, ArrowUpDown, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,17 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
   const [stopTargetId, setStopTargetId] = useState<number | string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "ক্যাম্পেইন হিস্ট্রি রিফ্রেশ করা হয়েছে" : "Campaign history refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const handleToggleExpand = async (id: number | string) => {
     if (expandedId === id) {
@@ -260,9 +271,21 @@ export function CampaignHistory({ campaigns, onRefresh }: CampaignHistoryProps) 
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
-        <h3 className="text-sm font-bold text-foreground">
-          {m.historyTitle || (lang === "bn" ? "ক্যাম্পেইন হিস্ট্রি ও অডিট ট্রেইল" : "Campaign Dispatch History & Audit Trail")}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">
+            {m.historyTitle || (lang === "bn" ? "ক্যাম্পেইন হিস্ট্রি ও অডিট ট্রেইল" : "Campaign Dispatch History & Audit Trail")}
+          </h3>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-8 text-xs gap-1.5"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+          </Button>
+        </div>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">
           <Table>

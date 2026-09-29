@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Shield, Plus, ArrowUpDown } from "lucide-react";
+import { Shield, Plus, ArrowUpDown, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,17 @@ interface SecurityViolationsProps {
 export function SecurityViolations({ violations, onRefresh }: SecurityViolationsProps) {
   const { lang } = useLanguage();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "লগ রিফ্রেশ করা হয়েছে" : "Violation logs refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const handleSeed = async () => {
     try {
@@ -148,10 +159,22 @@ export function SecurityViolations({ violations, onRefresh }: SecurityViolations
             </h3>
           </div>
 
-          <Button size="sm" variant="outline" onClick={handleSeed} className="gap-1 text-xs h-8">
-            <Plus className="h-3.5 w-3.5" />{" "}
-            {lang === "bn" ? "টেস্ট লগ তৈরি করুন" : "Seed Test Logs"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="gap-1.5 text-xs h-8"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleSeed} className="gap-1 text-xs h-8">
+              <Plus className="h-3.5 w-3.5" />{" "}
+              {lang === "bn" ? "টেস্ট লগ তৈরি করুন" : "Seed Test Logs"}
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">

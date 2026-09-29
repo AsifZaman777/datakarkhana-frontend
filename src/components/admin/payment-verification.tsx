@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Key, Copy, Check, Calendar, MessageSquare, ShieldCheck, ArrowUpDown } from "lucide-react";
+import { CheckCircle2, XCircle, Key, Copy, Check, Calendar, MessageSquare, ShieldCheck, ArrowUpDown, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +63,17 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
 
   // Success dialog after key is generated
   const [licenseResult, setLicenseResult] = useState<GeneratedLicenseDialogData | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "পেমেন্ট তালিকা রিফ্রেশ করা হয়েছে" : "Payment requests refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const openApproveModal = (req: PaymentRequest) => {
     setApproveTarget(req);
@@ -311,7 +322,7 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
   return (
     <Card className="glass-panel p-6">
       <CardContent className="p-0 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 className="text-sm font-bold text-foreground">
               {lang === "bn" ? "গ্রাহক বিডিটি পেমেন্ট সাবমিশন যাচাইকরণ" : "Customer BDT Payment Submissions Verification"}
@@ -322,6 +333,16 @@ export function PaymentVerification({ requests, onRefresh }: PaymentVerification
                 : "Approve bKash/Pathao payments, manually assign expiration dates, and generate production keys."}
             </p>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-8 text-xs gap-1.5 shrink-0"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+          </Button>
         </div>
 
         <div className="rounded-lg border border-border/40 overflow-hidden bg-background/50">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Globe, Lock, Inbox, Upload, Sparkles, FileSpreadsheet } from "lucide-react";
+import { Globe, Lock, Inbox, Upload, Sparkles, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DatasetCard } from "@/components/catalog/dataset-card";
@@ -79,6 +79,21 @@ export default function CatalogPage() {
   const [isDemoting, setIsDemoting] = useState(false);
   const [syncingJobId, setSyncingJobId] = useState<number | null>(null);
   const [desyncingJobId, setDesyncingJobId] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.allSettled([
+        loadPublicDatasets(),
+        loadPrivateDatasets(),
+        refreshProfile?.(),
+      ]);
+      toast.success(lang === "bn" ? "ক্যাটালগ ডাটা রিফ্রেশ করা হয়েছে" : "Catalog datasets refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   // Load configs
   useEffect(() => {
@@ -453,6 +468,17 @@ export default function CatalogPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="gap-2 text-xs font-semibold h-8"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+          </Button>
+
           <Button
             size="sm"
             onClick={() => setUploadModalOpen(true)}

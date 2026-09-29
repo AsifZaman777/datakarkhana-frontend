@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building, Key, MoreHorizontal, ChevronDown, ShieldCheck } from "lucide-react";
+import { Settings, Upload, Inbox, Coins, LayoutDashboard, Building, Key, MoreHorizontal, ChevronDown, ShieldCheck, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -63,10 +64,12 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
     }).catch(() => {});
   }, []);
 
-  const loadData = useCallback(() => {
-    adminApi.listPromotionRequests().then((r) => setPromotions(r.data)).catch(() => {});
-    adminApi.listPaymentRequests().then((r) => setPayments(r.data)).catch(() => {});
-    adminApi.listDatasetRequests().then((r) => setDatasetRequests(r.data)).catch(() => {});
+  const loadData = useCallback(async () => {
+    return Promise.allSettled([
+      adminApi.listPromotionRequests().then((r) => setPromotions(r.data)).catch(() => {}),
+      adminApi.listPaymentRequests().then((r) => setPayments(r.data)).catch(() => {}),
+      adminApi.listDatasetRequests().then((r) => setDatasetRequests(r.data)).catch(() => {}),
+    ]);
   }, []);
 
   useEffect(() => {
@@ -246,9 +249,20 @@ export default function AdminPage({ initialTab = "dashboard" }: AdminPageProps) 
         {/* TAB 5: REQUESTS */}
         <TabsContent value="requests" className="pt-4 space-y-4">
           <div className="rounded-lg border border-border/40 overflow-hidden bg-card/60 p-4">
-            <h3 className="text-sm font-bold mb-3">
-              {lang === "bn" ? "কাস্টম ডাটা রিকোয়েস্ট তালিকা" : (at.tabRequests || "Custom Dataset Requests List")}
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold">
+                {lang === "bn" ? "কাস্টম ডাটা রিকোয়েস্ট তালিকা" : (at.tabRequests || "Custom Dataset Requests List")}
+              </h3>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadData}
+                className="h-8 text-xs gap-1.5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+              </Button>
+            </div>
             <div className="space-y-3">
               {datasetRequests.map((req) => (
                 <div key={req.id} className="p-3 rounded-lg border border-border/30 bg-background/50 flex justify-between items-center text-xs">

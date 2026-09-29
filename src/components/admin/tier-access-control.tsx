@@ -18,6 +18,7 @@ import {
   Mail,
   CheckCircle2,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,20 @@ export function TierAccessControl({ onRefreshUsers }: TierAccessControlProps) {
       setTiers(res.data || []);
     } catch (err: any) {
       console.error("[TIER_PERMISSIONS_LOAD_ERROR]", err);
+      const detail = err?.response?.data?.detail || err?.response?.data?.message || err?.message || "";
+      toast.error(detail ? `Failed to load tier permissions: ${detail}` : "Failed to load tier permissions.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const res = await adminApi.getTierPermissions();
+      setTiers(res.data || []);
+      toast.success(lang === "bn" ? "টিয়ার পারমিশন পলিসি রিফ্রেশ করা হয়েছে" : "Tier permissions refreshed");
+    } catch (err: any) {
       const detail = err?.response?.data?.detail || err?.response?.data?.message || err?.message || "";
       toast.error(detail ? `Failed to load tier permissions: ${detail}` : "Failed to load tier permissions.");
     } finally {
@@ -174,6 +189,17 @@ export function TierAccessControl({ onRefreshUsers }: TierAccessControlProps) {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={loading || saving}
+              className="h-8 text-xs gap-1.5"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"

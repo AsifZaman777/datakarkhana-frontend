@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Users,
   Filter,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,17 @@ export function UserManagement({
   const [creditModalTarget, setCreditModalTarget] = useState<{ user: User; mode: "add" | "deduct" } | null>(null);
   const [creditAmount, setCreditAmount] = useState<string>("50");
   const [isSubmittingCredit, setIsSubmittingCredit] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast.success(lang === "bn" ? "গ্রাহক তালিকা রিফ্রেশ করা হয়েছে" : "User accounts refreshed");
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   const [roleTarget, setRoleTarget] = useState<{ userId: number; role: string } | null>(null);
   const [banTarget, setBanTarget] = useState<User | null>(null);
@@ -841,6 +853,16 @@ export function UserManagement({
                 : "Manage user roles, balances, upload limits, and inspect cloud storage datasets."}
             </p>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-8 text-xs gap-1.5 shrink-0"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {lang === "bn" ? "রিফ্রেশ" : "Refresh"}
+          </Button>
         </div>
 
         {/* Cloud Storage Monitoring Summary Banner */}
