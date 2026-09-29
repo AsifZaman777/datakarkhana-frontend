@@ -152,6 +152,7 @@ function SidebarInner({
       items: [
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
         { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
+        { label: lang === "bn" ? "ইউনিভার্সাল ই-কমার্স" : "Universal E-Commerce", href: "/scraper/ecommerce", icon: Globe, iconColor: "text-indigo-500 dark:text-indigo-400" },
       ],
     },
     {
@@ -213,6 +214,7 @@ function SidebarInner({
       items: [
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
         { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
+        { label: lang === "bn" ? "ইউনিভার্সাল ই-কমার্স" : "Universal E-Commerce", href: "/scraper/ecommerce", icon: Globe, iconColor: "text-indigo-500 dark:text-indigo-400" },
       ],
     },
     {
@@ -235,6 +237,7 @@ function SidebarInner({
     if (href === "/catalog") return "sidebar-nav-catalog";
     if (href === "/scraper") return "sidebar-nav-scraper";
     if (href === "/scraper/daraz") return "sidebar-nav-daraz";
+    if (href === "/scraper/ecommerce") return "sidebar-nav-ecommerce";
     if (href === "/marketing") return "sidebar-nav-marketing";
     if (href === "/upgrade") return "sidebar-nav-upgrade";
     if (href === "/tutorial") return "sidebar-nav-tutorial";

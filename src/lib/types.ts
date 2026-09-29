@@ -192,6 +192,8 @@ export interface ScraperJob {
   area?: string;
   status: "pending" | "running" | "done" | "stopped" | "failed";
   result_count?: number;
+  cost_credits?: number;
+  result_path?: string;
   is_synced?: number;
   promotion_status?: "pending" | "approved" | "rejected" | string | null;
   created_at?: string;
@@ -218,6 +220,34 @@ export interface DarazProductItem {
   "Image URL"?: string;
   "Shop URL"?: string;
   "Category"?: string;
+  "Search Query"?: string;
+  "Page Number"?: number;
+  [key: string]: unknown;
+}
+
+export interface EcommercePlatform {
+  id: string;
+  name: string;
+  domain: string;
+  search_pattern?: string;
+}
+
+export interface EcommerceProductItem {
+  "Product Name"?: string;
+  "Sale Price"?: string;
+  "Sale Price (BDT)"?: string;
+  "Original Price"?: string;
+  "Original Price (BDT)"?: string;
+  "Discount"?: string;
+  "Shop Name"?: string;
+  "Shop Rating"?: string;
+  "Brand"?: string;
+  "Rating"?: string | number;
+  "Review Count"?: string | number;
+  "Stock Status"?: string;
+  "Product URL"?: string;
+  "Image URL"?: string;
+  "Platform"?: string;
   "Search Query"?: string;
   "Page Number"?: number;
   [key: string]: unknown;
