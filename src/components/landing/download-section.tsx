@@ -19,13 +19,11 @@ export function DownloadSection() {
   }>({
     version: "2.1.2",
     windowsUrl:
-      process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
       "https://github.com/AsifZaman777/datakarkhana-desktop/releases/download/v2.1.2/DataKarkhana-Desktop-Setup-2.1.2.exe",
     macUrl:
-      process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
       "https://github.com/AsifZaman777/datakarkhana-desktop/releases/download/v2.1.2/DataKarkhana-Desktop-2.1.2-arm64.dmg",
-    winSizeMb: 185,
-    macSizeMb: 196,
+    winSizeMb: 79,
+    macSizeMb: 96,
   });
   const apiBase = getApiBase();
 
@@ -50,11 +48,9 @@ export function DownloadSection() {
           setReleaseInfo((prev) => ({
             version: data.version,
             windowsUrl:
-              process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
               data.windows?.url ||
               prev.windowsUrl,
             macUrl:
-              process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
               data.mac?.url ||
               prev.macUrl,
             winSizeMb: data.windows?.sizeMb || prev.winSizeMb,
