@@ -10,6 +10,23 @@ export function DownloadSection() {
   const { t, lang } = useLanguage();
   const dt = t.download || {};
   const [detectedOs, setDetectedOs] = useState<"windows" | "mac" | "other">("windows");
+  const [releaseInfo, setReleaseInfo] = useState<{
+    version: string;
+    windowsUrl: string;
+    macUrl: string;
+    winSizeMb: number;
+    macSizeMb: number;
+  }>({
+    version: "2.1.2",
+    windowsUrl:
+      process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
+      "https://github.com/AsifZaman777/datakarkhana-desktop/releases/download/v2.1.2/DataKarkhana-Desktop-Setup-2.1.2.exe",
+    macUrl:
+      process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
+      "https://github.com/AsifZaman777/datakarkhana-desktop/releases/download/v2.1.2/DataKarkhana-Desktop-2.1.2-arm64.dmg",
+    winSizeMb: 185,
+    macSizeMb: 196,
+  });
   const apiBase = getApiBase();
 
   useEffect(() => {
@@ -21,15 +38,34 @@ export function DownloadSection() {
         setDetectedOs("windows");
       }
     }
+
+    // Auto-fetch latest release details from GitHub via cached Next.js route
+    fetch("/api/desktop-release")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.version) {
+          setReleaseInfo((prev) => ({
+            version: data.version,
+            windowsUrl:
+              process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
+              data.windows?.url ||
+              prev.windowsUrl,
+            macUrl:
+              process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
+              data.mac?.url ||
+              prev.macUrl,
+            winSizeMb: data.windows?.sizeMb || prev.winSizeMb,
+            macSizeMb: data.mac?.sizeMb || prev.macSizeMb,
+          }));
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not auto-fetch desktop release, using defaults:", err);
+      });
   }, []);
-
-  const windowsDownloadUrl =
-    process.env.NEXT_PUBLIC_DESKTOP_WIN_URL ||
-    `${apiBase}/api/download/desktop?os=windows`;
-
-  const macDownloadUrl =
-    process.env.NEXT_PUBLIC_DESKTOP_MAC_URL ||
-    `${apiBase}/api/download/desktop?os=mac`;
 
   return (
     <section id="download" className="relative py-20 lg:py-28 overflow-hidden bg-background border-t border-border/40">
@@ -42,7 +78,11 @@ export function DownloadSection() {
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold tracking-wide shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-            <span>{dt.badge || "DESKTOP APPLICATION • STANDALONE V2.0"}</span>
+            <span>
+              {lang === "bn"
+                ? `ডেস্কটপ অ্যাপ্লিকেশন • স্বতন্ত্র v${releaseInfo.version}`
+                : `DESKTOP APPLICATION • STANDALONE V${releaseInfo.version}`}
+            </span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground">
@@ -109,7 +149,8 @@ export function DownloadSection() {
               {/* Specs pill */}
               <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/60 p-2 rounded-lg border border-border/60">
                 <span className="flex items-center gap-1">
-                  <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.winSize || "Size: ~185 MB"}
+                  <HardDrive className="h-3.5 w-3.5 text-primary" />{" "}
+                  {lang === "bn" ? `আকার: ~${releaseInfo.winSizeMb} মেগাবাইট` : `Size: ~${releaseInfo.winSizeMb} MB`}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
@@ -119,14 +160,16 @@ export function DownloadSection() {
             </div>
 
             <div className="pt-5 mt-auto">
-              <a href={windowsDownloadUrl} download className="block">
+              <a href={releaseInfo.windowsUrl} download className="block">
                 <Button size="lg" className="w-full gap-2 font-bold py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25">
                   <Download className="h-5 w-5" />
                   {dt.winBtn || "Download for Windows (.exe)"}
                 </Button>
               </a>
               <p className="text-[11px] text-center text-muted-foreground/80 mt-1.5 font-mono">
-                {dt.winVer || "Version 2.0.2 • Windows 10 & 11"}
+                {lang === "bn"
+                  ? `সংস্করণ ${releaseInfo.version} • উইন্ডোজ ১০ ও ১১ (৬৪-বিট)`
+                  : `Version ${releaseInfo.version} • Windows 10 & 11 (64-bit)`}
               </p>
             </div>
           </div>
@@ -180,7 +223,8 @@ export function DownloadSection() {
               {/* Specs pill */}
               <div className="flex items-center gap-4 text-[11px] font-mono text-muted-foreground bg-muted/60 p-2 rounded-lg border border-border/60">
                 <span className="flex items-center gap-1">
-                  <HardDrive className="h-3.5 w-3.5 text-primary" /> {dt.macSize || "Size: ~196 MB"}
+                  <HardDrive className="h-3.5 w-3.5 text-primary" />{" "}
+                  {lang === "bn" ? `আকার: ~${releaseInfo.macSizeMb} মেগাবাইট` : `Size: ~${releaseInfo.macSizeMb} MB`}
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
@@ -191,7 +235,7 @@ export function DownloadSection() {
 
             {/* Action */}
             <div className="pt-5 mt-auto">
-              <a href={macDownloadUrl} download className="block">
+              <a href={releaseInfo.macUrl} download className="block">
                 <Button
                   size="lg"
                   className={`w-full gap-2 font-bold py-2.5 shadow-md transition-all ${
@@ -205,7 +249,9 @@ export function DownloadSection() {
                 </Button>
               </a>
               <p className="text-[11px] text-center text-muted-foreground/80 mt-1.5 font-mono">
-                {dt.macNote || "Mount DMG and drag to Applications for 1-click launch"}
+                {lang === "bn"
+                  ? `সংস্করণ ${releaseInfo.version} • macOS ১১.০+ (অ্যাপল সিলিকন ও ইন্টেল)`
+                  : `Version ${releaseInfo.version} • macOS 11.0+ (Apple Silicon & Intel)`}
               </p>
             </div>
           </div>
