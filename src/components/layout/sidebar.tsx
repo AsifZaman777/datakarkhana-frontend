@@ -29,6 +29,7 @@ import {
   ShoppingCart,
   Cpu,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +151,7 @@ function SidebarInner({
       icon: Search,
       color: "text-cyan-600 dark:text-cyan-400",
       items: [
+        { label: lang === "bn" ? "ডিএসই শেয়ার বাজার" : "DSE Stock Market", href: "/stocks", icon: TrendingUp, iconColor: "text-emerald-500 dark:text-emerald-400", badge: "LIVE" },
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
         { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
         { label: lang === "bn" ? "ইউনিভার্সাল ই-কমার্স" : "Universal E-Commerce", href: "/scraper/ecommerce", icon: Globe, iconColor: "text-indigo-500 dark:text-indigo-400" },
@@ -212,6 +214,7 @@ function SidebarInner({
       icon: Search,
       color: "text-cyan-600 dark:text-cyan-400",
       items: [
+        { label: lang === "bn" ? "ডিএসই শেয়ার বাজার" : "DSE Stock Market", href: "/stocks", icon: TrendingUp, iconColor: "text-emerald-500 dark:text-emerald-400", badge: "LIVE" },
         { label: lang === "bn" ? "গুগল ম্যাপস ইঞ্জিন" : "Google Maps Engine", href: "/scraper", icon: Search },
         { label: lang === "bn" ? "দারাজ ইঞ্জিন" : "Daraz Engine", href: "/scraper/daraz", icon: ShoppingCart, iconColor: "text-orange-500 dark:text-orange-400" },
         { label: lang === "bn" ? "ইউনিভার্সাল ই-কমার্স" : "Universal E-Commerce", href: "/scraper/ecommerce", icon: Globe, iconColor: "text-indigo-500 dark:text-indigo-400" },
@@ -234,6 +237,7 @@ function SidebarInner({
   const groups = isAdmin ? adminGroups : userGroups;
 
   const getTourIdForHref = (href: string) => {
+    if (href === "/stocks") return "sidebar-nav-stocks";
     if (href === "/catalog") return "sidebar-nav-catalog";
     if (href === "/scraper") return "sidebar-nav-scraper";
     if (href === "/scraper/daraz") return "sidebar-nav-daraz";

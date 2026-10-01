@@ -13,6 +13,7 @@ export function resolveTargetBaseUrl(url?: string): string {
   const cleanUrl = url.toLowerCase();
   // Local machine automation routes (Selenium scraping, WhatsApp Web, local AI models, local scrape datasets)
   if (
+    cleanUrl.startsWith("/api/stocks") ||
     cleanUrl.startsWith("/api/scraper") ||
     cleanUrl.startsWith("/api/marketing") ||
     cleanUrl.startsWith("/api/local") ||
