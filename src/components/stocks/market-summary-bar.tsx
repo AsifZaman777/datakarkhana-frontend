@@ -44,7 +44,7 @@ export function MarketSummaryBar({ summary, isConnected }: MarketSummaryBarProps
               }`}
             />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {isConnected ? "LankaBangla Live Feed Active" : "Connecting to Local Stream..."}
+              {isConnected ? "Live Market Active" : "Connecting..."}
             </span>
           </div>
 

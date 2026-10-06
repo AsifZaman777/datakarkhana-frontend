@@ -133,30 +133,29 @@ export function BinanceTradingHeader({
       <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-1.5 border-b border-[#1e2329]/60 text-[11px]">
         {/* Left: LankaBangla Live Status Button, Switcher & Telemetry */}
         <div className="flex items-center gap-2.5">
-          {/* LankaBangla Official Exchange & Live Market Status Dropdown */}
+          {/* Exchange & Live Market Status Dropdown (Dark Theme) */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#39859f] hover:bg-[#32778f] text-white text-[11px] font-bold shadow-sm border border-[#4ea1bc]/60 transition-all select-none active:scale-[0.98]"
-              title="LankaBangla Portal Live Market Status (Click to switch exchange)"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#181a20] hover:bg-[#202630] active:bg-[#2b313a] text-[#eaecef] text-[11px] font-semibold border border-[#2b313a] hover:border-[#3b4350] shadow-sm transition-all select-none active:scale-[0.98] group"
+              title="Select Exchange"
             >
-              <span className="text-sm leading-none">🇧🇩</span>
-              <span className="tracking-wide text-white font-bold">{activeExchange}</span>
-              <span className={`font-bold ${getStatusColor(rawStatus)}`}>
+              <span className="text-sm leading-none select-none">🇧🇩</span>
+              <span className="tracking-wide text-[#eaecef] font-bold group-hover:text-white transition-colors">{activeExchange}</span>
+              <span className={`font-semibold ${getStatusColor(rawStatus)}`}>
                 ({rawStatus})
               </span>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-white/90 transition-transform duration-200 ${
-                  dropdownOpen ? "rotate-180" : ""
+                className={`w-3.5 h-3.5 text-[#848e9c] group-hover:text-[#eaecef] transition-transform duration-200 ${
+                  dropdownOpen ? "rotate-180 text-[#f0b90b]" : ""
                 }`}
               />
             </button>
 
             {dropdownOpen && (
               <div className="absolute left-0 mt-1.5 w-64 rounded-lg bg-[#181a20] border border-[#2b313a] shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-1.5 border-b border-[#2b313a]/80 text-[10px] uppercase font-bold text-[#848e9c] flex items-center justify-between">
-                  <span>LankaBangla Exchanges</span>
-                  <span className="text-[#0ecb81] font-mono text-[9px]">LIVE FEED</span>
+                <div className="px-3 py-1.5 border-b border-[#2b313a]/80 text-[10px] uppercase font-bold text-[#848e9c]">
+                  Select Exchange
                 </div>
                 {(exchanges.length > 0
                   ? exchanges
@@ -174,16 +173,18 @@ export function BinanceTradingHeader({
                         onSelectExchange(exch.code as "DSE" | "CSE");
                         setDropdownOpen(false);
                       }}
-                      className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-[#202630] transition-colors ${
-                        isSelected ? "bg-[#2b313a]/60 text-white" : "text-[#eaecef]"
+                      className={`w-full px-3 py-2 text-left flex items-center justify-between transition-colors ${
+                        isSelected
+                          ? "bg-[#202630] text-white border-l-2 border-[#f0b90b]"
+                          : "text-[#eaecef] hover:bg-[#202630]/60 border-l-2 border-transparent"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <span className="text-base">🇧🇩</span>
                         <div>
                           <div className="font-bold text-xs flex items-center gap-1.5">
-                            <span>{exch.code}</span>
-                            <span className={`text-[10px] font-bold ${getStatusColor(exchStatus)}`}>
+                            <span className={isSelected ? "text-[#f0b90b]" : "text-[#eaecef]"}>{exch.code}</span>
+                            <span className={`text-[10px] font-semibold ${getStatusColor(exchStatus)}`}>
                               ({exchStatus})
                             </span>
                           </div>
@@ -192,42 +193,12 @@ export function BinanceTradingHeader({
                           </div>
                         </div>
                       </div>
-                      {isSelected && <span className="text-[#0ecb81] font-bold text-xs">✓</span>}
+                      {isSelected && <span className="text-[#f0b90b] font-bold text-xs">✓</span>}
                     </button>
                   );
                 })}
-                <div className="px-3 py-1.5 mt-1 border-t border-[#2b313a]/80 text-[9px] text-[#848e9c] flex items-center justify-between">
-                  <span>Source: lankabd.com</span>
-                  <span className="text-[#0ecb81]">Direct API Sync</span>
-                </div>
               </div>
             )}
-          </div>
-
-          {/* Quick Exchange Switcher Tabs */}
-          <div className="hidden sm:flex items-center p-0.5 rounded-lg bg-[#181a20] border border-[#2b313a]">
-            <button
-              onClick={() => onSelectExchange("DSE")}
-              className={`px-2.5 py-1 rounded font-bold transition-all flex items-center gap-1.5 text-[10px] ${
-                activeExchange === "DSE"
-                  ? "bg-[#f0b90b] text-black shadow-sm"
-                  : "text-[#848e9c] hover:text-[#eaecef]"
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${activeExchange === "DSE" ? "bg-black" : "bg-emerald-500"}`} />
-              <span>DSE</span>
-            </button>
-            <button
-              onClick={() => onSelectExchange("CSE")}
-              className={`px-2.5 py-1 rounded font-bold transition-all flex items-center gap-1.5 text-[10px] ${
-                activeExchange === "CSE"
-                  ? "bg-[#f0b90b] text-black shadow-sm"
-                  : "text-[#848e9c] hover:text-[#eaecef]"
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${activeExchange === "CSE" ? "bg-black" : "bg-cyan-400"}`} />
-              <span>CSE</span>
-            </button>
           </div>
 
           {/* Real-time Market Status Badge */}
@@ -238,7 +209,6 @@ export function BinanceTradingHeader({
             </span>
             <span className="text-[10px] text-[#848e9c] hidden md:inline">BST (UTC+6)</span>
           </div>
-
 
           {/* Live WebSocket Telemetry Indicator */}
           <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#181a20] border border-[#2b313a]/80 font-mono text-[10px]">
@@ -253,12 +223,8 @@ export function BinanceTradingHeader({
               <span className="text-[#f0b90b] hidden sm:inline">#{serverCycle}</span>
             )}
           </div>
-
-          <span className="hidden lg:inline-block text-[#5e6673]">|</span>
-          <span className="hidden lg:inline-block text-[11px] text-[#848e9c]">
-            Feed: <strong className="text-[#0ecb81]">LankaBangla Portal Direct</strong>
-          </span>
         </div>
+
 
         {/* Center/Right: Live Indices Ticker Ribbon */}
         <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-0.5">

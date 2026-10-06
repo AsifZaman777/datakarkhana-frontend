@@ -397,7 +397,7 @@ export function BinanceChartPanel({
         <div className="flex items-center justify-between text-[10px] text-[#848e9c] pt-0.5">
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0ecb81]" />
-            <span className="hidden sm:inline">LankaBangla direct stream</span>
+            <span className="hidden sm:inline">Real-time Stream</span>
           </div>
 
           {stock && (
