@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { SectorHeatmapData, ScrapedSectorItem, stocksApi } from "@/lib/api/stocks";
-import { X, Filter, RefreshCw } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { SectorHeatmapData, ScrapedSectorItem } from "@/lib/api/stocks";
+import { X, Filter } from "lucide-react";
 
 // Official DSE baseline scraped directly from www.dse.com.bd homepage
 const DEFAULT_DSE_HEATMAP: SectorHeatmapData = {
@@ -26,43 +26,27 @@ const DEFAULT_DSE_HEATMAP: SectorHeatmapData = {
 };
 
 interface SectorHeatmapProps {
+  heatmapData?: SectorHeatmapData | null;
   selectedSector?: string;
   onSelectSector: (sector: string) => void;
   initialData?: SectorHeatmapData | null;
 }
 
 export function SectorHeatmap({
+  heatmapData,
   selectedSector,
   onSelectSector,
   initialData,
 }: SectorHeatmapProps) {
   const [data, setData] = useState<SectorHeatmapData>(initialData || DEFAULT_DSE_HEATMAP);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const res = await stocksApi.getSectorHeatmap();
-      if (res.data && res.data.sectors && res.data.sectors.length > 0) {
-        setData(res.data);
-      }
-    } catch {
-      // Gracefully retain current/default scraped DSE sectors if network blips
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    if (initialData) {
+    if (heatmapData) {
+      setData(heatmapData);
+    } else if (initialData) {
       setData(initialData);
-    } else {
-      loadData();
     }
-    // Auto-refresh scraped sector heatmap every 60 seconds
-    const interval = setInterval(loadData, 60000);
-    return () => clearInterval(interval);
-  }, [initialData, loadData]);
+  }, [heatmapData, initialData]);
 
   const sectors = data?.top_12 && data.top_12.length > 0 ? data.top_12 : (data?.sectors || []).slice(0, 12);
   const advCount = data?.adv ?? 5;
@@ -116,15 +100,6 @@ export function SectorHeatmap({
             <span className="text-rose-600 dark:text-rose-400 font-semibold">{decCount} dec</span>
           </div>
 
-          {/* Quick Refresh */}
-          <button
-            onClick={() => loadData()}
-            disabled={isLoading}
-            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
-            title="Refresh DSE Sector Heatmap"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-primary" : ""}`} />
-          </button>
         </div>
       </div>
 

@@ -5,38 +5,31 @@ import { TrendingUp, TrendingDown, Flame, DollarSign, Activity, LineChart, Bell,
 import { StockTicker, TopSharesData, stocksApi } from "@/lib/api/stocks";
 
 interface TopSharesViewProps {
+  stocks: StockTicker[];
   onOpenChart: (ticker: string) => void;
   onOpenAlert: (ticker: string) => void;
   onViewDepth?: (ticker: string) => void;
 }
 
-export function TopSharesView({ onOpenChart, onOpenAlert, onViewDepth }: TopSharesViewProps) {
+export function TopSharesView({ stocks, onOpenChart, onOpenAlert, onViewDepth }: TopSharesViewProps) {
   const [activeTab, setActiveTab] = useState<"turnover" | "gainers" | "losers" | "volume">("turnover");
-  const [topData, setTopData] = useState<TopSharesData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await stocksApi.getTopShares();
-      setTopData(res.data);
-    } catch (e) {
-      console.error("Error fetching top shares:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const getActiveList = (): StockTicker[] => {
-    if (!topData) return [];
-    if (activeTab === "turnover") return topData.top_turnover || [];
-    if (activeTab === "gainers") return topData.top_gainers || [];
-    if (activeTab === "losers") return topData.top_losers || [];
-    if (activeTab === "volume") return topData.top_volume || [];
+    if (!stocks || stocks.length === 0) return [];
+    
+    let list = [...stocks];
+    if (activeTab === "turnover") {
+      return list.sort((a, b) => (b.value_mn || 0) - (a.value_mn || 0)).slice(0, 20);
+    }
+    if (activeTab === "gainers") {
+      return list.filter(s => (s.percent || 0) > 0).sort((a, b) => (b.percent || 0) - (a.percent || 0)).slice(0, 20);
+    }
+    if (activeTab === "losers") {
+      return list.filter(s => (s.percent || 0) < 0).sort((a, b) => (a.percent || 0) - (b.percent || 0)).slice(0, 20);
+    }
+    if (activeTab === "volume") {
+      return list.sort((a, b) => (b.volume || 0) - (a.volume || 0)).slice(0, 20);
+    }
     return [];
   };
 
@@ -96,13 +89,7 @@ export function TopSharesView({ onOpenChart, onOpenAlert, onViewDepth }: TopShar
           </button>
         </div>
 
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="p-2 rounded-xl border border-border/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-        </button>
+
       </div>
 
       {/* Top 3 Spotlight Cards */}

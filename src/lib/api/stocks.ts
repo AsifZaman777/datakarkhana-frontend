@@ -3,6 +3,7 @@ import { getLocalApiBase } from "@/lib/constants";
 
 export interface StockTicker {
   ticker: string;
+  name?: string;
   ltp: number;
   ycp: number;
   open: number;
@@ -85,16 +86,51 @@ export interface UserStockAlert {
 
 export interface MarketDepthLevel {
   price: number;
-  quantity: number;
-  orders: number;
+  volume: number;
+  quantity?: number;
+  orders?: number;
+  total?: number;
 }
 
 export interface MarketDepthData {
-  code: string;
+  symbol?: string;
+  code?: string;
+  exchange?: string;
   bids: MarketDepthLevel[];
   asks: MarketDepthLevel[];
-  asOf?: string;
+  buy_percentage?: number;
+  sell_percentage?: number;
+  total_buy_volume?: number;
+  total_sell_volume?: number;
+  lankabd_url?: string;
+  circuit_upper?: number;
+  circuit_lower?: number;
+  as_of?: string;
   session?: any;
+  stats?: {
+    ltp: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    ycp: number;
+    volume: number;
+    value_mn?: number;
+    value?: number;
+    trades: number;
+    change?: number;
+    percent?: number;
+  };
+  y_stats?: {
+    open?: number;
+    high?: number;
+    low?: number;
+    close?: number;
+    ltp?: number;
+    trades?: number;
+    volume?: number;
+    value_bdt?: number;
+  };
   priceStats?: {
     ltp: number;
     open: number;
@@ -108,6 +144,113 @@ export interface MarketDepthData {
     change?: number;
     percent?: number;
   };
+}
+
+export interface ShareholdingItem {
+  date: string;
+  sponsorDirector: number;
+  govt: number;
+  foreign: number;
+  ins: number;
+  public: number;
+}
+
+export interface FinancialRatioItem {
+  id: number;
+  Name: string;
+  Code: string;
+  Category: string;
+  Result: number;
+  Equation?: string;
+}
+
+export interface DividendHistoryItem {
+  symbol: string;
+  dividendType?: string;
+  cashDividend?: number;
+  stockDividend?: number;
+  eps?: number;
+  nav?: number;
+  year?: number;
+  recordDate?: string;
+}
+
+export interface InterimReportItem {
+  year?: number;
+  quarterId?: number;
+  turnover?: string;
+  netProfit?: string;
+  eps?: string;
+  nav?: string;
+}
+
+export interface BoardMemberItem {
+  name: string;
+  designation?: string;
+  level?: number;
+}
+
+export interface AuditorItem {
+  name: string;
+}
+
+export interface ContactItem {
+  name?: string;
+  contact_person?: string;
+  address?: string;
+  phone?: string;
+  fax?: string;
+  is_headquarter?: boolean;
+}
+
+export interface CompanyOverview {
+  symbol: string;
+  cid?: number;
+  name: string;
+  sector: string;
+  category: string;
+  board: string;
+  ltp: number;
+  change?: number;
+  percent?: number;
+  profile: {
+    nameENG?: string;
+    board?: string;
+    financialYearEndMonth?: number;
+    totalShares?: number;
+    mainActivityENG?: string;
+    listingYear?: number;
+    marketLot?: number;
+    faceValue?: number;
+    contactPerson?: string;
+    headOfficePhone?: string;
+    headOfficeEmail?: string;
+    website?: string;
+  };
+  statistics: {
+    authorized_capital?: string;
+    paid_up_capital?: string;
+    total_shares?: string;
+    market_capitalization?: string;
+    "p/e_(interim)_as_on_04"?: string;
+    "p/e_(audited)_as_on_04"?: string;
+    market_category?: string;
+    "52_weeks_moving_range"?: string;
+    net_asset_value_per_share?: string;
+    earning_per_share?: string;
+    dividend_yield?: string;
+    "reserve_&_surplus"?: string;
+    raw?: Record<string, any>;
+  };
+  shareholding: ShareholdingItem[];
+  financial_ratios: FinancialRatioItem[];
+  dividend_history: DividendHistoryItem[];
+  interim_reports: InterimReportItem[];
+  board_members: BoardMemberItem[];
+  auditors: AuditorItem[];
+  contacts: ContactItem[];
+  lankabd_url: string;
+  as_of?: string;
 }
 
 export interface CircuitBreakerItem {
@@ -181,51 +324,89 @@ export interface SectorHeatmapData {
   source?: string;
 }
 
+export interface BlockMarketDeal {
+  symbol: string;
+  company_name: string;
+  max_price: number;
+  min_price: number;
+  trades: number;
+  quantity: number;
+  value_mn: number;
+  exchange: string;
+  date: string;
+}
+
+export interface IndexMover {
+  symbol: string;
+  company_name: string;
+  ltp: number;
+  ycp: number;
+  change_percent: number;
+  total_volume: number;
+  total_value_mn: number;
+  index_mover_points: number;
+  market_cap: number;
+  updated_at?: string;
+}
+
+export interface ExchangeInfo {
+  code: string;
+  name: string;
+  exchangeID: number;
+  status: "OPEN" | "CLOSED";
+  currency: string;
+  city: string;
+  country: string;
+  indices: string[];
+  trading_hours: string;
+}
+
+export interface StockDetail extends StockTicker {
+  intraday_series?: { time: number; value: number; volume?: number }[];
+  est_52w_high?: number;
+  est_52w_low?: number;
+  tick_size?: number;
+  circuit_upper?: number;
+  circuit_lower?: number;
+}
+
 export const stocksApi = {
-  getSummary: () => apiClient.get<MarketSummary>("/api/stocks/summary"),
-  getBoards: () => apiClient.get<{ boards: BoardSummaryItem[]; total_instruments: number }>("/api/stocks/boards"),
-  
-  getAll: (params?: {
-    search?: string;
-    sector?: string;
-    category?: string;
+  getTickers: (params?: {
+    exchange?: string;
     board?: string;
+    category?: string;
+    sector?: string;
+    search?: string;
     sort_by?: string;
-    sort_order?: string;
-  }) => apiClient.get<{ count: number; stocks: StockTicker[] }>("/api/stocks/all", { params }),
+    limit?: number;
+  }) => apiClient.get<{ count: number; total_available: number; tickers: StockTicker[] }>("/api/stocks/tickers", { params }),
 
-  getDetail: (ticker: string) =>
-    apiClient.get<StockTicker & { intraday_series: { time: number; value: number; volume: number }[] }>(
-      `/api/stocks/detail/${ticker}`
-    ),
+  getTickerDetail: (ticker: string) =>
+    apiClient.get<StockDetail>(`/api/stocks/ticker/${ticker}`),
 
-  getNews: (ticker?: string, limit: number = 50) =>
-    apiClient.get<{ count: number; news: StockNewsItem[] }>("/api/stocks/news", {
-      params: { ticker, limit },
-    }),
+  getSummary: () =>
+    apiClient.get<{ summary: any; is_trading_hour: boolean; total_tracked: number }>("/api/stocks/summary"),
 
-  getMarketDepth: (code: string) =>
-    apiClient.get<MarketDepthData>("/api/stocks/depth", { params: { code } }),
+  getDepth: (symbol: string, exchange: string = "DSE") =>
+    apiClient.get<MarketDepthData>("/api/stocks/depth", { params: { symbol, exchange } }),
 
-  getDepthInstruments: () =>
-    apiClient.get<{ rows: { code: string; name: string; sector: string; price: number }[]; popular: string[] }>(
-      "/api/stocks/depth/instruments"
-    ),
+  getCompanyOverview: (symbol: string) =>
+    apiClient.get<CompanyOverview>(`/api/stocks/overview/${symbol}`),
 
-  getSectorHeatmap: () => apiClient.get<SectorHeatmapData>("/api/stocks/sector-heatmap"),
-  getTopShares: () => apiClient.get<TopSharesData>("/api/stocks/top-shares"),
+  getSectors: () =>
+    apiClient.get<SectorHeatmapData>("/api/stocks/sectors"),
 
-  getCircuitBreakers: () =>
-    apiClient.get<{ count: number; circuit_breakers: CircuitBreakerItem[] }>("/api/stocks/circuit-breakers"),
+  getNews: (params?: { ticker?: string; limit?: number }) =>
+    apiClient.get<{ count: number; news: StockNewsItem[] }>("/api/stocks/news", { params }),
 
-  getRecentMarketInfo: (fromDate?: string, toDate?: string) =>
-    apiClient.get<{ rows: RecentMarketInfoRow[] }>("/api/stocks/recent-market-info", {
-      params: { from_date: fromDate, to_date: toDate },
-    }),
+  getBlockMarket: () =>
+    apiClient.get<{ count: number; deals: BlockMarketDeal[] }>("/api/stocks/block-market"),
 
-  getPe: () => apiClient.get<{ count: number; pe_data: PEItem[] }>("/api/stocks/pe"),
+  getMovers: () =>
+    apiClient.get<{ index_movers: IndexMover[]; top_lists: any }>("/api/stocks/movers"),
 
-  getAtAGlance: () => apiClient.get<{ count: number; at_a_glance: Record<string, string>[] }>("/api/stocks/at-a-glance"),
+  getExchanges: () =>
+    apiClient.get<{ exchanges: ExchangeInfo[] }>("/api/stocks/exchanges"),
 
   createAlert: (data: {
     whatsapp_number: string;
@@ -250,6 +431,22 @@ export const stocksApi = {
   sendTestPing: (whatsapp_number: string) =>
     apiClient.post<{ success: boolean; message: string }>("/api/stocks/alerts/test-ping", {
       whatsapp_number,
+    }),
+
+  sendOtp: (whatsapp_number: string) =>
+    apiClient.post<{ success: boolean; message: string; phone?: string }>("/api/stocks/alerts/send-otp", {
+      whatsapp_number,
+    }),
+
+  verifyOtp: (whatsapp_number: string, otp: string) =>
+    apiClient.post<{ success: boolean; message: string; phone?: string }>("/api/stocks/alerts/verify-otp", {
+      whatsapp_number,
+      otp,
+    }),
+
+  checkVerification: (whatsapp_number: string) =>
+    apiClient.get<{ whatsapp_number: string; is_verified: boolean }>("/api/stocks/alerts/verification-status", {
+      params: { whatsapp_number },
     }),
 
   getStreamUrl: () => `${getLocalApiBase()}/api/stocks/stream`,

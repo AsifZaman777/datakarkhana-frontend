@@ -20,7 +20,6 @@ interface MarketWatchTableProps {
   flashingTickers: Record<string, "up" | "down">;
   onOpenChart: (ticker: string) => void;
   onOpenAlert: (ticker: string) => void;
-  onViewDepth?: (ticker: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
   selectedCategory: string;
@@ -37,7 +36,6 @@ export function MarketWatchTable({
   flashingTickers,
   onOpenChart,
   onOpenAlert,
-  onViewDepth,
   searchQuery,
   onSearchChange,
   selectedCategory,
@@ -463,22 +461,6 @@ export function MarketWatchTable({
                     {/* 12. Market Depth & Row Actions */}
                     <td className={`${isDense ? "py-1 px-2" : "py-2 px-3"} text-center whitespace-nowrap`}>
                       <div className="flex items-center justify-center gap-1.5">
-                        {/* High-Visibility Market Depth Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onViewDepth) {
-                              onViewDepth(stock.ticker);
-                            } else {
-                              onOpenChart(stock.ticker);
-                            }
-                          }}
-                          title={`View ${stock.ticker} Live Market Depth (10-Level Order Book)`}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-600 dark:text-cyan-400 border border-cyan-500/35 text-[10px] font-extrabold shadow-2xs hover:scale-105 active:scale-95 transition-all"
-                        >
-                          <Layers className="w-3 h-3 text-cyan-500" />
-                          <span>Depth</span>
-                        </button>
 
                         {/* Interactive TradingView Chart Button */}
                         <button

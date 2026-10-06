@@ -1,425 +1,503 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   TrendingUp,
   Bell,
   RefreshCw,
   BarChart2,
-  LineChart,
   DollarSign,
-  AlertOctagon,
-  Calculator,
-  Calendar,
   Globe,
-  Newspaper,
-  LayoutGrid,
+  Layers,
 } from "lucide-react";
-import { StockTicker, MarketSummary, StockNewsItem, stocksApi } from "@/lib/api/stocks";
-import { LiveTickerTape } from "@/components/stocks/live-ticker-tape";
-import { MarketSummaryBar } from "@/components/stocks/market-summary-bar";
-import { SectorHeatmap } from "@/components/stocks/sector-heatmap";
-import { MarketWatchTable } from "@/components/stocks/market-watch-table";
-import { StockChartModal } from "@/components/stocks/stock-chart-modal";
+import {
+  StockTicker,
+  MarketSummary,
+  StockNewsItem,
+  MarketDepthData,
+  BlockMarketDeal,
+  IndexMover,
+  SectorHeatmapData,
+  stocksApi,
+} from "@/lib/api/stocks";
+import { BinanceTradingHeader } from "@/components/stocks/binance-trading-header";
+import { BinanceWatchlist } from "@/components/stocks/binance-watchlist";
+import { BinanceChartPanel } from "@/components/stocks/binance-chart-panel";
+import { BinanceOrderBook } from "@/components/stocks/binance-order-book";
+import { BinanceBottomHub } from "@/components/stocks/binance-bottom-hub";
 import { StockAlertModal } from "@/components/stocks/stock-alert-modal";
-import { MarketDepthView } from "@/components/stocks/market-depth-view";
-import { TopSharesView } from "@/components/stocks/top-shares-view";
-import { CircuitBreakerView } from "@/components/stocks/circuit-breaker-view";
-import { RecentMarketInfoView } from "@/components/stocks/recent-market-info-view";
-import { PERatioView } from "@/components/stocks/pe-ratio-view";
-import { AtAGlanceView } from "@/components/stocks/at-a-glance-view";
-import { AllNewsView } from "@/components/stocks/all-news-view";
-
-type NavTab = "watch" | "depth" | "top" | "circuit" | "pe" | "recent" | "at-a-glance" | "news";
+import { LiveTickerTape } from "@/components/stocks/live-ticker-tape";
 
 export default function StockMarketPage() {
-  const [activeTab, setActiveTab] = useState<NavTab>("watch");
+  // Exchange and Active Pair State
+  const [activeExchange, setActiveExchange] = useState<"DSE" | "CSE">("DSE");
+  const [selectedTicker, setSelectedTicker] = useState<string>("GP");
+
+  // Market Datasets
   const [stocks, setStocks] = useState<StockTicker[]>([]);
   const [marketSummary, setMarketSummary] = useState<MarketSummary | null>(null);
+  const [sectorHeatmap, setSectorHeatmap] = useState<SectorHeatmapData | null>(null);
   const [news, setNews] = useState<StockNewsItem[]>([]);
+  const [blockDeals, setBlockDeals] = useState<BlockMarketDeal[]>([]);
+  const [movers, setMovers] = useState<IndexMover[]>([]);
+  const [topLists, setTopLists] = useState<any>(null);
+
+  // Real-time Market Depth & Live Trades Feed
+  const [depth, setDepth] = useState<MarketDepthData | null>(null);
+  const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [depthLoading, setDepthLoading] = useState<boolean>(false);
+
+  // Connectivity and Ticker Flashes
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [wsPing, setWsPing] = useState<number | undefined>(undefined);
+  const [serverCycle, setServerCycle] = useState<number | undefined>(undefined);
   const [flashingTickers, setFlashingTickers] = useState<Record<string, "up" | "down">>({});
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [selectedBoard, setSelectedBoard] = useState<string>("ALL");
-  const [selectedSector, setSelectedSector] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("turnover");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Modals
-  const [activeChartTicker, setActiveChartTicker] = useState<string | null>(null);
+  // WhatsApp Alert Modal
   const [alertModalOpen, setAlertModalOpen] = useState<boolean>(false);
   const [alertInitialTicker, setAlertInitialTicker] = useState<string | undefined>(undefined);
-  const [depthTargetInstrument, setDepthTargetInstrument] = useState<string>("IPDC");
+  const [bottomHubCollapsed, setBottomHubCollapsed] = useState<boolean>(false);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const selectedTickerRef = useRef<string>(selectedTicker);
+  const activeExchangeRef = useRef<"DSE" | "CSE">(activeExchange);
   const flashTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectDelayRef = useRef<number>(1000);
 
-  // Initial REST fetch
-  const fetchInitialData = async () => {
-    try {
-      const [sumRes, stocksRes, newsRes] = await Promise.all([
-        stocksApi.getSummary(),
-        stocksApi.getAll(),
-        stocksApi.getNews(undefined, 25),
-      ]);
-      setMarketSummary(sumRes.data);
-      setStocks(stocksRes.data.stocks || []);
-      setNews(newsRes.data.news || []);
-    } catch (e) {
-      console.error("Initial stock data fetch failed:", e);
-    }
-  };
-
-  // SSE stream with auto-reconnect (exponential backoff)
   useEffect(() => {
-    fetchInitialData();
+    selectedTickerRef.current = selectedTicker;
+  }, [selectedTicker]);
+
+  useEffect(() => {
+    activeExchangeRef.current = activeExchange;
+  }, [activeExchange]);
+
+  // Current selected stock object
+  const selectedStock = useMemo(() => {
+    return stocks.find((s) => s.ticker === selectedTicker) || (stocks.length > 0 ? stocks[0] : null);
+  }, [stocks, selectedTicker]);
+
+  // Fetch depth for the active stock (REST fallback)
+  const loadMarketDepth = useCallback(
+    async (sym: string, exch: "DSE" | "CSE") => {
+      if (!sym) return;
+      setDepthLoading(true);
+      try {
+        const res = await stocksApi.getDepth(sym, exch);
+        if (res.data) {
+          setDepth(res.data);
+        }
+      } catch (err) {
+        console.debug("Failed to fetch market depth:", err);
+      } finally {
+        setDepthLoading(false);
+      }
+    },
+    []
+  );
+
+  // Initial bootstrap data via REST
+  useEffect(() => {
+    let isMounted = true;
+
+    async function bootstrapData() {
+      try {
+        const [sumRes, secRes, newsRes, bmRes, movRes] = await Promise.allSettled([
+          stocksApi.getSummary(),
+          stocksApi.getSectors(),
+          stocksApi.getNews({ limit: 30 }),
+          stocksApi.getBlockMarket(),
+          stocksApi.getMovers(),
+        ]);
+
+        if (isMounted) {
+          if (sumRes.status === "fulfilled" && sumRes.value.data) {
+            setMarketSummary(sumRes.value.data as any);
+          }
+          if (secRes.status === "fulfilled" && secRes.value.data) {
+            setSectorHeatmap(secRes.value.data);
+          }
+          if (newsRes.status === "fulfilled" && newsRes.value.data?.news) {
+            setNews(newsRes.value.data.news);
+          }
+          if (bmRes.status === "fulfilled" && bmRes.value.data?.deals) {
+            setBlockDeals(bmRes.value.data.deals);
+          }
+          if (movRes.status === "fulfilled" && movRes.value.data) {
+            setMovers(movRes.value.data.index_movers || []);
+            setTopLists(movRes.value.data.top_lists || null);
+          }
+        }
+      } catch (e) {
+        console.debug("Bootstrap error:", e);
+      }
+    }
+
+    bootstrapData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // When selectedTicker or activeExchange changes, notify WebSocket & load depth
+  useEffect(() => {
+    const sym = selectedTicker;
+    const exch = activeExchange;
+    if (sym) {
+      loadMarketDepth(sym, exch);
+
+      // Tell WebSocket server to stream real-time depth for this stock
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        try {
+          wsRef.current.send(
+            JSON.stringify({
+              action: "subscribe_depth",
+              symbol: sym,
+              exchange: exch,
+            })
+          );
+        } catch {}
+      }
+    }
+  }, [selectedTicker, activeExchange, loadMarketDepth]);
+
+  // WebSocket Connection Lifecycle — 100% Real-Time Persistent
+  useEffect(() => {
+    let isCleanedUp = false;
 
     const connect = () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+      if (isCleanedUp) return;
+
+      if (wsRef.current) {
+        wsRef.current.onopen = null;
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.close();
+        wsRef.current = null;
       }
 
-      const es = new EventSource(stocksApi.getStreamUrl());
-      eventSourceRef.current = es;
+      try {
+        const wsUrl = stocksApi.getWsUrl();
+        const ws = new window.WebSocket(wsUrl);
+        wsRef.current = ws;
 
-      es.onopen = () => {
-        setIsConnected(true);
-        reconnectDelayRef.current = 1000; // reset backoff on successful connect
-      };
-
-      es.onerror = () => {
-        setIsConnected(false);
-        es.close();
-        // Exponential backoff: 1s → 2s → 4s → max 15s
-        const delay = reconnectDelayRef.current;
-        reconnectDelayRef.current = Math.min(delay * 2, 15000);
-        reconnectTimerRef.current = setTimeout(connect, delay);
-      };
-
-      es.addEventListener("init", (e: MessageEvent) => {
-        try {
-          const payload = JSON.parse(e.data);
-          if (payload.market_summary) setMarketSummary({ summary: payload.market_summary, is_trading_hour: true, total_tracked: payload.tickers_count });
-          if (payload.tickers) setStocks(payload.tickers);
-          if (payload.recent_news) setNews(payload.recent_news);
-        } catch (err) {
-          console.error("SSE init parse error:", err);
-        }
-      });
-
-      // Live DSEX/DS30/DSES index updates — fires whenever backend detects a change
-      es.addEventListener("market_update", (e: MessageEvent) => {
-        try {
-          const payload = JSON.parse(e.data);
-          if (payload.market_summary) {
-            setMarketSummary((prev) => ({
-              ...(prev ?? {}),
-              summary: payload.market_summary,
-              is_trading_hour: true,
-            } as any));
+        ws.onopen = () => {
+          if (isCleanedUp) {
+            ws.close();
+            return;
           }
-        } catch (err) {
-          console.error("SSE market_update parse error:", err);
-        }
-      });
+          setIsConnected(true);
+          reconnectDelayRef.current = 1000;
 
-      es.addEventListener("tick_diff", (e: MessageEvent) => {
-        try {
-          const payload = JSON.parse(e.data);
-          const diffs = payload.ticks || [];
-          if (!diffs.length) return;
+          // Request active symbol depth immediately upon connect
+          const sym = selectedTickerRef.current || "GP";
+          const exch = activeExchangeRef.current || "DSE";
+          try {
+            ws.send(
+              JSON.stringify({
+                action: "subscribe_depth",
+                symbol: sym,
+                exchange: exch,
+              })
+            );
+          } catch {}
+        };
 
-          const newFlashes: Record<string, "up" | "down"> = {};
+        ws.onclose = () => {
+          if (isCleanedUp) return;
+          setIsConnected(false);
+          const delay = reconnectDelayRef.current;
+          reconnectDelayRef.current = Math.min(delay * 1.5, 6000);
+          if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+          reconnectTimerRef.current = setTimeout(() => {
+            connect();
+          }, delay);
+        };
 
-          setStocks((prevStocks) => {
-            const map = new Map(prevStocks.map((s) => [s.ticker, s]));
-            diffs.forEach((d: any) => {
-              const existing = map.get(d.ticker);
-              if (existing) {
-                map.set(d.ticker, {
-                  ...existing,
-                  ltp: d.ltp,
-                  change: d.change,
-                  percent: d.percent,
-                  volume: d.volume,
-                  value_mn: d.value_mn,
-                  high: d.high,
-                  low: d.low,
-                  trades: d.trades,
-                  direction: d.direction,
+        ws.onerror = (err) => {
+          console.debug("WebSocket notice:", err);
+        };
+
+        ws.onmessage = (e) => {
+          if (isCleanedUp) return;
+          try {
+            const payload = JSON.parse(e.data);
+
+            // Server keepalive ping or pong
+            if (payload.event === "ping") {
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: "pong" }));
+              }
+              return;
+            }
+
+            if (payload.event === "pong") {
+              if (payload.client_ts) {
+                const rtt = Math.max(1, Date.now() - payload.client_ts);
+                setWsPing(rtt);
+              }
+              return;
+            }
+
+            // Server periodic heartbeat
+            if (payload.event === "heartbeat") {
+              if (payload.server_time_ms) {
+                const rtt = Math.max(1, Date.now() - payload.server_time_ms);
+                setWsPing(rtt);
+              }
+              if (payload.cycle) {
+                setServerCycle(payload.cycle);
+              }
+              return;
+            }
+
+            // 1. Initial Snapshot on Connect
+            if (payload.event === "init") {
+              if (payload.market_summary) {
+                setMarketSummary({
+                  summary: payload.market_summary,
+                  is_trading_hour: payload.is_trading_hour,
+                  total_tracked: payload.tickers_count,
                 });
               }
-              newFlashes[d.ticker] = d.direction === "up" ? "up" : "down";
-            });
-            return Array.from(map.values());
-          });
+              if (payload.tickers) {
+                setStocks(payload.tickers);
+                if (!selectedTickerRef.current && payload.tickers.length > 0) {
+                  setSelectedTicker(payload.tickers[0].ticker);
+                }
+              }
+              if (payload.recent_news) setNews(payload.recent_news);
+              if (payload.sector_heatmap) setSectorHeatmap(payload.sector_heatmap);
+              if (payload.block_market) setBlockDeals(payload.block_market);
+              if (payload.movers) setMovers(payload.movers);
+              if (payload.top_lists) setTopLists(payload.top_lists);
+              if (payload.initial_depth) setDepth(payload.initial_depth);
+              if (payload.recent_trades) setRecentTrades(payload.recent_trades);
+            }
 
-          setFlashingTickers((prev) => ({ ...prev, ...newFlashes }));
+            // 2. Real-Time Order Book / Market Depth Update
+            else if (payload.event === "depth_update") {
+              if (payload.depth) {
+                const currentSym = (selectedTickerRef.current || "").toUpperCase();
+                const currentExch = (activeExchangeRef.current || "").toUpperCase();
+                const payloadSym = (payload.symbol || "").toUpperCase();
+                const payloadExch = (payload.exchange || "").toUpperCase();
 
-          Object.keys(newFlashes).forEach((code) => {
-            if (flashTimersRef.current[code]) clearTimeout(flashTimersRef.current[code]);
-            flashTimersRef.current[code] = setTimeout(() => {
-              setFlashingTickers((prev) => {
-                const updated = { ...prev };
-                delete updated[code];
-                return updated;
+                if (!payloadSym || payloadSym === currentSym) {
+                  if (!payloadExch || payloadExch === currentExch) {
+                    setDepth(payload.depth);
+                  }
+                }
+              }
+            }
+
+            // 3. Real-Time Market Indices & Breadth Update
+            else if (payload.event === "market_update") {
+              if (payload.market_summary) {
+                setMarketSummary((prev) => ({
+                  ...(prev ?? {}),
+                  summary: payload.market_summary,
+                  is_trading_hour: payload.is_trading_hour ?? true,
+                  total_tracked: payload.total_tracked,
+                } as any));
+              }
+            }
+
+            // 4. Real-Time Sector Heatmap Update
+            else if (payload.event === "sector_update") {
+              if (payload.sector_heatmap) setSectorHeatmap(payload.sector_heatmap);
+            }
+
+            // 5. Real-Time News & Corporate PSI Update
+            else if (payload.event === "news_update") {
+              if (payload.news) setNews(payload.news);
+            }
+
+            // 6. Real-Time Block Market Deals Update
+            else if (payload.event === "block_market_update") {
+              if (payload.deals) setBlockDeals(payload.deals);
+            }
+
+            // 7. Real-Time Index Movers & Top Lists Update
+            else if (payload.event === "movers_update") {
+              if (payload.movers) setMovers(payload.movers);
+              if (payload.top_lists) setTopLists(payload.top_lists);
+            }
+
+            // 8. Real-Time Stock Tick Diffs & Live Trade Executions
+            else if (payload.event === "tick_diff") {
+              const diffs = payload.ticks || [];
+              if (!diffs.length) return;
+
+              // Prepend newly executed trades into the Market Trades stream
+              if (payload.trades && payload.trades.length > 0) {
+                setRecentTrades((prev) => [...payload.trades, ...prev].slice(0, 60));
+              }
+
+              const newFlashes: Record<string, "up" | "down"> = {};
+
+              setStocks((prevStocks) => {
+                const map = new Map(prevStocks.map((s) => [s.ticker, s]));
+                diffs.forEach((d: any) => {
+                  const existing = map.get(d.ticker);
+                  if (existing) {
+                    map.set(d.ticker, {
+                      ...existing,
+                      ltp: d.ltp,
+                      change: d.change,
+                      percent: d.percent,
+                      volume: d.volume,
+                      value_mn: d.value_mn,
+                      high: d.high,
+                      low: d.low,
+                      trades: d.trades,
+                      direction: d.direction,
+                    });
+                  } else {
+                    map.set(d.ticker, d);
+                  }
+                  newFlashes[d.ticker] = d.direction === "up" ? "up" : "down";
+                });
+                return Array.from(map.values());
               });
-            }, 750);
-          });
-        } catch (err) {
-          console.error("SSE tick_diff parse error:", err);
-        }
-      });
+
+              setFlashingTickers((prev) => ({ ...prev, ...newFlashes }));
+
+              Object.keys(newFlashes).forEach((code) => {
+                if (flashTimersRef.current[code]) clearTimeout(flashTimersRef.current[code]);
+                flashTimersRef.current[code] = setTimeout(() => {
+                  setFlashingTickers((prev) => {
+                    const updated = { ...prev };
+                    delete updated[code];
+                    return updated;
+                  });
+                }, 750);
+              });
+            }
+          } catch (err) {
+            console.debug("WS parse error:", err);
+          }
+        };
+      } catch (err) {
+        console.debug("WS init error:", err);
+      }
     };
 
     connect();
 
+    const pingInterval = setInterval(() => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        try {
+          wsRef.current.send(JSON.stringify({ action: "ping", client_ts: Date.now() }));
+        } catch {}
+      }
+    }, 8000);
+
     return () => {
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      if (eventSourceRef.current) eventSourceRef.current.close();
-      eventSourceRef.current = null;
+      isCleanedUp = true;
+      clearInterval(pingInterval);
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.onopen = null;
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onmessage = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
       Object.values(flashTimersRef.current).forEach((t) => clearTimeout(t));
     };
   }, []);
 
-  // Filtered & Sorted Stocks for Market Watch
-  const filteredStocks = useMemo(() => {
-    let list = [...stocks];
-
-    if (searchQuery) {
-      const q = searchQuery.toUpperCase().trim();
-      list = list.filter(
-        (s) =>
-          s.ticker.includes(q) ||
-          s.sector?.toUpperCase().includes(q) ||
-          ((s as any).name && (s as any).name.toUpperCase().includes(q))
-      );
-    }
-
-    if (selectedCategory && selectedCategory !== "ALL") {
-      list = list.filter((s) => s.category?.toUpperCase() === selectedCategory.toUpperCase());
-    }
-
-    if (selectedBoard && selectedBoard !== "ALL") {
-      const bUpper = selectedBoard.toUpperCase();
-      if (bUpper === "DEBT") {
-        list = list.filter((s) => s.board?.toUpperCase() === "DEBT" || s.asset_type?.toUpperCase() === "CB");
-      } else if (bUpper === "YIELDDBT" || bUpper === "G-SEC") {
-        list = list.filter((s) => s.board?.toUpperCase() === "YIELDDBT" || s.asset_type?.toUpperCase() === "GOVDBT");
-      } else {
-        list = list.filter((s) => s.board?.toUpperCase() === bUpper);
-      }
-    }
-
-    if (selectedSector) {
-      const qSec = selectedSector.toLowerCase();
-      list = list.filter((s) => {
-        const sec = (s.sector || "").toLowerCase();
-        return sec === qSec || sec.includes(qSec) || qSec.includes(sec);
-      });
-    }
-
-    const isReverse = sortOrder === "desc";
-    list.sort((a, b) => {
-      if (sortBy === "turnover" || sortBy === "value_mn") return isReverse ? (b.value_mn || 0) - (a.value_mn || 0) : (a.value_mn || 0) - (b.value_mn || 0);
-      if (sortBy === "percent") return isReverse ? (b.percent || 0) - (a.percent || 0) : (a.percent || 0) - (b.percent || 0);
-      if (sortBy === "change") return isReverse ? (b.change || 0) - (a.change || 0) : (a.change || 0) - (b.change || 0);
-      if (sortBy === "ltp") return isReverse ? (b.ltp || 0) - (a.ltp || 0) : (a.ltp || 0) - (b.ltp || 0);
-      if (sortBy === "high") return isReverse ? (b.high || 0) - (a.high || 0) : (a.high || 0) - (b.high || 0);
-      if (sortBy === "low") return isReverse ? (b.low || 0) - (a.low || 0) : (a.low || 0) - (b.low || 0);
-      if (sortBy === "close") return isReverse ? (b.close || 0) - (a.close || 0) : (a.close || 0) - (b.close || 0);
-      if (sortBy === "ycp") return isReverse ? (b.ycp || 0) - (a.ycp || 0) : (a.ycp || 0) - (b.ycp || 0);
-      if (sortBy === "trades" || sortBy === "trade") return isReverse ? (b.trades || 0) - (a.trades || 0) : (a.trades || 0) - (b.trades || 0);
-      if (sortBy === "volume") return isReverse ? (b.volume || 0) - (a.volume || 0) : (a.volume || 0) - (b.volume || 0);
-      if (sortBy === "code") return isReverse ? b.ticker.localeCompare(a.ticker) : a.ticker.localeCompare(b.ticker);
-      return 0;
-    });
-
-    return list;
-  }, [stocks, searchQuery, selectedCategory, selectedBoard, selectedSector, sortBy, sortOrder]);
-
-  const handleSortChange = (col: string) => {
-    if (sortBy === col) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(col);
-      setSortOrder("desc");
-    }
-  };
-
   const handleOpenAlert = (ticker?: string) => {
-    setAlertInitialTicker(ticker);
+    setAlertInitialTicker(ticker || selectedStock?.ticker || "GP");
     setAlertModalOpen(true);
   };
 
-  const handleViewDepth = (ticker: string) => {
-    setDepthTargetInstrument(ticker);
-    setActiveTab("depth");
-  };
-
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* 1. Live Continuous Marquee Ticker Tape at the Top */}
-      <div className="-mx-6 -mt-6 lg:-mx-10 lg:-mt-6">
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden bg-[#0b0e11] text-[#eaecef] select-none">
+      {/* 1. Live Running Continuous Marquee Ticker Tape at the very top */}
+      <div className="shrink-0">
         <LiveTickerTape
           stocks={stocks}
-          onSelectTicker={(ticker) => {
-            setActiveChartTicker(ticker);
-          }}
+          onSelectTicker={(t) => setSelectedTicker(t)}
         />
       </div>
 
-      {/* 2. Top Header & Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-7 h-7 text-primary" />
-              <span>DSE Stock Market Live</span>
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-extrabold text-xs border border-emerald-500/20">
-              REAL-TIME
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Dhaka Stock Exchange live quotes, TradingView charts, market depth order books, circuit limits, and automated WhatsApp alerts.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => handleOpenAlert()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-all active:scale-95"
-          >
-            <Bell className="w-4 h-4" />
-            <span>Setup WhatsApp Alerts</span>
-          </button>
-
-          <button
-            onClick={fetchInitialData}
-            title="Refresh snapshot"
-            className="p-2.5 rounded-xl border border-border/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
+      {/* 2. Binance Pro Header Bar (Exchange Switcher, Hero Stock, 24h Stats & Indices) */}
+      <div className="shrink-0">
+        <BinanceTradingHeader
+          selectedStock={selectedStock}
+          activeExchange={activeExchange}
+          onSelectExchange={(ex) => setActiveExchange(ex)}
+          marketSummary={marketSummary}
+          isConnected={isConnected}
+          onOpenAlertModal={handleOpenAlert}
+          flashDirection={selectedStock ? flashingTickers[selectedStock.ticker] : undefined}
+          wsPing={wsPing}
+          serverCycle={serverCycle}
+        />
       </div>
 
-      {/* 3. Market Summary Indices Bar (Always visible) */}
-      <MarketSummaryBar summary={marketSummary} isConnected={isConnected} onRefresh={fetchInitialData} />
-
-      {/* 4. Navigation Tabs for Deep Market Analysis */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-md shadow-sm">
-        {[
-          { id: "watch", label: "Market Watch", icon: BarChart2 },
-          { id: "depth", label: "Market Depth", icon: LineChart },
-          { id: "top", label: "Top Shares", icon: DollarSign },
-          { id: "circuit", label: "Circuit Breakers", icon: AlertOctagon },
-          { id: "pe", label: "P/E Ratio", icon: Calculator },
-          { id: "recent", label: "Recent Market Info", icon: Calendar },
-          { id: "at-a-glance", label: "At a Glance", icon: Globe },
-          { id: "news", label: "News & PSI", icon: Newspaper },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as NavTab)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-muted/30 hover:bg-muted/60 text-muted-foreground hover:text-foreground hover:scale-[1.02]"
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="whitespace-nowrap">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 5. Active Tab Content Views */}
-      {activeTab === "watch" && (
-        <div className="space-y-6">
-          <SectorHeatmap
-            selectedSector={selectedSector}
-            onSelectSector={(s) => setSelectedSector(s)}
-          />
-
-          <MarketWatchTable
-            stocks={filteredStocks}
+      {/* 3. Main 3-Column Binance Pro Trading Station Grid (100% viewport locked, zero scroll) */}
+      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
+        {/* Left Column: Watchlist & Pair Screener (3 cols on lg) */}
+        <div className="col-span-3 h-full overflow-hidden flex flex-col border-r border-[#1e2329]">
+          <BinanceWatchlist
+            stocks={stocks}
+            selectedTicker={selectedStock?.ticker || selectedTicker}
+            onSelectTicker={(t) => setSelectedTicker(t)}
             flashingTickers={flashingTickers}
-            onOpenChart={(t) => setActiveChartTicker(t)}
-            onOpenAlert={(t) => handleOpenAlert(t)}
-            onViewDepth={(t) => handleViewDepth(t)}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            selectedBoard={selectedBoard}
-            onBoardChange={setSelectedBoard}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
           />
         </div>
-      )}
 
-      {activeTab === "depth" && (
-        <MarketDepthView
-          initialInstrument={depthTargetInstrument}
-          allStocks={stocks}
-          onOpenChart={(t) => setActiveChartTicker(t)}
-          onOpenAlert={(t) => handleOpenAlert(t)}
-        />
-      )}
+        {/* Center Column: Pro Chart & Bottom Hub (6 cols on lg) */}
+        <div className="col-span-6 h-full overflow-hidden flex flex-col border-r border-[#1e2329]">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <BinanceChartPanel
+              stock={selectedStock}
+              depth={depth}
+              onOpenAlertModal={handleOpenAlert}
+            />
+          </div>
+          <div className={`shrink-0 transition-all duration-200 ${bottomHubCollapsed ? "h-[32px]" : "h-[220px]"}`}>
+            <BinanceBottomHub
+              selectedStock={selectedStock}
+              news={news}
+              heatmapData={sectorHeatmap}
+              blockDeals={blockDeals}
+              movers={movers}
+              topLists={topLists}
+              onSelectTicker={(t) => setSelectedTicker(t)}
+              onOpenAlertModal={handleOpenAlert}
+              isCollapsed={bottomHubCollapsed}
+              onToggleCollapse={() => setBottomHubCollapsed(!bottomHubCollapsed)}
+            />
+          </div>
+        </div>
 
-      {activeTab === "top" && (
-        <TopSharesView
-          onOpenChart={(t) => setActiveChartTicker(t)}
-          onOpenAlert={(t) => handleOpenAlert(t)}
-          onViewDepth={(t) => handleViewDepth(t)}
-        />
-      )}
+        {/* Right Column: Binance Order Book & Recent Trades (3 cols on lg) */}
+        <div className="col-span-3 h-full overflow-hidden flex flex-col">
+          <BinanceOrderBook
+            depth={depth}
+            stock={selectedStock}
+            activeExchange={activeExchange}
+            onToggleExchange={(ex) => setActiveExchange(ex)}
+            isLoading={depthLoading}
+            liveTrades={recentTrades}
+            onRefresh={() => {
+              if (selectedStock) loadMarketDepth(selectedStock.ticker, activeExchange);
+            }}
+          />
+        </div>
+      </div>
 
-      {activeTab === "circuit" && (
-        <CircuitBreakerView
-          onOpenChart={(t) => setActiveChartTicker(t)}
-          onOpenAlert={(t) => handleOpenAlert(t)}
-        />
-      )}
-
-      {activeTab === "pe" && (
-        <PERatioView
-          onOpenChart={(t) => setActiveChartTicker(t)}
-          onOpenAlert={(t) => handleOpenAlert(t)}
-        />
-      )}
-
-      {activeTab === "recent" && <RecentMarketInfoView />}
-
-      {activeTab === "at-a-glance" && <AtAGlanceView />}
-
-      {activeTab === "news" && (
-        <AllNewsView onOpenChart={(t) => setActiveChartTicker(t)} />
-      )}
-
-      {/* 7. TradingView Chart Modal */}
-      {activeChartTicker && (
-        <StockChartModal
-          ticker={activeChartTicker}
-          onClose={() => setActiveChartTicker(null)}
-          onOpenAlertModal={(t) => handleOpenAlert(t)}
-        />
-      )}
-
-      {/* 8. WhatsApp Stock Alert Modal */}
+      {/* 4. WhatsApp Stock Alert Configuration Modal */}
       {alertModalOpen && (
         <StockAlertModal
           initialTicker={alertInitialTicker}

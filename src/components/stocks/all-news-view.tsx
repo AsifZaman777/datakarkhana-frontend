@@ -5,31 +5,16 @@ import { Search, RefreshCw, Newspaper, ChevronRight, X, LineChart } from "lucide
 import { StockNewsItem, stocksApi } from "@/lib/api/stocks";
 
 interface AllNewsViewProps {
+  news: StockNewsItem[];
   onOpenChart: (ticker: string) => void;
 }
 
-export function AllNewsView({ onOpenChart }: AllNewsViewProps) {
-  const [news, setNews] = useState<StockNewsItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+export function AllNewsView({ news, onOpenChart }: AllNewsViewProps) {
   const [search, setSearch] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("ALL");
   const [activeModalItem, setActiveModalItem] = useState<StockNewsItem | null>(null);
 
-  const fetchNews = async () => {
-    try {
-      setLoading(true);
-      const res = await stocksApi.getNews(undefined, 80);
-      setNews(res.data.news || []);
-    } catch (e) {
-      console.error("Error fetching news archive:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
 
   const filtered = news.filter((item) => {
     const matchesSearch =
@@ -92,14 +77,6 @@ export function AllNewsView({ onOpenChart }: AllNewsViewProps) {
               </button>
             ))}
           </div>
-
-          <button
-            onClick={fetchNews}
-            disabled={loading}
-            className="p-2 rounded-xl border border-border/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
         </div>
       </div>
 
@@ -107,7 +84,7 @@ export function AllNewsView({ onOpenChart }: AllNewsViewProps) {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground/60 text-xs rounded-2xl border border-border/40 bg-card/60">
-            {loading ? "Loading announcements..." : "No corporate disclosures match your criteria."}
+            No corporate disclosures match your criteria.
           </div>
         ) : (
           filtered.map((item) => (
