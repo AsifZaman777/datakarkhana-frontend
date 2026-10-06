@@ -31,6 +31,21 @@ export interface MarketIndex {
   prev: number;
 }
 
+export interface ExchangeStatus {
+  code: string;
+  name: string;
+  exchangeID: number;
+  marketStatus: string; // "Open" | "Pre-Open" | "Post-Close" | "Closed" | "CPT"
+  status?: string;
+  selected?: number;
+  logoPath?: string;
+  currency?: string;
+  city?: string;
+  country?: string;
+  indices?: string[];
+  trading_hours?: string;
+}
+
 export interface MarketSummary {
   summary: {
     indices?: MarketIndex[];
@@ -47,6 +62,8 @@ export interface MarketSummary {
       declined: number;
       unchanged: number;
     };
+    market_status?: string;
+    exchanges?: ExchangeStatus[];
     session?: {
       state: string;
       date: string;
@@ -56,9 +73,12 @@ export interface MarketSummary {
     topMovers?: any;
   };
   is_trading_hour: boolean;
+  market_status?: string;
+  exchanges?: ExchangeStatus[];
   total_tracked: number;
   last_scraped_at?: string;
 }
+
 
 export interface StockNewsItem {
   id: string;
@@ -385,7 +405,7 @@ export const stocksApi = {
     apiClient.get<StockDetail>(`/api/stocks/ticker/${ticker}`),
 
   getSummary: () =>
-    apiClient.get<{ summary: any; is_trading_hour: boolean; total_tracked: number }>("/api/stocks/summary"),
+    apiClient.get<MarketSummary>("/api/stocks/summary"),
 
   getDepth: (symbol: string, exchange: string = "DSE") =>
     apiClient.get<MarketDepthData>("/api/stocks/depth", { params: { symbol, exchange } }),
@@ -406,7 +426,10 @@ export const stocksApi = {
     apiClient.get<{ index_movers: IndexMover[]; top_lists: any }>("/api/stocks/movers"),
 
   getExchanges: () =>
-    apiClient.get<{ exchanges: ExchangeInfo[] }>("/api/stocks/exchanges"),
+    apiClient.get<ExchangeStatus[]>("/api/stocks/exchanges"),
+
+  getMarketStatus: (exchange: string = "DSE") =>
+    apiClient.get<{ exchange: string; market_status: string; is_trading_hour: boolean }>("/api/stocks/status", { params: { exchange } }),
 
   createAlert: (data: {
     whatsapp_number: string;

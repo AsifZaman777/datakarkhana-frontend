@@ -15,6 +15,8 @@ export function MarketSummaryBar({ summary, isConnected }: MarketSummaryBarProps
   const totals = summary?.summary?.totals;
   const breadth = summary?.summary?.breadth;
   const isLive = summary?.is_trading_hour ?? false;
+  const rawMarketStatus = summary?.market_status || (isLive ? "Open" : "Closed");
+  const normStatus = rawMarketStatus.toLowerCase();
 
   const totalAdv = breadth?.advanced ?? 0;
   const totalDec = breadth?.declined ?? 0;
@@ -32,11 +34,17 @@ export function MarketSummaryBar({ summary, isConnected }: MarketSummaryBarProps
           <div className="flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
-                isConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                isConnected
+                  ? normStatus === "open"
+                    ? "bg-emerald-500 animate-pulse"
+                    : normStatus === "pre-open"
+                    ? "bg-lime-400 animate-pulse"
+                    : "bg-amber-500"
+                  : "bg-red-500"
               }`}
             />
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {isConnected ? "DSE Live Feed Active" : "Connecting to Local Stream..."}
+              {isConnected ? "LankaBangla Live Feed Active" : "Connecting to Local Stream..."}
             </span>
           </div>
 
@@ -45,8 +53,12 @@ export function MarketSummaryBar({ summary, isConnected }: MarketSummaryBarProps
           <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/60 text-secondary-foreground">
             <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             <span>
-              {isLive ? (
-                <span className="text-emerald-500 font-semibold">Live Session (10:00 - 14:30 BST)</span>
+              {normStatus === "open" ? (
+                <span className="text-emerald-500 font-semibold">Live Session (Market Open)</span>
+              ) : normStatus === "pre-open" ? (
+                <span className="text-lime-400 font-semibold">Pre-Opening Session</span>
+              ) : normStatus === "post-close" || normStatus === "cpt" ? (
+                <span className="text-amber-400 font-semibold">Post-Close Session</span>
               ) : (
                 <span className="text-muted-foreground">Market Closed</span>
               )}

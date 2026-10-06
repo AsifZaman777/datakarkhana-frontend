@@ -250,15 +250,28 @@ export default function StockMarketPage() {
               if (payload.cycle) {
                 setServerCycle(payload.cycle);
               }
+              if (payload.market_status || payload.exchanges) {
+                setMarketSummary((prev) => {
+                  if (!prev) return prev;
+                  return {
+                    ...prev,
+                    market_status: payload.market_status ?? prev.market_status,
+                    exchanges: payload.exchanges ?? prev.exchanges,
+                    is_trading_hour: payload.is_trading_hour ?? prev.is_trading_hour,
+                  };
+                });
+              }
               return;
             }
 
             // 1. Initial Snapshot on Connect
             if (payload.event === "init") {
-              if (payload.market_summary) {
+              if (payload.market_summary || payload.market_status) {
                 setMarketSummary({
                   summary: payload.market_summary,
                   is_trading_hour: payload.is_trading_hour,
+                  market_status: payload.market_status,
+                  exchanges: payload.exchanges,
                   total_tracked: payload.tickers_count,
                 });
               }
@@ -295,12 +308,14 @@ export default function StockMarketPage() {
 
             // 3. Real-Time Market Indices & Breadth Update
             else if (payload.event === "market_update") {
-              if (payload.market_summary) {
+              if (payload.market_summary || payload.market_status) {
                 setMarketSummary((prev) => ({
                   ...(prev ?? {}),
-                  summary: payload.market_summary,
-                  is_trading_hour: payload.is_trading_hour ?? true,
-                  total_tracked: payload.total_tracked,
+                  summary: payload.market_summary ?? prev?.summary,
+                  is_trading_hour: payload.is_trading_hour ?? prev?.is_trading_hour ?? true,
+                  market_status: payload.market_status ?? prev?.market_status,
+                  exchanges: payload.exchanges ?? prev?.exchanges,
+                  total_tracked: payload.total_tracked ?? prev?.total_tracked,
                 } as any));
               }
             }

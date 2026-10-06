@@ -41,10 +41,82 @@ export function BinanceTradingHeader({
   wsPing,
   serverCycle,
 }: BinanceTradingHeaderProps) {
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const indices = marketSummary?.summary?.indices || [];
   const breadth = marketSummary?.summary?.breadth || { advanced: 0, declined: 0, unchanged: 0 };
   const totals = marketSummary?.summary?.totals || {};
   const isTradingHour = marketSummary?.is_trading_hour ?? false;
+
+  // Real-time market status and exchanges directly from LankaBangla
+  const exchanges = marketSummary?.exchanges || [];
+  const currentExchangeInfo = exchanges.find(
+    (e) => e.code.toUpperCase() === activeExchange.toUpperCase()
+  );
+  const rawStatus =
+    currentExchangeInfo?.marketStatus ||
+    marketSummary?.market_status ||
+    (isTradingHour ? "Open" : "Closed");
+
+  // Dynamic colors matching LankaBangla portal (.btn-market-*)
+  const getStatusColor = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s === "open") return "text-[#82f73b]";
+    if (s === "pre-open") return "text-[#aaf73b]";
+    if (s === "post-close" || s === "cpt") return "text-[#f59e0b]";
+    if (s === "closed") return "text-[#f6465d]";
+    return "text-[#82f73b]";
+  };
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s === "open") {
+      return {
+        label: "MARKET OPEN",
+        dotColor: "bg-[#0ecb81] animate-pulse",
+        textColor: "text-[#0ecb81]",
+      };
+    }
+    if (s === "pre-open") {
+      return {
+        label: "PRE-OPEN SESSION",
+        dotColor: "bg-[#aaf73b] animate-pulse",
+        textColor: "text-[#aaf73b]",
+      };
+    }
+    if (s === "post-close" || s === "cpt") {
+      return {
+        label: "POST-CLOSE REPORTING",
+        dotColor: "bg-[#f0b90b]",
+        textColor: "text-[#f0b90b]",
+      };
+    }
+    return {
+      label: "MARKET CLOSED",
+      dotColor: "bg-[#f6465d]",
+      textColor: "text-[#f6465d]",
+    };
+  };
+
+  const badgeInfo = isConnected
+    ? getStatusBadge(rawStatus)
+    : {
+        label: "CONNECTING...",
+        dotColor: "bg-[#f6465d]",
+        textColor: "text-[#f6465d]",
+      };
 
   const dsex = indices.find((i) => i.key === "DSEX");
   const ds30 = indices.find((i) => i.key === "DS30");
@@ -59,49 +131,114 @@ export function BinanceTradingHeader({
     <div className="w-full bg-[#12161c] border-b border-[#1e2329] text-xs text-[#848e9c] shadow-sm select-none">
       {/* ── Top Exchange & Global Market Ribbon ─────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-1.5 border-b border-[#1e2329]/60 text-[11px]">
-        {/* Left: Exchange Switcher & Connection */}
+        {/* Left: LankaBangla Live Status Button, Switcher & Telemetry */}
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center p-0.5 rounded-lg bg-[#181a20] border border-[#2b313a]">
+          {/* LankaBangla Official Exchange & Live Market Status Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#39859f] hover:bg-[#32778f] text-white text-[11px] font-bold shadow-sm border border-[#4ea1bc]/60 transition-all select-none active:scale-[0.98]"
+              title="LankaBangla Portal Live Market Status (Click to switch exchange)"
+            >
+              <span className="text-sm leading-none">🇧🇩</span>
+              <span className="tracking-wide text-white font-bold">{activeExchange}</span>
+              <span className={`font-bold ${getStatusColor(rawStatus)}`}>
+                ({rawStatus})
+              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-white/90 transition-transform duration-200 ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute left-0 mt-1.5 w-64 rounded-lg bg-[#181a20] border border-[#2b313a] shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="px-3 py-1.5 border-b border-[#2b313a]/80 text-[10px] uppercase font-bold text-[#848e9c] flex items-center justify-between">
+                  <span>LankaBangla Exchanges</span>
+                  <span className="text-[#0ecb81] font-mono text-[9px]">LIVE FEED</span>
+                </div>
+                {(exchanges.length > 0
+                  ? exchanges
+                  : [
+                      { code: "DSE", name: "Dhaka Stock Exchange PLC.", marketStatus: rawStatus },
+                      { code: "CSE", name: "Chittagong Stock Exchange PLC.", marketStatus: rawStatus },
+                    ]
+                ).map((exch) => {
+                  const isSelected = activeExchange.toUpperCase() === exch.code.toUpperCase();
+                  const exchStatus = exch.marketStatus || rawStatus;
+                  return (
+                    <button
+                      key={exch.code}
+                      onClick={() => {
+                        onSelectExchange(exch.code as "DSE" | "CSE");
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-[#202630] transition-colors ${
+                        isSelected ? "bg-[#2b313a]/60 text-white" : "text-[#eaecef]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🇧🇩</span>
+                        <div>
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            <span>{exch.code}</span>
+                            <span className={`text-[10px] font-bold ${getStatusColor(exchStatus)}`}>
+                              ({exchStatus})
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-[#848e9c] line-clamp-1">
+                            {exch.name}
+                          </div>
+                        </div>
+                      </div>
+                      {isSelected && <span className="text-[#0ecb81] font-bold text-xs">✓</span>}
+                    </button>
+                  );
+                })}
+                <div className="px-3 py-1.5 mt-1 border-t border-[#2b313a]/80 text-[9px] text-[#848e9c] flex items-center justify-between">
+                  <span>Source: lankabd.com</span>
+                  <span className="text-[#0ecb81]">Direct API Sync</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Exchange Switcher Tabs */}
+          <div className="hidden sm:flex items-center p-0.5 rounded-lg bg-[#181a20] border border-[#2b313a]">
             <button
               onClick={() => onSelectExchange("DSE")}
-              className={`px-3 py-1 rounded font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded font-bold transition-all flex items-center gap-1.5 text-[10px] ${
                 activeExchange === "DSE"
                   ? "bg-[#f0b90b] text-black shadow-sm"
                   : "text-[#848e9c] hover:text-[#eaecef]"
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${activeExchange === "DSE" ? "bg-black" : "bg-emerald-500"}`} />
-              <span>DSE (Dhaka)</span>
+              <span>DSE</span>
             </button>
             <button
               onClick={() => onSelectExchange("CSE")}
-              className={`px-3 py-1 rounded font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded font-bold transition-all flex items-center gap-1.5 text-[10px] ${
                 activeExchange === "CSE"
                   ? "bg-[#f0b90b] text-black shadow-sm"
                   : "text-[#848e9c] hover:text-[#eaecef]"
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${activeExchange === "CSE" ? "bg-black" : "bg-cyan-400"}`} />
-              <span>CSE (Chittagong)</span>
+              <span>CSE</span>
             </button>
           </div>
 
-          {/* Market Status Badge */}
+          {/* Real-time Market Status Badge */}
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#181a20] border border-[#2b313a]/80">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isConnected
-                  ? isTradingHour
-                    ? "bg-[#0ecb81] animate-pulse"
-                    : "bg-[#f0b90b]"
-                  : "bg-[#f6465d]"
-              }`}
-            />
-            <span className="font-semibold text-[10px] text-[#eaecef]">
-              {isConnected ? (isTradingHour ? "MARKET OPEN" : "POST-MARKET") : "CONNECTING..."}
+            <span className={`w-2 h-2 rounded-full ${badgeInfo.dotColor}`} />
+            <span className={`font-semibold text-[10px] ${badgeInfo.textColor}`}>
+              {badgeInfo.label}
             </span>
-            <span className="text-[10px] text-[#848e9c]">BST (UTC+6)</span>
+            <span className="text-[10px] text-[#848e9c] hidden md:inline">BST (UTC+6)</span>
           </div>
+
 
           {/* Live WebSocket Telemetry Indicator */}
           <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#181a20] border border-[#2b313a]/80 font-mono text-[10px]">
