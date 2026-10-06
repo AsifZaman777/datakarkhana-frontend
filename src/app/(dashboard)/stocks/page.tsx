@@ -58,6 +58,106 @@ export default function StockMarketPage() {
   const [alertInitialTicker, setAlertInitialTicker] = useState<string | undefined>(undefined);
   const [bottomHubCollapsed, setBottomHubCollapsed] = useState<boolean>(false);
 
+  // Resizable bottom console panel (like VS Code bottom panel)
+  const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(260);
+  const [isDraggingBottom, setIsDraggingBottom] = useState<boolean>(false);
+  const centerColRef = useRef<HTMLDivElement>(null);
+  const bottomPanelHeightRef = useRef<number>(260);
+  const bottomHubCollapsedRef = useRef<boolean>(false);
+
+  // Restore saved height on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("binance_bottom_panel_height");
+      if (saved) {
+        const h = parseInt(saved, 10);
+        if (!isNaN(h) && h >= 80 && h <= 700) {
+          setBottomPanelHeight(h);
+          bottomPanelHeightRef.current = h;
+        }
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    bottomPanelHeightRef.current = bottomPanelHeight;
+  }, [bottomPanelHeight]);
+
+  useEffect(() => {
+    bottomHubCollapsedRef.current = bottomHubCollapsed;
+  }, [bottomHubCollapsed]);
+
+  // Handle interactive vertical dragging to resize bottom panel
+  const handleMouseDownResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingBottom(true);
+    const startY = e.clientY;
+    const startH = bottomHubCollapsedRef.current ? 32 : bottomPanelHeightRef.current;
+
+    if (bottomHubCollapsedRef.current) {
+      setBottomHubCollapsed(false);
+    }
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      // Dragging up (smaller clientY) increases bottom panel height
+      const deltaY = startY - moveEvent.clientY;
+      const targetH = startH + deltaY;
+
+      const maxH = centerColRef.current
+        ? Math.max(160, centerColRef.current.clientHeight - 120)
+        : 650;
+
+      if (targetH < 45) {
+        setBottomHubCollapsed(true);
+      } else {
+        setBottomHubCollapsed(false);
+        const clamped = Math.max(80, Math.min(targetH, maxH));
+        setBottomPanelHeight(clamped);
+      }
+    };
+
+    const onMouseUp = () => {
+      setIsDraggingBottom(false);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }, []);
+
+  const handleDoubleClickSash = useCallback(() => {
+    if (bottomHubCollapsed) {
+      setBottomHubCollapsed(false);
+      if (bottomPanelHeight < 120) setBottomPanelHeight(260);
+    } else {
+      setBottomHubCollapsed(true);
+    }
+  }, [bottomHubCollapsed, bottomPanelHeight]);
+
+  const handleToggleCollapse = useCallback(() => {
+    if (bottomHubCollapsed) {
+      setBottomHubCollapsed(false);
+      if (bottomPanelHeight < 120) setBottomPanelHeight(260);
+    } else {
+      setBottomHubCollapsed(true);
+    }
+  }, [bottomHubCollapsed, bottomPanelHeight]);
+
+  // Persist resized height
+  useEffect(() => {
+    if (!isDraggingBottom && bottomPanelHeight >= 80) {
+      try {
+        localStorage.setItem("binance_bottom_panel_height", bottomPanelHeight.toString());
+      } catch {}
+    }
+  }, [bottomPanelHeight, isDraggingBottom]);
+
   const wsRef = useRef<WebSocket | null>(null);
   const selectedTickerRef = useRef<string>(selectedTicker);
   const activeExchangeRef = useRef<"DSE" | "CSE">(activeExchange);
@@ -471,8 +571,9 @@ export default function StockMarketPage() {
           />
         </div>
 
-        {/* Center Column: Pro Chart & Bottom Hub (6 cols on lg) */}
-        <div className="col-span-6 h-full overflow-hidden flex flex-col border-r border-[#1e2329]">
+        {/* Center Column: Pro Chart & Resizable Bottom Console Hub (6 cols on lg) */}
+        <div ref={centerColRef} className="col-span-6 h-full overflow-hidden flex flex-col border-r border-[#1e2329] relative">
+          {/* Main Stock Chart */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             <BinanceChartPanel
               stock={selectedStock}
@@ -480,7 +581,37 @@ export default function StockMarketPage() {
               onOpenAlertModal={handleOpenAlert}
             />
           </div>
-          <div className={`shrink-0 transition-all duration-200 ${bottomHubCollapsed ? "h-[32px]" : "h-[220px]"}`}>
+
+          {/* VS Code Style Resizer Sash (Draggable Divider) */}
+          <div
+            onMouseDown={handleMouseDownResize}
+            onDoubleClick={handleDoubleClickSash}
+            className={`group relative h-2 -my-1 z-30 flex items-center justify-center cursor-row-resize select-none transition-colors ${
+              isDraggingBottom ? "bg-[#f0b90b]/20" : "hover:bg-[#f0b90b]/15"
+            }`}
+            title="Drag with mouse to resize console panel (Double-click to toggle collapse)"
+          >
+            {/* Visual thin divider line */}
+            <div
+              className={`w-full h-[1px] transition-colors ${
+                isDraggingBottom ? "bg-[#f0b90b]" : "bg-[#1e2329] group-hover:bg-[#f0b90b]/80"
+              }`}
+            />
+            {/* Center grip pill handle */}
+            <div
+              className={`absolute top-1/2 -translate-y-1/2 w-10 h-1 rounded-full transition-colors ${
+                isDraggingBottom ? "bg-[#f0b90b]" : "bg-[#2b313a] group-hover:bg-[#f0b90b]"
+              }`}
+            />
+          </div>
+
+          {/* Resizable Bottom Console Panel */}
+          <div
+            style={{ height: bottomHubCollapsed ? 32 : bottomPanelHeight }}
+            className={`shrink-0 flex flex-col overflow-hidden ${
+              isDraggingBottom ? "transition-none" : "transition-[height] duration-150 ease-out"
+            }`}
+          >
             <BinanceBottomHub
               selectedStock={selectedStock}
               news={news}
@@ -491,7 +622,8 @@ export default function StockMarketPage() {
               onSelectTicker={(t) => setSelectedTicker(t)}
               onOpenAlertModal={handleOpenAlert}
               isCollapsed={bottomHubCollapsed}
-              onToggleCollapse={() => setBottomHubCollapsed(!bottomHubCollapsed)}
+              onToggleCollapse={handleToggleCollapse}
+              onMouseDownResize={handleMouseDownResize}
             />
           </div>
         </div>

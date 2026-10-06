@@ -331,15 +331,28 @@ export interface ScrapedSectorItem {
   col_span?: number;
   row_span?: number;
   bg_color?: string;
+  color_class?: string;
   turnover?: number;
+  volume?: number;
+  trades?: number;
+  price_up?: number;
+  price_down?: number;
+  price_flat?: number;
+  market_cap?: number;
+  stocks_count?: number;
 }
 
 export interface SectorHeatmapData {
   adv: number;
   dec: number;
   unch?: number;
+  total_sectors?: number;
   sectors: ScrapedSectorItem[];
   top_12: ScrapedSectorItem[];
+  mkt_total_market_cap?: number;
+  mkt_total_turnover?: number;
+  mkt_total_volume?: number;
+  mkt_total_trades?: number;
   last_scraped_at?: string;
   source?: string;
 }
@@ -360,6 +373,7 @@ export interface IndexMover {
   symbol: string;
   company_name: string;
   ltp: number;
+  cp?: number;
   ycp: number;
   change_percent: number;
   total_volume: number;
@@ -423,7 +437,12 @@ export const stocksApi = {
     apiClient.get<{ count: number; deals: BlockMarketDeal[] }>("/api/stocks/block-market"),
 
   getMovers: () =>
-    apiClient.get<{ index_movers: IndexMover[]; top_lists: any }>("/api/stocks/movers"),
+    apiClient.get<{
+      index_movers: IndexMover[];
+      index_movers_pos?: IndexMover[];
+      index_movers_neg?: IndexMover[];
+      top_lists: any;
+    }>("/api/stocks/movers"),
 
   getExchanges: () =>
     apiClient.get<ExchangeStatus[]>("/api/stocks/exchanges"),
@@ -457,20 +476,112 @@ export const stocksApi = {
     }),
 
   sendOtp: (whatsapp_number: string) =>
-    apiClient.post<{ success: boolean; message: string; phone?: string }>("/api/stocks/alerts/send-otp", {
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      phone?: string;
+      failed_attempts?: number;
+      max_attempts?: number;
+      is_rate_limited?: boolean;
+    }>("/api/stocks/alerts/send-otp", {
       whatsapp_number,
     }),
 
   verifyOtp: (whatsapp_number: string, otp: string) =>
-    apiClient.post<{ success: boolean; message: string; phone?: string }>("/api/stocks/alerts/verify-otp", {
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      phone?: string;
+      session_valid_until?: string;
+      session_valid_days?: number;
+      failed_attempts?: number;
+      max_attempts?: number;
+      is_rate_limited?: boolean;
+    }>("/api/stocks/alerts/verify-otp", {
       whatsapp_number,
       otp,
     }),
 
+  linkWhatsApp: () =>
+    apiClient.post<{ success: boolean; message: string }>("/api/stocks/alerts/link-whatsapp"),
+
+  disposeSession: (whatsapp_number: string, clear_credentials: boolean = false) =>
+    apiClient.post<{ success: boolean; message: string; phone: string }>("/api/stocks/alerts/dispose-session", {
+      whatsapp_number,
+      clear_credentials,
+    }),
+
   checkVerification: (whatsapp_number: string) =>
-    apiClient.get<{ whatsapp_number: string; is_verified: boolean }>("/api/stocks/alerts/verification-status", {
+    apiClient.get<{
+      phone: string;
+      is_verified: boolean;
+      expires_at?: string | null;
+      remaining_seconds?: number;
+      is_rate_limited?: boolean;
+      failed_attempts?: number;
+    }>("/api/stocks/alerts/verification-status", {
       params: { whatsapp_number },
     }),
+
+  getUserGreenApiConfig: (phone_number: string) =>
+    apiClient.get<{
+      has_config: boolean;
+      phone_number: string;
+      instance_id?: string;
+      api_url?: string;
+      is_authorized: boolean;
+      updated_at?: string;
+      message?: string;
+    }>("/api/stocks/alerts/green-api/user-config", {
+      params: { phone_number },
+    }),
+
+  checkGreenApiCredentials: (data: { instance_id: string; api_token: string; api_url?: string }) =>
+    apiClient.post<{
+      success: boolean;
+      state: string;
+      is_authorized: boolean;
+      host?: string;
+      message: string;
+      raw?: any;
+    }>("/api/stocks/alerts/green-api/check-credentials", data),
+
+  saveUserGreenApiConfig: (data: {
+    phone_number: string;
+    instance_id: string;
+    api_token: string;
+    api_url?: string;
+  }) =>
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      phone_number: string;
+      instance_id: string;
+      api_url: string;
+      is_authorized: boolean;
+      state: string;
+    }>("/api/stocks/alerts/green-api/save-user-config", data),
+
+  sendGreenApiTestMessage: (whatsapp_number: string) =>
+    apiClient.post<{
+      success: boolean;
+      message: string;
+      chatId?: string;
+      idMessage?: string;
+    }>("/api/stocks/alerts/green-api/send-test", { whatsapp_number }),
+
+  getGreenApiStatus: () =>
+    apiClient.get<{
+      is_configured: boolean;
+      state: string;
+      is_authorized?: boolean;
+      instance_id?: string;
+      host?: string;
+      message?: string;
+    }>("/api/stocks/alerts/green-api/status"),
+
+  configureGreenApi: (data: { instance_id: string; api_token: string; host?: string }) =>
+    apiClient.post<{ success: boolean; message: string; status: any }>("/api/stocks/alerts/green-api/configure", data),
 
   getStreamUrl: () => `${getLocalApiBase()}/api/stocks/stream`,
   getWsUrl: () => {
