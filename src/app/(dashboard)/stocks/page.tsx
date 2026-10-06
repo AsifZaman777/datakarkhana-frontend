@@ -27,6 +27,7 @@ import { BinanceOrderBook } from "@/components/stocks/binance-order-book";
 import { BinanceBottomHub } from "@/components/stocks/binance-bottom-hub";
 import { StockAlertModal } from "@/components/stocks/stock-alert-modal";
 import { LiveTickerTape } from "@/components/stocks/live-ticker-tape";
+import { triggerStockAlertNotification } from "@/lib/audio-alert";
 
 export default function StockMarketPage() {
   // Exchange and Active Pair State
@@ -489,6 +490,25 @@ export default function StockMarketPage() {
                     return updated;
                   });
                 }, 750);
+              });
+            }
+
+            // 9. Real-Time Stock Alert Trigger Broadcast (Sound chime + Floating toast notification)
+            else if (payload.event === "alert_triggered") {
+              triggerStockAlertNotification({
+                title: payload.header || `🎯 ${payload.ticker || "Stock"} Alert Triggered!`,
+                message: payload.reason || (payload.ltp ? `LTP: ${payload.ltp} BDT` : "Alert triggered"),
+                ticker: payload.ticker,
+                ltp: payload.ltp,
+                percent: payload.percent,
+                type: payload.alert_type?.includes("SPIKE")
+                  ? "spike"
+                  : payload.alert_type?.includes("DROP")
+                  ? "drop"
+                  : payload.alert_type === "TEST_NOTIFICATION"
+                  ? "success"
+                  : "target",
+                time: payload.time,
               });
             }
           } catch (err) {

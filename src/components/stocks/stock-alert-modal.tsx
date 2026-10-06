@@ -29,6 +29,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { stocksApi, UserStockAlert, StockTicker } from "@/lib/api/stocks";
+import { alertSound, triggerStockAlertNotification } from "@/lib/audio-alert";
 
 interface StockAlertModalProps {
   initialTicker?: string;
@@ -239,7 +240,13 @@ export function StockAlertModal({ initialTicker, allStocks, onClose }: StockAler
     try {
       setTestSending(true);
       setStatusMessage(null);
+      alertSound.resume();
       const res = await stocksApi.sendGreenApiTestMessage(phoneNumber.trim());
+      triggerStockAlertNotification({
+        title: "Test Message Sent to WhatsApp",
+        message: res.data.message || `Dispatched to ${phoneNumber.trim()}`,
+        type: "success",
+      });
       setStatusMessage({
         text: res.data.message || "✅ Test message dispatched to your WhatsApp! Check your inbox.",
         type: "success",
@@ -270,10 +277,16 @@ export function StockAlertModal({ initialTicker, allStocks, onClose }: StockAler
     try {
       setSendingOtp(true);
       setStatusMessage(null);
+      alertSound.resume();
       const res = await stocksApi.sendOtp(phoneNumber.trim());
       setOtpSent(true);
       setOtpCode(""); // User must enter OTP manually from WhatsApp
       setFailedAttempts(res.data?.failed_attempts || 0);
+      triggerStockAlertNotification({
+        title: "OTP Verification Code Sent",
+        message: `Security code dispatched to ${phoneNumber.trim()} via WhatsApp. Please check your phone.`,
+        type: "info",
+      });
       setStatusMessage({
         text: `Security OTP sent to ${phoneNumber} via WhatsApp. Please check your WhatsApp chat and enter the 6-digit code below.`,
         type: "success",
@@ -306,6 +319,7 @@ export function StockAlertModal({ initialTicker, allStocks, onClose }: StockAler
     try {
       setVerifyingOtp(true);
       setStatusMessage(null);
+      alertSound.resume();
       const res = await stocksApi.verifyOtp(phoneNumber.trim(), otpCode.trim());
       setIsVerified(true);
       setOtpSent(false);
@@ -316,6 +330,11 @@ export function StockAlertModal({ initialTicker, allStocks, onClose }: StockAler
       setSessionExpiry(expiry);
       localStorage.setItem("dk_stock_alert_phone", phoneNumber.trim());
       localStorage.setItem("dk_stock_alert_verified_until", String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      triggerStockAlertNotification({
+        title: "Session Verified for 1 Week",
+        message: `Stock alerts activated until ${expiry}!`,
+        type: "success",
+      });
       setStatusMessage({
         text: `✅ Verified successfully! WhatsApp session is active for 1 week (until ${expiry}). All alerts will arrive in your inbox.`,
         type: "success",
@@ -423,6 +442,13 @@ export function StockAlertModal({ initialTicker, allStocks, onClose }: StockAler
         alert_type: alertType,
         threshold_value: val,
         is_one_shot: isOneShot,
+      });
+
+      triggerStockAlertNotification({
+        title: `Alert Armed: ${ticker}`,
+        message: `Trigger set for ${ticker} (${alertType} ${val > 0 ? '@ ' + val + ' BDT' : ''}). Live WhatsApp alerts enabled!`,
+        ticker,
+        type: "target",
       });
 
       setStatusMessage({ text: `🚀 Alert armed for ${ticker}! Messages will arrive directly in your WhatsApp inbox.`, type: "success" });
