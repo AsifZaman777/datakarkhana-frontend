@@ -42,22 +42,42 @@ import type { EcommercePlatform } from "@/lib/types";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
 import { useAuth } from "@/providers/auth-provider";
+import platformPresetsData from "@/data/ecommerce-platforms.json";
+
+export interface PlatformPreset {
+  id: string;
+  name: string;
+  domain: string;
+  icon?: string;
+  searchUrlPattern?: string;
+  sampleUrl?: string;
+  fallbackUrl?: string;
+  defaultQuery?: string;
+  quickTemplate?: {
+    label: string;
+    url: string;
+  };
+}
+
+const PRESET_PLATFORMS: PlatformPreset[] = platformPresetsData as PlatformPreset[];
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  globe: Globe,
+  "shopping-bag": ShoppingBag,
+  store: Store,
+  compass: Compass,
+};
+
+function getPlatformIcon(iconName?: string) {
+  if (!iconName) return Store;
+  const key = iconName.toLowerCase().trim();
+  return ICON_MAP[key] || Store;
+}
 
 interface EcommerceScraperFormProps {
   onJobCreated: (jobId: number) => void;
   cooldownRemaining: number;
 }
-
-const PRESET_PLATFORMS = [
-  { id: "generic", name: "Any Store / Universal", domain: "Universal", icon: Globe, sampleUrl: "https://example-shop.com/catalog" },
-  { id: "ebay", name: "eBay", domain: "ebay.com", icon: ShoppingBag, sampleUrl: "https://www.ebay.com/sch/i.html?_nkw=smart+watch" },
-  { id: "pickaboo", name: "Pickaboo", domain: "pickaboo.com", icon: Store, sampleUrl: "https://www.pickaboo.com/search/result/?q=earphones" },
-  { id: "amazon", name: "Amazon", domain: "amazon.com", icon: ShoppingBag, sampleUrl: "https://www.amazon.com/s?k=wireless+earbuds" },
-  { id: "startech", name: "Star Tech", domain: "startech.com.bd", icon: Compass, sampleUrl: "https://www.startech.com.bd/laptop-notebook" },
-  { id: "ryans", name: "Ryans", domain: "ryans.com", icon: Store, sampleUrl: "https://www.ryans.com/search?q=keyboard" },
-  { id: "rokomari", name: "Rokomari", domain: "rokomari.com", icon: ShoppingBag, sampleUrl: "https://www.rokomari.com/book" },
-  { id: "chaldal", name: "Chaldal", domain: "chaldal.com", icon: Store, sampleUrl: "https://chaldal.com/search/honey" },
-];
 
 export function EcommerceScraperForm({
   onJobCreated,
@@ -77,34 +97,38 @@ export function EcommerceScraperForm({
 
   const getSearchUrlForPlatform = (platId: string, q: string): string => {
     const cleanQ = q.trim();
-    switch (platId) {
-      case "ebay":
-        return cleanQ ? `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(cleanQ)}` : "https://www.ebay.com/sch/i.html?_nkw=smart+watch";
-      case "pickaboo":
-        return cleanQ ? `https://www.pickaboo.com/search/result/?q=${encodeURIComponent(cleanQ)}` : "https://www.pickaboo.com/search/result/?q=earphones";
-      case "amazon":
-        return cleanQ ? `https://www.amazon.com/s?k=${encodeURIComponent(cleanQ)}` : "https://www.amazon.com/s?k=wireless+earbuds";
-      case "startech":
-        return cleanQ ? `https://www.startech.com.bd/product/search?search=${encodeURIComponent(cleanQ)}` : "https://www.startech.com.bd/laptop-notebook";
-      case "ryans":
-        return cleanQ ? `https://www.ryans.com/search?q=${encodeURIComponent(cleanQ)}` : "https://www.ryans.com/search?q=keyboard";
-      case "rokomari":
-        return cleanQ ? `https://www.rokomari.com/search?term=${encodeURIComponent(cleanQ)}` : "https://www.rokomari.com/book";
-      case "chaldal":
-        return cleanQ ? `https://chaldal.com/search/${encodeURIComponent(cleanQ)}` : "https://chaldal.com/search/honey";
-      default:
-        return "";
+    const platform = PRESET_PLATFORMS.find((p) => p.id === platId);
+    if (!platform) return "";
+
+    if (cleanQ && platform.searchUrlPattern) {
+      if (platform.searchUrlPattern.includes("{query}")) {
+        return platform.searchUrlPattern.replace("{query}", encodeURIComponent(cleanQ));
+      }
+      return `${platform.searchUrlPattern}${encodeURIComponent(cleanQ)}`;
     }
+
+    return platform.sampleUrl || platform.fallbackUrl || "";
   };
 
   const handlePlatformClick = (platId: string) => {
     setSelectedPlatform(platId);
+    const platform = PRESET_PLATFORMS.find((p) => p.id === platId);
     if (platId !== "generic") {
-      const generatedUrl = getSearchUrlForPlatform(platId, query);
+      const targetQuery = query.trim() || platform?.defaultQuery || "";
+      if (targetQuery && !query.trim() && platform?.defaultQuery) {
+        setQuery(platform.defaultQuery);
+      }
+      const generatedUrl = getSearchUrlForPlatform(platId, targetQuery);
       setUrl(generatedUrl);
     } else {
       // If switching to generic from a preset, clear the preset URL so user can paste any link
-      const isPresetUrl = PRESET_PLATFORMS.some((p) => p.id !== "generic" && (url === p.sampleUrl || url.includes(p.domain)));
+      const isPresetUrl = PRESET_PLATFORMS.some(
+        (p) =>
+          p.id !== "generic" &&
+          (url === p.sampleUrl ||
+            url === p.fallbackUrl ||
+            (p.domain && p.domain !== "Universal" && url.includes(p.domain)))
+      );
       if (isPresetUrl) {
         setUrl("");
       }
@@ -114,7 +138,9 @@ export function EcommerceScraperForm({
   const handleUrlChange = (newUrl: string) => {
     setUrl(newUrl);
     const lower = newUrl.toLowerCase();
-    const matched = PRESET_PLATFORMS.find((p) => p.id !== "generic" && lower.includes(p.domain));
+    const matched = PRESET_PLATFORMS.find(
+      (p) => p.id !== "generic" && p.domain && p.domain !== "Universal" && lower.includes(p.domain.toLowerCase())
+    );
     if (matched) {
       setSelectedPlatform(matched.id);
     } else if (!newUrl.trim()) {
@@ -147,6 +173,10 @@ export function EcommerceScraperForm({
   const handleQuickSample = (sample: string, platId: string) => {
     setSelectedPlatform(platId);
     setUrl(sample);
+    const platform = PRESET_PLATFORMS.find((p) => p.id === platId);
+    if (platform?.defaultQuery) {
+      setQuery(platform.defaultQuery);
+    }
   };
 
   // 20 credits per 10 pages
@@ -248,6 +278,7 @@ export function EcommerceScraperForm({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {PRESET_PLATFORMS.map((p) => {
                 const isSelected = selectedPlatform === p.id;
+                const IconComponent = getPlatformIcon(p.icon);
                 return (
                   <button
                     key={p.id}
@@ -260,7 +291,7 @@ export function EcommerceScraperForm({
                     }`}
                   >
                     <div className="flex items-center gap-1.5 truncate">
-                      <p.icon className={`h-3.5 w-3.5 shrink-0 ${isSelected ? "text-white" : "text-indigo-400"}`} />
+                      <IconComponent className={`h-3.5 w-3.5 shrink-0 ${isSelected ? "text-white" : "text-indigo-400"}`} />
                       <span className="truncate">{p.name}</span>
                     </div>
                     {isSelected && <Check className="h-3 w-3 shrink-0 text-white animate-in zoom-in-50 duration-200" />}
@@ -345,34 +376,29 @@ export function EcommerceScraperForm({
             </div>
 
             {/* Quick Sample Links */}
-            <div className="pt-0.5">
-              <span className="text-[10px] text-muted-foreground block mb-1">
-                {lang === "bn" ? "দ্রুত টেস্ট করতে ক্লিক করুন:" : "Quick 1-Click Test Templates:"}
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleQuickSample("https://www.ebay.com/sch/i.html?_nkw=smart+watch", "ebay")}
-                  className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/30 transition-colors"
-                >
-                  eBay: Smart Watch
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickSample("https://www.pickaboo.com/search/result/?q=earphones", "pickaboo")}
-                  className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/30 transition-colors"
-                >
-                  Pickaboo: Earphones
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickSample("https://www.startech.com.bd/component/processor", "startech")}
-                  className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/30 transition-colors"
-                >
-                  Star Tech: Processors
-                </button>
-              </div>
-            </div>
+            {(() => {
+              const quickTemplates = PRESET_PLATFORMS.filter((p) => p.quickTemplate);
+              if (quickTemplates.length === 0) return null;
+              return (
+                <div className="pt-0.5">
+                  <span className="text-[10px] text-muted-foreground block mb-1">
+                    {lang === "bn" ? "দ্রুত টেস্ট করতে ক্লিক করুন:" : "Quick 1-Click Test Templates:"}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {quickTemplates.map((p) => (
+                      <button
+                        key={p.quickTemplate!.label}
+                        type="button"
+                        onClick={() => handleQuickSample(p.quickTemplate!.url, p.id)}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/30 transition-colors cursor-pointer"
+                      >
+                        {p.quickTemplate!.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Crawl Settings Grid: Pages + Max Items */}
             <div className="grid grid-cols-2 gap-3 pt-1">

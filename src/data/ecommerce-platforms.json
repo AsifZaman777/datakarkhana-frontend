@@ -1,0 +1,110 @@
+[
+  {
+    "id": "generic",
+    "name": "Any Store / Universal",
+    "domain": "Universal",
+    "icon": "globe",
+    "searchUrlPattern": "",
+    "sampleUrl": "https://example-shop.com/catalog",
+    "fallbackUrl": "https://example-shop.com/catalog",
+    "defaultQuery": ""
+  },
+  {
+    "id": "ebay",
+    "name": "eBay",
+    "domain": "ebay.com",
+    "icon": "shopping-bag",
+    "searchUrlPattern": "https://www.ebay.com/sch/i.html?_nkw={query}",
+    "sampleUrl": "https://www.ebay.com/sch/i.html?_nkw=smart+watch",
+    "fallbackUrl": "https://www.ebay.com/sch/i.html?_nkw=smart+watch",
+    "defaultQuery": "smart watch",
+    "quickTemplate": {
+      "label": "eBay: Smart Watch",
+      "url": "https://www.ebay.com/sch/i.html?_nkw=smart+watch"
+    }
+  },
+  {
+    "id": "pickaboo",
+    "name": "Pickaboo",
+    "domain": "pickaboo.com",
+    "icon": "store",
+    "searchUrlPattern": "https://www.pickaboo.com/search-result/{query}",
+    "sampleUrl": "https://www.pickaboo.com/search-result/smartwatch",
+    "fallbackUrl": "https://www.pickaboo.com/search-result/smartwatch",
+    "defaultQuery": "smartwatch",
+    "quickTemplate": {
+      "label": "Pickaboo: Smartwatch",
+      "url": "https://www.pickaboo.com/search-result/smartwatch"
+    }
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "domain": "amazon.com",
+    "icon": "shopping-bag",
+    "searchUrlPattern": "https://www.amazon.com/s?k={query}",
+    "sampleUrl": "https://www.amazon.com/s?k=earbuds",
+    "fallbackUrl": "https://www.amazon.com/s?k=earbuds",
+    "defaultQuery": "earbuds",
+    "quickTemplate": {
+      "label": "Amazon: Earbuds",
+      "url": "https://www.amazon.com/s?k=earbuds"
+    }
+  },
+  {
+    "id": "startech",
+    "name": "Star Tech",
+    "domain": "startech.com.bd",
+    "icon": "compass",
+    "searchUrlPattern": "https://www.startech.com.bd/product/search?search={query}",
+    "sampleUrl": "https://www.startech.com.bd/product/search?search=ssd",
+    "fallbackUrl": "https://www.startech.com.bd/product/search?search=ssd",
+    "defaultQuery": "ssd",
+    "quickTemplate": {
+      "label": "Star Tech: SSD",
+      "url": "https://www.startech.com.bd/product/search?search=ssd"
+    }
+  },
+  {
+    "id": "ryans",
+    "name": "Ryans",
+    "domain": "ryans.com",
+    "icon": "store",
+    "searchUrlPattern": "https://www.ryans.com/search?search={query}",
+    "sampleUrl": "https://www.ryans.com/search?search=laptop",
+    "fallbackUrl": "https://www.ryans.com/search?search=laptop",
+    "defaultQuery": "laptop",
+    "quickTemplate": {
+      "label": "Ryans: Laptop",
+      "url": "https://www.ryans.com/search?search=laptop"
+    }
+  },
+  {
+    "id": "rokomari",
+    "name": "Rokomari",
+    "domain": "rokomari.com",
+    "icon": "shopping-bag",
+    "searchUrlPattern": "https://www.rokomari.com/search?term={query}&search_type=ALL",
+    "sampleUrl": "https://www.rokomari.com/search?term=earphone&search_type=ALL",
+    "fallbackUrl": "https://www.rokomari.com/search?term=earphone&search_type=ALL",
+    "defaultQuery": "earphone",
+    "quickTemplate": {
+      "label": "Rokomari: Earphone",
+      "url": "https://www.rokomari.com/search?term=earphone&search_type=ALL"
+    }
+  },
+  {
+    "id": "chaldal",
+    "name": "Chaldal",
+    "domain": "chaldal.com",
+    "icon": "store",
+    "searchUrlPattern": "https://chaldal.com/search/{query}",
+    "sampleUrl": "https://chaldal.com/search/milk",
+    "fallbackUrl": "https://chaldal.com/search/milk",
+    "defaultQuery": "milk",
+    "quickTemplate": {
+      "label": "Chaldal: Milk",
+      "url": "https://chaldal.com/search/milk"
+    }
+  }
+]
